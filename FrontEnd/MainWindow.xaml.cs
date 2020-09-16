@@ -365,12 +365,17 @@ namespace FrontEnd
         {
             if (currentSelectedNote != null)
                 currentSelectedNote.HasChanges = true;
-
+                
             // Macro handling
-            Match match = Regex.Match(NoteContentBox.Text, @"\\grid\{(\d+),(\d+),(\d+)\}");
+            Match match = Regex.Match(NoteContentBox.Text, @"\\grid\{\s*(\d+)\s*,\s*(\d+)\s*(,\s*(\d+)\s*)?\}");
             if (match.Success)
             {
-                Core.Macros.Grid grid = new Core.Macros.Grid(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), int.Parse(match.Groups[3].Value));
+                Core.Macros.Grid grid = null;
+                if (!string.IsNullOrEmpty(match.Groups[3].Value))
+                    grid = new Core.Macros.Grid(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), int.Parse(match.Groups[4].Value));
+                else
+                    grid = new Core.Macros.Grid(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), 3);
+                
                 NoteContentBox.Text = NoteContentBox.Text.Replace(match.Value, "\n" + grid.WriteComponent());
             }
 
