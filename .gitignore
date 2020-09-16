@@ -533,3 +533,4 @@ obj/
 # Ionide (cross platform F# VS Code tools) working folder
 
 # End of https://www.toptal.com/developers/gitignore/api/code,csharp,dotnetcore,visualstudio
+*.db
