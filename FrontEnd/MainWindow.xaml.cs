@@ -309,6 +309,14 @@ namespace FrontEnd
             NewTagNameBox.Focus();
         }
 
+        private void NewTagNameBox_EnterPressed(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                AddTagButton_Click(sender, null);
+            }
+        }
+
         private void RemoveTagButton_Click(object sender, RoutedEventArgs e)
         {
             NoteTag noteTag = null;
@@ -377,8 +385,16 @@ namespace FrontEnd
                     grid = new Core.Macros.Grid(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), 3);
                 
                 NoteContentBox.Text = NoteContentBox.Text.Replace(match.Value, "\n" + grid.WriteComponent());
+                NoteContentBox.CaretIndex = NoteContentBox.Text.Length;
+                return;
             }
-
+            match = Regex.Match(NoteContentBox.Text, @"\\pagebreak");
+            if (match.Success)
+            {
+                NoteContentBox.Text = NoteContentBox.Text.Replace(match.Value ,"\n" + "-".Repeat(60) + "\n");
+                NoteContentBox.CaretIndex = NoteContentBox.Text.Length;
+                return;
+            }
 
         }
 
@@ -417,6 +433,19 @@ namespace FrontEnd
                     _ => AreAlike(query, _.Name)
                 };
             };
+        }
+    }
+
+    public static class Extensions
+    {
+        public static string Repeat(this string str, int times)
+        {
+            string newString = str;
+            for (int i = 0; i < times; i++)
+            {
+                newString += str;
+            }
+            return newString;
         }
     }
 }

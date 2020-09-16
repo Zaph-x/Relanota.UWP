@@ -98,7 +98,7 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <TextBox Grid.Row="3" x:Name="NewTagNameBox" KeyDown="AddTagButton_Click"/>
+            <TextBox Grid.Row="3" x:Name="NewTagNameBox" KeyDown="NewTagNameBox_EnterPressed"/>
             <Grid Grid.Row="4" Margin="0,3">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
