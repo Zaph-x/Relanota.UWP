@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Text.RegularExpressions;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -364,6 +365,16 @@ namespace FrontEnd
         {
             if (currentSelectedNote != null)
                 currentSelectedNote.HasChanges = true;
+
+            // Macro handling
+            Match match = Regex.Match(NoteContentBox.Text, @"\\grid\{(\d+),(\d+),(\d+)\}");
+            if (match.Success)
+            {
+                Core.Macros.Grid grid = new Core.Macros.Grid(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), int.Parse(match.Groups[3].Value));
+                NoteContentBox.Text = NoteContentBox.Text.Replace(match.Value, "\n" + grid.WriteComponent());
+            }
+
+
         }
 
         private void TagSearchBox_TextChanged(object sender, TextChangedEventArgs e)

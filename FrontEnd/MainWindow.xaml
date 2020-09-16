@@ -57,8 +57,7 @@
                      AcceptsTab="True" 
                      AutoWordSelection="True"
                      VerticalScrollBarVisibility="Auto"
-                     HorizontalScrollBarVisibility="Auto"
-                     TextWrapping="WrapWithOverflow">
+                     HorizontalScrollBarVisibility="Auto">
                 Write Something... ✏💭
             </TextBox>
             <Grid Grid.Row="2">
