@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,9 +18,27 @@ namespace FrontEnd
     /// </summary>
     public partial class SettingsWindow : Window
     {
-        public SettingsWindow()
+        private Configuration config { get; set; }
+        public SettingsWindow(Configuration config)
         {
+            this.config = config;
             InitializeComponent();
+            FontPicker.SelectedValue = config.AppSettings.Settings["DefaultFont"].Value;
+            DevCheck.IsChecked = config.AppSettings.Settings["Mode"].Value == "DEV";
+
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            config.AppSettings.Settings["DefaultFont"].Value =
+                (FontPicker.SelectedItem as ComboBoxItem).Content.ToString();
+
+            config.AppSettings.Settings["Mode"].Value = DevCheck.IsChecked ?? false ? "DEV" : "Normal";
+
+            config.Save(ConfigurationSaveMode.Modified);
+
+
+            this.Close();
         }
     }
 }
