@@ -8,6 +8,10 @@
     <PackageReference Include="Emoji.Wpf" Version="0.0.19-experimental" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Resources\" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
