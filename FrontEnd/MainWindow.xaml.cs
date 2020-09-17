@@ -34,8 +34,33 @@ namespace FrontEnd
         private ICollectionView _noteListView;
         private ICollectionView _tagListView;
 
+        private bool _isMouseDown = false;
+
+        private void DragRectangle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            _isMouseDown = true;
+            this.DragMove();
+        }
+
+        private void DragRectangle_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            _isMouseDown = false;
+        }
+
+        private void DragRectangle_MouseMove(object sender, MouseEventArgs e)
+        {
+            // if we are dragging and Maximized, retore window
+            if (_isMouseDown && this.WindowState == System.Windows.WindowState.Maximized)
+            {
+                _isMouseDown = false;
+                this.WindowState = System.Windows.WindowState.Normal;
+            }
+        }
+
         public MainWindow()
         {
+            this.MaxHeight = SystemParameters.WorkArea.Height + 12;
+            this.MaxWidth = SystemParameters.WorkArea.Width + 12;
             InitializeComponent();
             this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             context.Database.EnsureCreated();
@@ -83,6 +108,11 @@ namespace FrontEnd
 
         private void SaveNote()
         {
+            if (string.IsNullOrWhiteSpace(NoteNameBox.Text))
+            {
+                MessageBox.Show(this, "Please add a name to the note in order to save it.", "Could not save note", MessageBoxButton.OK);
+                return;
+            }
             if (currentSelectedNote == null)
             {
                 if (!string.IsNullOrWhiteSpace(NoteNameBox.Text) && (NoteContentBox.Text != "Write Something... ✏💭" && !string.IsNullOrWhiteSpace(NoteContentBox.Text)))
@@ -373,7 +403,7 @@ namespace FrontEnd
         {
             if (currentSelectedNote != null)
                 currentSelectedNote.HasChanges = true;
-                
+
             // Macro handling
             Match match = Regex.Match(NoteContentBox.Text, @"\\grid\{\s*(\d+)\s*,\s*(\d+)\s*(,\s*(\d+)\s*)?\}");
             if (match.Success)
@@ -383,7 +413,7 @@ namespace FrontEnd
                     grid = new Core.Macros.Grid(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), int.Parse(match.Groups[4].Value));
                 else
                     grid = new Core.Macros.Grid(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), 3);
-                
+
                 NoteContentBox.Text = NoteContentBox.Text.Replace(match.Value, "\n" + grid.WriteComponent());
                 NoteContentBox.CaretIndex = NoteContentBox.Text.Length;
                 return;
@@ -391,7 +421,7 @@ namespace FrontEnd
             match = Regex.Match(NoteContentBox.Text, @"\\pagebreak");
             if (match.Success)
             {
-                NoteContentBox.Text = NoteContentBox.Text.Replace(match.Value ,"\n" + "-".Repeat(60) + "\n");
+                NoteContentBox.Text = NoteContentBox.Text.Replace(match.Value, "\n" + "-".Repeat(60) + "\n");
                 NoteContentBox.CaretIndex = NoteContentBox.Text.Length;
                 return;
             }
@@ -433,6 +463,75 @@ namespace FrontEnd
                     _ => AreAlike(query, _.Name)
                 };
             };
+        }
+        public static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
+        {
+            if (depObj != null)
+            {
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+
+                {
+
+                    DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
+
+                    if (child != null && child is T)
+
+                    {
+
+                        yield return (T)child;
+
+                    }
+
+
+
+                    foreach (T childOfChild in FindVisualChildren<T>(child))
+                    {
+                        yield return childOfChild;
+                    }
+                }
+            }
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (currentSelectedNote != null)
+            {
+                if (currentSelectedNote.HasChanges)
+                {
+                    if (MessageBox.Show(this,
+                            "You have unsaved changes in the current note.\nDo you wish to save these changes?",
+                            "Do you wish to save?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                    {
+                        SaveNote();
+                    }
+                }
+            }
+            this.Close();
+        }
+
+        private void MainWindow_OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (this.WindowState == WindowState.Maximized)
+            {
+                SizeChangeButton.Content = this.Resources["MinimizeButtonGraphic"] as Grid;
+                Border.Margin = new Thickness(5);
+            }
+            else if (this.WindowState == WindowState.Normal)
+            {
+                SizeChangeButton.Content = this.Resources["MaximizeButtonGraphic"] as Grid;
+                Border.Margin = new Thickness(0);
+
+            }
+        }
+
+        private void SizeChangeButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.WindowState = this.WindowState == WindowState.Normal ? WindowState.Maximized : WindowState.Normal;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            this.WindowState = WindowState.Minimized;
         }
     }
 
