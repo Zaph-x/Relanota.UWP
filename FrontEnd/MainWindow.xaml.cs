@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,6 +30,7 @@ namespace FrontEnd
     public partial class MainWindow : Window
     {
         private Database context = new Database();
+        private Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 
         private Note currentSelectedNote { get; set; }
 
@@ -72,6 +75,10 @@ namespace FrontEnd
 
             _noteListView = CollectionViewSource.GetDefaultView(NoteList.ItemsSource);
             _tagListView = CollectionViewSource.GetDefaultView(TagList.ItemsSource);
+
+
+            NoteContentBox.FontFamily = new FontFamily(ConfigurationManager.AppSettings["DefaultFont"]);
+
         }
 
         private void NoteContentBox_GotFocus(object sender, RoutedEventArgs e)
@@ -92,6 +99,8 @@ namespace FrontEnd
             }
             else
             {
+                if (string.IsNullOrWhiteSpace(NoteNameBox.Text)) return;
+
                 SaveNote();
             }
         }
@@ -395,7 +404,7 @@ namespace FrontEnd
 
             Tag tag = TagList.SelectedItems[0] as Tag;
 
-            RelatedItemsView riv = new RelatedItemsView(tag, context, this);
+            RelatedItemsWindow riv = new RelatedItemsWindow(tag, context, this);
             riv.ShowDialog();
         }
 
@@ -532,6 +541,14 @@ namespace FrontEnd
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             this.WindowState = WindowState.Minimized;
+        }
+
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsWindow sw = new SettingsWindow(configuration);
+            sw.ShowDialog();
+
+            NoteContentBox.FontFamily = new FontFamily(configuration.AppSettings.Settings["DefaultFont"].Value);
         }
     }
 
