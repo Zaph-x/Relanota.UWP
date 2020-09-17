@@ -18,14 +18,14 @@ using Microsoft.EntityFrameworkCore;
 namespace FrontEnd
 {
     /// <summary>
-    /// Interaction logic for RelatedItemsView.xaml
+    /// Interaction logic for RelatedItemsWindow.xaml
     /// </summary>
-    public partial class RelatedItemsView : Window
+    public partial class RelatedItemsWindow : Window
     {
         public Note SelectedNote { get; set; }
         private List<Note> Notes { get; set; }
         MainWindow mainWindow { get; set; }
-        public RelatedItemsView(Tag tag, Database context, MainWindow mainWindow) {
+        public RelatedItemsWindow(Tag tag, Database context, MainWindow mainWindow) {
             this.Owner = mainWindow;
             this.mainWindow = mainWindow;
             Notes = context.Notes
