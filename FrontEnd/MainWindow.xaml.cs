@@ -33,6 +33,7 @@ namespace FrontEnd
         private Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 
         private Note currentSelectedNote { get; set; }
+        private byte tabsize { get; set; }
 
         private ICollectionView _noteListView;
         private ICollectionView _tagListView;
@@ -72,7 +73,7 @@ namespace FrontEnd
             NoteList.Items.SortDescriptions.Add(
                 new System.ComponentModel.SortDescription("Name",
                     System.ComponentModel.ListSortDirection.Ascending));
-
+            tabsize = byte.Parse(configuration.AppSettings.Settings["TabSize"].Value);
             _noteListView = CollectionViewSource.GetDefaultView(NoteList.ItemsSource);
             _tagListView = CollectionViewSource.GetDefaultView(TagList.ItemsSource);
 
@@ -132,7 +133,7 @@ namespace FrontEnd
                         LoadNote(context.Notes
                             .Include(note => note.NoteTags)
                             .ThenInclude(nt => nt.Tag).First(note => note.Name.ToLower() == NoteNameBox.Text.ToLower()));
-                        currentSelectedNote.Content += $"\n\n{contentToAppend}";
+                        currentSelectedNote.Content += $"{Environment.NewLine + Environment.NewLine}{contentToAppend}";
                         context.TryUpdateManyToMany(currentSelectedNote.NoteTags, currentSelectedNote.NoteTags, x => x.TagKey);
                         context.SaveChanges();
                         NoteContentBox.Text = currentSelectedNote.Content;
@@ -233,7 +234,7 @@ namespace FrontEnd
             {
                 if (NoteContentBox.Text != context.Notes.First(note => note.Name.ToLower() == NoteNameBox.Text.ToLower())?.Content)
                 {
-                    if (MessageBox.Show(this, "Do you wish to save this note?\n\nIf you pick no, it can not be recovered", "You have unsaved changes",
+                    if (MessageBox.Show(this, $"Do you wish to save this note?{Environment.NewLine + Environment.NewLine}If you pick no, it can not be recovered", "You have unsaved changes",
                             MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                     {
                         SaveNote();
@@ -253,7 +254,7 @@ namespace FrontEnd
                              (NoteContentBox.Text != "Write Something... ✏💭" &&
                               !string.IsNullOrWhiteSpace(NoteContentBox.Text)) && currentSelectedNote.HasChanges)
                     {
-                        if (MessageBox.Show(this, "Do you wish to save this note?\n\nIf you pick no, it can not be recovered", "You have an unsaved note",
+                        if (MessageBox.Show(this, $"Do you wish to save this note?{Environment.NewLine + Environment.NewLine}If you pick no, it can not be recovered", "You have an unsaved note",
                                 MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                         {
                             SaveNote();
@@ -275,7 +276,7 @@ namespace FrontEnd
                          (NoteContentBox.Text != "Write Something... ✏💭" &&
                           !string.IsNullOrWhiteSpace(NoteContentBox.Text)))
                 {
-                    if (MessageBox.Show(this, "Do you wish to save this note?\n\nIf you pick no, it can not be recovered", "You have an unsaved note",
+                    if (MessageBox.Show(this, $"Do you wish to save this note?{Environment.NewLine + Environment.NewLine}If you pick no, it can not be recovered", "You have an unsaved note",
                             MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                     {
                         SaveNote();
@@ -408,13 +409,44 @@ namespace FrontEnd
             riv.ShowDialog();
         }
 
+        private void NoteContentBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            int selectionStart = NoteContentBox.SelectionStart;
+            int y = NoteContentBox.GetLineIndexFromCharacterIndex(selectionStart);
+            int x = selectionStart - NoteContentBox.GetCharacterIndexFromLineIndex(y);
+
+            if (e.Key == Key.Tab && bool.Parse(configuration.AppSettings.Settings["TabToSpace"].Value))
+            {
+                String tab = new String(' ', tabsize - (x % tabsize));
+                int caretPosition = NoteContentBox.CaretIndex;
+                NoteContentBox.Text = NoteContentBox.Text.Insert(caretPosition, tab);
+                NoteContentBox.CaretIndex = caretPosition + tabsize - (x % tabsize);
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Enter)
+            {
+                if (NoteContentBox.Text.Split(Environment.NewLine).Any())
+                {
+                    
+                    Match match = Regex.Match(NoteContentBox.Text.Split(Environment.NewLine)[y], @"\s*[-*>+]\s");
+
+                    if (match.Success && x >= match.Index + match.Length)
+                    {
+                        NoteContentBox.Text = NoteContentBox.Text.Insert(NoteContentBox.CaretIndex, $"{Environment.NewLine}{match.Value}");
+                        NoteContentBox.CaretIndex = selectionStart + match.Index + match.Length + Environment.NewLine.Length;
+                        e.Handled = true;
+                    }
+                }
+            }
+        }
+
         private void NoteContentBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (currentSelectedNote != null)
                 currentSelectedNote.HasChanges = true;
 
             // Macro handling
-            Match match = Regex.Match(NoteContentBox.Text, @"[^`]\\grid\{\s*(\d+)\s*,\s*(\d+)\s*(,\s*(\d+)\s*)?(,\s*(\d+))?\}");
+            Match match = Regex.Match(NoteContentBox.Text, @"\\grid\{\s*(\d+)\s*,\s*(\d+)\s*(,\s*(\d+)\s*)?(,\s*(\d+))?\}");
             if (match.Success)
             {
                 Core.Macros.Grid grid = null;
@@ -426,14 +458,14 @@ namespace FrontEnd
                     grid = new Core.Macros.Grid(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), 3, 3);
 
 
-                NoteContentBox.Text = NoteContentBox.Text.Replace(match.Value, "\n" + grid.WriteComponent());
+                NoteContentBox.Text = NoteContentBox.Text.Replace(match.Value, Environment.NewLine + grid.WriteComponent());
                 NoteContentBox.CaretIndex = NoteContentBox.Text.Length;
                 return;
             }
-            match = Regex.Match(NoteContentBox.Text, @"[^`]\\pagebreak");
+            match = Regex.Match(NoteContentBox.Text, @"\\pagebreak");
             if (match.Success)
             {
-                NoteContentBox.Text = NoteContentBox.Text.Replace(match.Value, "\n" + "-".Repeat(60) + "\n");
+                NoteContentBox.Text = NoteContentBox.Text.Replace(match.Value, Environment.NewLine + "-".Repeat(60) + Environment.NewLine);
                 NoteContentBox.CaretIndex = NoteContentBox.Text.Length;
                 return;
             }
@@ -481,20 +513,14 @@ namespace FrontEnd
             if (depObj != null)
             {
                 for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
-
                 {
-
                     DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
 
                     if (child != null && child is T)
 
                     {
-
                         yield return (T)child;
-
                     }
-
-
 
                     foreach (T childOfChild in FindVisualChildren<T>(child))
                     {
@@ -511,7 +537,7 @@ namespace FrontEnd
                 if (currentSelectedNote.HasChanges)
                 {
                     if (MessageBox.Show(this,
-                            "You have unsaved changes in the current note.\nDo you wish to save these changes?",
+                            $"You have unsaved changes in the current note.{Environment.NewLine}Do you wish to save these changes?",
                             "Do you wish to save?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                     {
                         SaveNote();
@@ -552,6 +578,7 @@ namespace FrontEnd
             sw.ShowDialog();
 
             NoteContentBox.FontFamily = new FontFamily(configuration.AppSettings.Settings["DefaultFont"].Value);
+            tabsize = byte.Parse(configuration.AppSettings.Settings["TabSize"].Value);
         }
     }
 

@@ -210,7 +210,16 @@
                         <emoji:TextBlock Grid.Column="0" Text="Note Name" />
                         <TextBox x:Name="NoteNameBox" Grid.Column="1" Margin="2"></TextBox>
                     </Grid>
-                    <TextBox x:Name="NoteContentBox" Grid.Row="1" Width="auto" Height="auto" FontFamily="Consolas" Foreground="DarkGray" GotFocus="NoteContentBox_GotFocus" LostFocus="NoteContentBox_LostFocus" TextChanged="NoteContentBox_TextChanged" AcceptsReturn="True" AcceptsTab="True" AutoWordSelection="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                    <TextBox x:Name="NoteContentBox" Grid.Row="1" Width="auto" Height="auto" FontFamily="Consolas" Foreground="DarkGray" 
+                             GotFocus="NoteContentBox_GotFocus" 
+                             LostFocus="NoteContentBox_LostFocus" 
+                             TextChanged="NoteContentBox_TextChanged" 
+                             PreviewKeyDown="NoteContentBox_PreviewKeyDown"
+                             AcceptsReturn="True" 
+                             AcceptsTab="True" 
+                             AutoWordSelection="True" 
+                             VerticalScrollBarVisibility="Auto" 
+                             HorizontalScrollBarVisibility="Auto">
                         Write Something... ✏💭
                     </TextBox>
                     <Grid Grid.Row="2">
