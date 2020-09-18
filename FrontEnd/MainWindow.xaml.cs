@@ -411,6 +411,7 @@ namespace FrontEnd
 
         private void NoteContentBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightShift)) return;
             int selectionStart = NoteContentBox.SelectionStart;
             int y = NoteContentBox.GetLineIndexFromCharacterIndex(selectionStart);
             int x = selectionStart - NoteContentBox.GetCharacterIndexFromLineIndex(y);
