@@ -1,46 +1,48 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Core.Macros
 {
-    public class Grid : ITextComponent
+    public class Grid : TextComponent
     {
-
         public int Width { get; }
         public int Height { get; }
-        public int CellSize { get; }
-        public string result { get; set; }
+        public int CellHeight { get; }
+        public int CellWidth { get; }
 
-        public Grid(int width, int height, int cellSize)
+        public Grid(int width, int height, int cellWidth, int cellHeight)
         {
             Width = width;
             Height = height;
-            CellSize = cellSize + 1;
+            CellHeight = cellHeight + 1;
+            CellWidth = cellWidth + 1;
         }
 
-        public string WriteComponent()
+        public override string WriteComponent()
         {
-            for (int i = 0; i <= Height * CellSize; i++)
+            for (int i = 0; i <= Height * CellHeight; i++)
             {
-                for (int j = 0; j <= Width * CellSize; j++)
+                for (int j = 0; j <= Width * CellWidth; j++)
                 {
-                    if (j % CellSize == 0 && i % CellSize == 0)
+                    if (j % CellWidth == 0 && i % CellHeight == 0)
                     {
-                        result += '+';
+                        Result += '+';
                     }
-                    else if (j % CellSize != 0 && i % CellSize == 0)
+                    else if (j % CellWidth != 0 && i % CellHeight == 0)
                     {
-                        result += '-';
+                        Result += '-';
                     }
-                    else if (j % CellSize != 0 && i % CellSize != 0)
+                    else if (j % CellWidth != 0 && i % CellHeight != 0)
                     {
-                        result += ' ';
+                        Result += ' ';
                     }
                     else
                     {
-                        result += '|';
+                        Result += '|';
                     }
                 }
-                result += '\n';
+                Result += '\n';
             }
-            return result;
+            return Result;
         }
     }
 }

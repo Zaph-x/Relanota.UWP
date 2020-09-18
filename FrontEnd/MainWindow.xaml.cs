@@ -414,20 +414,23 @@ namespace FrontEnd
                 currentSelectedNote.HasChanges = true;
 
             // Macro handling
-            Match match = Regex.Match(NoteContentBox.Text, @"\\grid\{\s*(\d+)\s*,\s*(\d+)\s*(,\s*(\d+)\s*)?\}");
+            Match match = Regex.Match(NoteContentBox.Text, @"[^`]\\grid\{\s*(\d+)\s*,\s*(\d+)\s*(,\s*(\d+)\s*)?(,\s*(\d+))?\}");
             if (match.Success)
             {
                 Core.Macros.Grid grid = null;
-                if (!string.IsNullOrEmpty(match.Groups[3].Value))
-                    grid = new Core.Macros.Grid(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), int.Parse(match.Groups[4].Value));
+                if (!string.IsNullOrEmpty(match.Groups[5].Value))
+                    grid = new Core.Macros.Grid(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), int.Parse(match.Groups[4].Value), int.Parse(match.Groups[6].Value));
+                else if (!string.IsNullOrEmpty(match.Groups[3].Value))
+                    grid = new Core.Macros.Grid(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), int.Parse(match.Groups[4].Value), int.Parse(match.Groups[4].Value));
                 else
-                    grid = new Core.Macros.Grid(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), 3);
+                    grid = new Core.Macros.Grid(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), 3, 3);
+
 
                 NoteContentBox.Text = NoteContentBox.Text.Replace(match.Value, "\n" + grid.WriteComponent());
                 NoteContentBox.CaretIndex = NoteContentBox.Text.Length;
                 return;
             }
-            match = Regex.Match(NoteContentBox.Text, @"\\pagebreak");
+            match = Regex.Match(NoteContentBox.Text, @"[^`]\\pagebreak");
             if (match.Success)
             {
                 NoteContentBox.Text = NoteContentBox.Text.Replace(match.Value, "\n" + "-".Repeat(60) + "\n");
