@@ -36,7 +36,8 @@ namespace FrontEnd
                     .Any(t => t.Name.ToLower() == tag.Name.ToLower()))
                 .ToList();
             InitializeComponent();
-            this.Title = $"Notes related to '{tag.Name}'";
+            this.Title = $"Related notes";
+            this.InfoText.Text = $"Notes related to '{tag.Name}' 📜";
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             NoteList.ItemsSource = new ObservableCollection<Note>(Notes);
             CollectionViewSource.GetDefaultView(NoteList.ItemsSource).Refresh();

@@ -13,8 +13,8 @@
             <RowDefinition/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <emoji:TextBlock Grid.Row="0" Text="Related Notes 📜"/>
-        <ListBox x:Name="NoteList" Grid.Row="1" MinWidth="300"
+        <emoji:TextBlock Grid.Row="0" x:Name="InfoText" Text="Related Notes 📜" Margin="3"/>
+        <ListBox x:Name="NoteList" Grid.Row="1" MinWidth="300" Margin="3"
                  Width="Auto"
                  ItemsSource="{Binding Notes}"
                  MouseDoubleClick="NoteList_DoubleClickNote"
