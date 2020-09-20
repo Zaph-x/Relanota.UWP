@@ -12,6 +12,10 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition  Height="Auto"/>
             <RowDefinition  Height="Auto"/>
+            <RowDefinition  Height="Auto"/>
+            <RowDefinition  Height="Auto"/>
+            <RowDefinition  Height="Auto"/>
+            <RowDefinition  Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -29,7 +33,22 @@
         <emoji:TextBlock Text="💻 Use dev channel" Grid.Column="0" Grid.Row="1" Margin="3"/>
         <CheckBox Margin="3" Grid.Column="1" Grid.Row="1" x:Name="DevCheck"/>
 
-        <Button Grid.Row="4" Grid.Column="0" Margin="3" Click="Button_Click">
+        <emoji:TextBlock Text="↔ Use space instead of tab" Grid.Column="0" Grid.Row="2" Margin="3"/>
+        <CheckBox Margin="3" Grid.Column="1" Grid.Row="2" x:Name="TabCheck"/>
+
+        <emoji:TextBlock Grid.Column="0" Grid.Row="3" Text="⏩ Tab size" Margin="3"/>
+        <ComboBox Grid.Column="1" Grid.Row="3"  Margin="3" MinWidth="250" x:Name="TabSizePicker" SelectedValuePath="Content">
+            <ComboBoxItem Content="1"/>
+            <ComboBoxItem Content="2"/>
+            <ComboBoxItem Content="3"/>
+            <ComboBoxItem Content="4"/>
+            <ComboBoxItem Content="5"/>
+            <ComboBoxItem Content="6"/>
+            <ComboBoxItem Content="7"/>
+            <ComboBoxItem Content="8"/>
+        </ComboBox>
+
+        <Button Grid.Row="7" Grid.Column="0" Margin="3" Click="Button_Click">
             <emoji:TextBlock Text="💾 Save"></emoji:TextBlock>
         </Button>
     </Grid>
