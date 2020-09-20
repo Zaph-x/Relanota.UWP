@@ -7,11 +7,14 @@
         xmlns:local="clr-namespace:FrontEnd" 
         mc:Ignorable="d" 
         Title="Relanote" Height="600" Width="900" WindowStyle="None" 
-        AllowsTransparency="True" 
-        MouseLeftButtonDown="DragRectangle_MouseLeftButtonDown" 
-        MouseLeftButtonUp="DragRectangle_MouseLeftButtonUp" 
-        MouseMove="DragRectangle_MouseMove"
+        ResizeMode="CanResizeWithGrip"
+        AllowsTransparency="True"
         SizeChanged="MainWindow_OnSizeChanged">
+    <!--<WindowChrome.WindowChrome>
+        <WindowChrome 
+            CaptionHeight="0"
+            ResizeBorderThickness="5" />
+    </WindowChrome.WindowChrome>-->
     <Window.Resources>
         <Grid x:Key="CloseButtonGraphic">
             <Path StrokeThickness="0.7" StrokeDashCap="Flat" StrokeDashOffset="0" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat" StrokeLineJoin="Miter" StrokeMiterLimit="10" Stroke="#FF000000" Height="12" Stretch="Fill" Width="12">
@@ -77,7 +80,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <emoji:TextBlock Text="Relanote ✏" Grid.Column="0" Margin="5,3" TextAlignment="Center" VerticalAlignment="Center"/>
-                <Button Grid.Column="2" Padding="0" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center" Width="40" Height="27" Click="SettingsButton_Click">
+                <Button Grid.Column="2" WindowChrome.IsHitTestVisibleInChrome="True" Padding="0" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center" Width="40" Height="27" Click="SettingsButton_Click">
                     <Button.Style>
                         <Style TargetType="{x:Type Button}">
                             <Setter Property="Border.BorderBrush" Value="Transparent" />
@@ -101,7 +104,7 @@
                     </Button.Style>
                     <emoji:TextBlock Text="⚙" Padding="0" Margin="0" Height="20" TextAlignment="Center" />
                 </Button>
-                <Button Grid.Column="3" Padding="0" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center" Width="50" Height="27" Content="{StaticResource HideButtonGraphic}" Click="Button_Click">
+                <Button Grid.Column="3" WindowChrome.IsHitTestVisibleInChrome="True" Padding="0" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center" Width="50" Height="27" Content="{StaticResource HideButtonGraphic}" Click="Button_Click">
                     <Button.Style>
                         <Style TargetType="{x:Type Button}">
                             <Setter Property="Border.BorderBrush" Value="Transparent" />
@@ -124,7 +127,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button x:Name="SizeChangeButton" Grid.Column="4" Padding="0" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center"  Width="50" Height="27" Content="{StaticResource MaximizeButtonGraphic}" Click="SizeChangeButton_Click">
+                <Button x:Name="SizeChangeButton" WindowChrome.IsHitTestVisibleInChrome="True" Grid.Column="4" Padding="0" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center"  Width="50" Height="27" Content="{StaticResource MaximizeButtonGraphic}" Click="SizeChangeButton_Click">
                     <Button.Style>
                         <Style TargetType="{x:Type Button}">
                             <Setter Property="Border.BorderBrush" Value="Transparent" />
@@ -147,7 +150,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Grid.Column="5" Padding="0" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center" Width="50" Height="27" Click="CloseButton_Click" Content="{StaticResource CloseButtonGraphic}">
+                <Button Grid.Column="5" Padding="0" WindowChrome.IsHitTestVisibleInChrome="True" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center" Width="50" Height="27" Click="CloseButton_Click" Content="{StaticResource CloseButtonGraphic}">
                     <Button.Style>
                         <Style TargetType="{x:Type Button}">
                             <Setter Property="Border.BorderBrush" Value="Transparent" />
