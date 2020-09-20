@@ -76,8 +76,8 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <emoji:TextBlock Text="Relanote ✏" Grid.Column="0" Margin="5,3" />
-                <Button Grid.Column="2" Padding="0" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center" Width="40" Click="SettingsButton_Click">
+                <emoji:TextBlock Text="Relanote ✏" Grid.Column="0" Margin="5,3" TextAlignment="Center" VerticalAlignment="Center"/>
+                <Button Grid.Column="2" Padding="0" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center" Width="40" Height="27" Click="SettingsButton_Click">
                     <Button.Style>
                         <Style TargetType="{x:Type Button}">
                             <Setter Property="Border.BorderBrush" Value="Transparent" />
@@ -101,7 +101,7 @@
                     </Button.Style>
                     <emoji:TextBlock Text="⚙" Padding="0" Margin="0" Height="20" TextAlignment="Center" />
                 </Button>
-                <Button Grid.Column="3" Padding="0" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center" Width="50" Height="22" Content="{StaticResource HideButtonGraphic}" Click="Button_Click">
+                <Button Grid.Column="3" Padding="0" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center" Width="50" Height="27" Content="{StaticResource HideButtonGraphic}" Click="Button_Click">
                     <Button.Style>
                         <Style TargetType="{x:Type Button}">
                             <Setter Property="Border.BorderBrush" Value="Transparent" />
@@ -124,7 +124,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button x:Name="SizeChangeButton" Grid.Column="4" Padding="0" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center"  Width="50" Height="22" Content="{StaticResource MaximizeButtonGraphic}" Click="SizeChangeButton_Click">
+                <Button x:Name="SizeChangeButton" Grid.Column="4" Padding="0" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center"  Width="50" Height="27" Content="{StaticResource MaximizeButtonGraphic}" Click="SizeChangeButton_Click">
                     <Button.Style>
                         <Style TargetType="{x:Type Button}">
                             <Setter Property="Border.BorderBrush" Value="Transparent" />
@@ -147,7 +147,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Grid.Column="5" Padding="0" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center" Width="50" Height="22" Click="CloseButton_Click" Content="{StaticResource CloseButtonGraphic}">
+                <Button Grid.Column="5" Padding="0" Margin="0" VerticalContentAlignment="Center" VerticalAlignment="Center" Width="50" Height="27" Click="CloseButton_Click" Content="{StaticResource CloseButtonGraphic}">
                     <Button.Style>
                         <Style TargetType="{x:Type Button}">
                             <Setter Property="Border.BorderBrush" Value="Transparent" />
