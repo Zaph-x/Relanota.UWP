@@ -409,7 +409,7 @@ namespace FrontEnd
                 if (NoteContentBox.Text.Split(Environment.NewLine).Any())
                 {
                     
-                    Match match = Regex.Match(NoteContentBox.Text.Split(Environment.NewLine)[y], @"\s*[-*>+]\s");
+                    Match match = Regex.Match(NoteContentBox.Text.Split(Environment.NewLine)[y], @"^\s*[-*>+]\s");
 
                     if (match.Success && x >= match.Index + match.Length)
                     {
