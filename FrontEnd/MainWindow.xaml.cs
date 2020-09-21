@@ -408,7 +408,7 @@ namespace FrontEnd
             {
                 if (NoteContentBox.Text.Split(Environment.NewLine).Any())
                 {
-                    
+
                     Match match = Regex.Match(NoteContentBox.Text.Split(Environment.NewLine)[y], @"^\s*[-*>+]\s");
 
                     if (match.Success && x >= match.Index + match.Length)
@@ -416,7 +416,20 @@ namespace FrontEnd
                         NoteContentBox.Text = NoteContentBox.Text.Insert(NoteContentBox.CaretIndex, $"{Environment.NewLine}{match.Value}");
                         NoteContentBox.CaretIndex = selectionStart + match.Index + match.Length + Environment.NewLine.Length;
                         e.Handled = true;
+                        return;
                     }
+                    match = Regex.Match(NoteContentBox.Text.Split(Environment.NewLine)[y], @"^\s*([1-9][0-9]*)\.\s");
+                    if (match.Success && x >= match.Index + match.Length)
+                    {
+                        int newValue = int.Parse(match.Groups[1].Value) + 1;
+                        NoteContentBox.Text = NoteContentBox.Text.Insert(NoteContentBox.CaretIndex,
+                            $"{Environment.NewLine}{match.Value.Replace(match.Groups[1].Value, newValue.ToString())}");
+                        NoteContentBox.CaretIndex = selectionStart + match.Index + match.Length 
+                                                    + Environment.NewLine.Length + (newValue.ToString().Length > (newValue - 1).ToString().Length ? 1 : 0);
+                        e.Handled = true;
+                        return;
+                    }
+
                 }
             }
         }
