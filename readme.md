@@ -2,6 +2,8 @@
 
 Relanote is a note taking app, with simplistic UI without distractions, so that you can take your best notes.
 
+Want to contribute? See the [contribution guidelines](./contributing.md).
+
 ## Notes are related
 
 Sometimes it can be hard to manage notes that are related to each other.

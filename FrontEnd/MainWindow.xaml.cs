@@ -17,6 +17,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Shell;
 using Core.Objects;
 using Core.SqlHelper;
 using Microsoft.EntityFrameworkCore;
@@ -38,29 +39,6 @@ namespace FrontEnd
         private ICollectionView _noteListView;
         private ICollectionView _tagListView;
 
-        private bool _isMouseDown = false;
-
-        private void DragRectangle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            _isMouseDown = true;
-            this.DragMove();
-        }
-
-        private void DragRectangle_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            _isMouseDown = false;
-        }
-
-        private void DragRectangle_MouseMove(object sender, MouseEventArgs e)
-        {
-            // if we are dragging and Maximized, retore window
-            if (_isMouseDown && this.WindowState == System.Windows.WindowState.Maximized)
-            {
-                _isMouseDown = false;
-                this.WindowState = System.Windows.WindowState.Normal;
-            }
-        }
-
         public MainWindow()
         {
             this.MaxHeight = SystemParameters.WorkArea.Height + 12;
@@ -68,6 +46,8 @@ namespace FrontEnd
             InitializeComponent();
             this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             context.Database.EnsureCreated();
+            WindowChrome chrome = new WindowChrome();
+            WindowChrome.SetWindowChrome(this, chrome);
             context.Notes.Load();
             NoteList.ItemsSource = context.Notes.Local.ToObservableCollection();
             NoteList.Items.SortDescriptions.Add(
@@ -428,15 +408,28 @@ namespace FrontEnd
             {
                 if (NoteContentBox.Text.Split(Environment.NewLine).Any())
                 {
-                    
-                    Match match = Regex.Match(NoteContentBox.Text.Split(Environment.NewLine)[y], @"\s*[-*>+]\s");
+
+                    Match match = Regex.Match(NoteContentBox.Text.Split(Environment.NewLine)[y], @"^\s*[-*>+]\s");
 
                     if (match.Success && x >= match.Index + match.Length)
                     {
                         NoteContentBox.Text = NoteContentBox.Text.Insert(NoteContentBox.CaretIndex, $"{Environment.NewLine}{match.Value}");
                         NoteContentBox.CaretIndex = selectionStart + match.Index + match.Length + Environment.NewLine.Length;
                         e.Handled = true;
+                        return;
                     }
+                    match = Regex.Match(NoteContentBox.Text.Split(Environment.NewLine)[y], @"^\s*([1-9][0-9]*)\.\s");
+                    if (match.Success && x >= match.Index + match.Length)
+                    {
+                        int newValue = int.Parse(match.Groups[1].Value) + 1;
+                        NoteContentBox.Text = NoteContentBox.Text.Insert(NoteContentBox.CaretIndex,
+                            $"{Environment.NewLine}{match.Value.Replace(match.Groups[1].Value, newValue.ToString())}");
+                        NoteContentBox.CaretIndex = selectionStart + match.Index + match.Length 
+                                                    + Environment.NewLine.Length + (newValue.ToString().Length > (newValue - 1).ToString().Length ? 1 : 0);
+                        e.Handled = true;
+                        return;
+                    }
+
                 }
             }
         }
@@ -509,27 +502,6 @@ namespace FrontEnd
                 };
             };
         }
-        public static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
-        {
-            if (depObj != null)
-            {
-                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
-                {
-                    DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
-
-                    if (child != null && child is T)
-
-                    {
-                        yield return (T)child;
-                    }
-
-                    foreach (T childOfChild in FindVisualChildren<T>(child))
-                    {
-                        yield return childOfChild;
-                    }
-                }
-            }
-        }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
@@ -559,7 +531,6 @@ namespace FrontEnd
             {
                 SizeChangeButton.Content = this.Resources["MaximizeButtonGraphic"] as Grid;
                 Border.Margin = new Thickness(0);
-
             }
         }
 
