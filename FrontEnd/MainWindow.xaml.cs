@@ -424,18 +424,19 @@ namespace FrontEnd
                         int newValue = int.Parse(match.Groups[1].Value) + 1;
                         NoteContentBox.Text = NoteContentBox.Text.Insert(NoteContentBox.CaretIndex,
                             $"{Environment.NewLine}{match.Value.Replace(match.Groups[1].Value, newValue.ToString())}");
-                        NoteContentBox.CaretIndex = selectionStart + match.Index + match.Length 
+                        NoteContentBox.CaretIndex = selectionStart + match.Index + match.Length
                                                     + Environment.NewLine.Length + (newValue.ToString().Length > (newValue - 1).ToString().Length ? 1 : 0);
                         e.Handled = true;
                         return;
                     }
-
                 }
             }
         }
 
         private void NoteContentBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            int currCaretIndex = NoteContentBox.CaretIndex;
+
             if (currentSelectedNote != null)
                 currentSelectedNote.HasChanges = true;
 
@@ -461,6 +462,16 @@ namespace FrontEnd
             {
                 NoteContentBox.Text = NoteContentBox.Text.Replace(match.Value, Environment.NewLine + "-".Repeat(60) + Environment.NewLine);
                 NoteContentBox.CaretIndex = NoteContentBox.Text.Length;
+                return;
+            }
+            match = Regex.Match(NoteContentBox.Text, @"\{\{([^\r\n]+)\}\}\s");
+            if (match.Success)
+            {
+                if (currentSelectedNote == null) return;
+                currentSelectedNote.CheckInlineTags(match, NoteContentBox, context, currCaretIndex);
+                SaveNote();
+                TagList.ItemsSource = currentSelectedNote.NoteTags.Select(nt => nt.Tag);
+                CollectionViewSource.GetDefaultView(TagList.ItemsSource).Refresh();
                 return;
             }
 

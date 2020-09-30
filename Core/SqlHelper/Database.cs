@@ -39,9 +39,21 @@ namespace Core.SqlHelper
                 .HasForeignKey(nt => nt.TagKey);
 
         }
+
+        public void TryGetTag(string tagName, out Tag tag)
+        {
+            tag = Tags.FirstOrDefault(t => t.Name.ToLower() == tagName.ToLower()) ?? new Tag() { Name = tagName };
+        }
+
+        public void TryGetNoteTag(Note note, Tag tag, out NoteTag noteTag)
+        {
+            noteTag = NoteTags.FirstOrDefault(nt => nt.Note.Name.ToLower() == note.Name.ToLower() && nt.Tag.Name.ToLower() == tag.Name.ToLower()) 
+                      ?? new NoteTag() { Note = note, Tag = tag };
+        }
     }
 
-    public static class DbHelper {
+    public static class DbHelper
+    {
         public static void TryUpdateManyToMany<T, TKey>(this DbContext db, IEnumerable<T> currentItems, IEnumerable<T> newItems, Func<T, TKey> getKey) where T : class
         {
             db.Set<T>().RemoveRange(currentItems.Except(newItems, getKey));
