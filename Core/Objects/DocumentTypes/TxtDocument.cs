@@ -2,50 +2,55 @@ using System;
 using Core.Interfaces;
 using Core.ExtensionClasses;
 using System.Collections.Generic;
+using System.Linq;
+using System.IO;
 
 namespace Core.Objects.DocumentTypes
 {
     public class TxtDocument : IDocumentType
     {
-        public List<Note> Note { get; set; }
+        public List<Note> Notes { get; set; }
+
+        public string FileExtension => ".txt";
 
         public TxtDocument(List<Note> notes)
         {
-            
+            Notes = notes;
         }
 
         public string ConvertContent(string content)
         {
-            throw new NotImplementedException();
+            return $"Content:{Environment.NewLine}{content}";
         }
 
-        public string ConvertNote(Note note)
+        public string ConvertNotes()
         {
-            string convertedNote = "";
-
-            convertedNote += ConvertTitle(note.Name);
-
-
-            return convertedNote;
+            return string.Join("", Notes.Select(note => ConvertNote(note)));
         }
 
         public string ConvertTags(List<NoteTag> noteTags)
         {
-            throw new NotImplementedException();
+            return $"Tags: {string.Join(", ", noteTags.Select(noteTag => noteTag.Tag.Name))}{Environment.NewLine.Repeat(3)}";
         }
 
         public string ConvertTitle(string title)
         {
-            string convertedNote = "";
-            convertedNote += "#".Repeat(4+title.Length) + Environment.NewLine;
-            convertedNote += $"# {title} #" + Environment.NewLine;
-            convertedNote += "#".Repeat(4+title.Length) + Environment.NewLine;
-            return convertedNote;
+            return $"{"#".Repeat(4 + title.Length)}{Environment.NewLine}# {title} #{Environment.NewLine}{"#".Repeat(4 + title.Length)}{Environment.NewLine}";
         }
 
-        public void Export(string filePath)
+
+
+        public string ConvertNote(Note note)
         {
-            throw new System.NotImplementedException();
+            return $"{ConvertTitle(note.Name)}{ConvertTags(note.NoteTags)}{ConvertContent(note.Content)}";
+        }
+
+        public void Export(Stream stream)
+        {
+            using (StreamWriter writer = new StreamWriter(stream))
+            {
+                writer.Write(ConvertNotes());
+            }
         }
     }
 }
