@@ -20,7 +20,7 @@ namespace Core.Objects.DocumentTypes
 
         public string ConvertContent(string content)
         {
-            return $"Content:{Environment.NewLine}{content}";
+            return $"Content:{Environment.NewLine}{content}{Environment.NewLine.Repeat(2)}";
         }
 
         public string ConvertNotes()
