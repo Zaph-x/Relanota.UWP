@@ -7,6 +7,6 @@ namespace Core.Objects
     {
         public int Key {get;set;}
         public string Name {get;set;}
-        public List<NoteTag> NoteTags {get;set;}
+        public List<NoteTag> NoteTags {get;set;} = new List<NoteTag>();
     }
 }
