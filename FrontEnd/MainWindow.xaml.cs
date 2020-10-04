@@ -22,6 +22,7 @@ using Core.Objects;
 using Core.SqlHelper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
+using Core.ExtensionClasses;
 
 namespace FrontEnd
 {
@@ -557,24 +558,11 @@ namespace FrontEnd
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            SettingsWindow sw = new SettingsWindow(configuration);
+            SettingsWindow sw = new SettingsWindow(configuration, context);
             sw.ShowDialog();
 
             NoteContentBox.FontFamily = new FontFamily(configuration.AppSettings.Settings["DefaultFont"].Value);
             tabsize = byte.Parse(configuration.AppSettings.Settings["TabSize"].Value);
-        }
-    }
-
-    public static class Extensions
-    {
-        public static string Repeat(this string str, int times)
-        {
-            string newString = str;
-            for (int i = 0; i < times; i++)
-            {
-                newString += str;
-            }
-            return newString;
         }
     }
 }
