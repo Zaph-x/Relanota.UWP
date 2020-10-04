@@ -558,7 +558,7 @@ namespace FrontEnd
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            SettingsWindow sw = new SettingsWindow(configuration);
+            SettingsWindow sw = new SettingsWindow(configuration, context);
             sw.ShowDialog();
 
             NoteContentBox.FontFamily = new FontFamily(configuration.AppSettings.Settings["DefaultFont"].Value);
