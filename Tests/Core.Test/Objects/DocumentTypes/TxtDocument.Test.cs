@@ -54,7 +54,7 @@ Maybe even tags" };
         [Test]
         public void Test_ConvertContent_ShouldConvertNoteContent()
         {
-            string expected = $"Content:{Environment.NewLine}This is a note{Environment.NewLine}It is multiline.{Environment.NewLine}It contains some text{Environment.NewLine}Maybe even tags";
+            string expected = $"Content:{Environment.NewLine}This is a note{Environment.NewLine}It is multiline.{Environment.NewLine}It contains some text{Environment.NewLine}Maybe even tags{Environment.NewLine.Repeat(2)}";
             string actual = doc.ConvertContent(note.Content);
 
             Assert.AreEqual(expected, actual, "Content was not converted correctly.");
@@ -65,7 +65,7 @@ Maybe even tags" };
         {
             string expected = $"################{Environment.NewLine}# My cool Note #{Environment.NewLine}################{Environment.NewLine}";
             expected += $"Tags: Test Tag, Other tag{Environment.NewLine.Repeat(3)}";
-            expected += $"Content:{Environment.NewLine}This is a note{Environment.NewLine}It is multiline.{Environment.NewLine}It contains some text{Environment.NewLine}Maybe even tags";
+            expected += $"Content:{Environment.NewLine}This is a note{Environment.NewLine}It is multiline.{Environment.NewLine}It contains some text{Environment.NewLine}Maybe even tags{Environment.NewLine.Repeat(2)}";
 
             string actual = doc.ConvertNote(note);
 
@@ -78,7 +78,7 @@ Maybe even tags" };
 
             string expected = $"################{Environment.NewLine}# My cool Note #{Environment.NewLine}################{Environment.NewLine}";
             expected += $"Tags: Test Tag, Other tag{Environment.NewLine.Repeat(3)}";
-            expected += $"Content:{Environment.NewLine}This is a note{Environment.NewLine}It is multiline.{Environment.NewLine}It contains some text{Environment.NewLine}Maybe even tags";
+            expected += $"Content:{Environment.NewLine}This is a note{Environment.NewLine}It is multiline.{Environment.NewLine}It contains some text{Environment.NewLine}Maybe even tags{Environment.NewLine.Repeat(2)}";
 
             using (MemoryStream memStream = new MemoryStream())
             {
