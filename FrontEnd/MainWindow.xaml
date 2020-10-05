@@ -15,6 +15,14 @@
             CaptionHeight="0"
             ResizeBorderThickness="5" />
     </WindowChrome.WindowChrome>-->
+    <Window.CommandBindings>
+        <CommandBinding Command="Save" Executed="SaveButton_Click"/>
+        <CommandBinding Command="Delete" Executed="DeleteButton_Click"/>
+    </Window.CommandBindings>
+    <Window.InputBindings>
+        <KeyBinding Command="Save" Key="S" Modifiers="Ctrl"></KeyBinding>
+        <KeyBinding Command="Delete" Key="D" Modifiers="Ctrl"></KeyBinding>
+    </Window.InputBindings>
     <Window.Resources>
         <Grid x:Key="CloseButtonGraphic">
             <Path StrokeThickness="0.7" StrokeDashCap="Flat" StrokeDashOffset="0" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat" StrokeLineJoin="Miter" StrokeMiterLimit="10" Stroke="#FF000000" Height="12" Stretch="Fill" Width="12">
