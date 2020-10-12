@@ -469,7 +469,10 @@ namespace FrontEnd
             if (match.Success)
             {
                 if (currentSelectedNote == null) return;
-                currentSelectedNote.CheckInlineTags(match, NoteContentBox, context, currCaretIndex);
+                currentSelectedNote.CheckInlineTags(match, context);
+                NoteContentBox.Text = NoteContentBox.Text.Replace(match.Value, match.Groups[1].Value + " ");
+                NoteContentBox.CaretIndex = currCaretIndex == 0 ? NoteContentBox.Text.Length : currCaretIndex - 4;
+                
                 SaveNote();
                 TagList.ItemsSource = currentSelectedNote.NoteTags.Select(nt => nt.Tag);
                 CollectionViewSource.GetDefaultView(TagList.ItemsSource).Refresh();
