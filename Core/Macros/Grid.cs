@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace Core.Macros
@@ -40,7 +41,7 @@ namespace Core.Macros
                         Result += '|';
                     }
                 }
-                Result += '\n';
+                Result += Environment.NewLine;
             }
             return Result;
         }

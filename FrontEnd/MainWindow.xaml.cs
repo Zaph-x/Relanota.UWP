@@ -60,6 +60,7 @@ namespace FrontEnd
 
 
             NoteContentBox.FontFamily = new FontFamily(ConfigurationManager.AppSettings["DefaultFont"]);
+            Console.WriteLine($"{AppContext.BaseDirectory}");
 
         }
 
@@ -396,6 +397,9 @@ namespace FrontEnd
             int selectionStart = NoteContentBox.SelectionStart;
             int y = NoteContentBox.GetLineIndexFromCharacterIndex(selectionStart);
             int x = selectionStart - NoteContentBox.GetCharacterIndexFromLineIndex(y);
+            #if DEBUG
+            Console.WriteLine($"k:{e.Key} x:{x} y:{y}");
+            #endif
 
             if (e.Key == Key.Tab && bool.Parse(configuration.AppSettings.Settings["TabToSpace"].Value))
             {
@@ -409,8 +413,8 @@ namespace FrontEnd
             {
                 if (NoteContentBox.Text.Split(Environment.NewLine).Any())
                 {
-
-                    Match match = Regex.Match(NoteContentBox.Text.Split(Environment.NewLine)[y], @"^\s*[-*>+]\s");
+                    string[] lines = NoteContentBox.Text.Split(Environment.NewLine);
+                    Match match = Regex.Match(lines[y], @"^\s*[-*>+]\s");
 
                     if (match.Success && x >= match.Index + match.Length)
                     {
