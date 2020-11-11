@@ -13,26 +13,38 @@
             <ColumnDefinition/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition/>
-            <RowDefinition Height="auto"/>
-        </Grid.RowDefinitions>
-        <ListView x:Name="TagsListView" Grid.Row="0" Grid.Column="0">
-            <ListView.ItemTemplate>
-                <DataTemplate x:DataType="objects:Tag">
-                    <TextBlock Text="{Binding Name}" Grid.ColumnSpan="4"/>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-        <StackPanel Orientation="Horizontal">
-            <Grid Grid.Row="1" Grid.Column="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                </Grid.RowDefinitions>
-                <TextBox Grid.Row="0" PlaceholderText="Tag Name"/>
-                <TextBox Grid.Row="1" AcceptsReturn="True" PlaceholderText="Tag Description"/>
+        <StackPanel Grid.Column="0">
+            <Grid Grid.Row="0" Grid.Column="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBox Grid.Row="0" PlaceholderText="Tag Name" HorizontalAlignment="Stretch"/>
+                    <TextBox Grid.Row="1" AcceptsReturn="True" PlaceholderText="Tag Description" HorizontalAlignment="Stretch" Height="80" MaxHeight="80"/>
+                </Grid>
+                <Button Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" FontFamily="Segoe MDL2 Assets" Content="&#xE74E;"/>
             </Grid>
+            <ListView ItemContainerStyle="{StaticResource ListViewItemContainerStyle}" x:Name="TagsListView" Grid.Row="1" Grid.Column="0">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="objects:Tag">
+                        <Grid>
+                            <StackPanel HorizontalAlignment="Left">
+                                <TextBlock FontWeight="SemiBold" Text="{Binding Name}"/>
+                                <TextBlock Foreground="#444" Text="{Binding Description}"/>
+                            </StackPanel>
+                            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <Button FontFamily="Segoe MDL2 Assets" Content="&#xE70F;" VerticalAlignment="Stretch" Background="Transparent" Tag="{Binding}"/>
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            
         </StackPanel>
     </Grid>
 </Page>

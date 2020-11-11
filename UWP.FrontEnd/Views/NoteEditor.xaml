@@ -65,8 +65,7 @@ FontFamily="Segoe MDL2 Assets"/>
             </Grid>
 
             <ScrollViewer Grid.Column="3" VerticalScrollBarVisibility="Auto">
-                <controls:MarkdownTextBlock  
-                                            Grid.Row="3" 
+                <controls:MarkdownTextBlock Grid.Row="3" 
                                             x:Name="RenderBlock"
                                             Padding="10"
                                             CodeBackground="#dfdfdf"

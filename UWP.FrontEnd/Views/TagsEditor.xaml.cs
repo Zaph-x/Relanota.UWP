@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Core.Objects;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,9 +23,16 @@ namespace UWP.FrontEnd.Views
     /// </summary>
     public sealed partial class TagsEditor : Page
     {
+        Tag CurrentTag { get; set; } = null;
         public TagsEditor()
         {
             this.InitializeComponent();
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            TagsListView.ItemsSource = MainPage.CurrentNote?.NoteTags.Select(nt => nt.Tag) ?? new List<Tag>();
         }
     }
 }

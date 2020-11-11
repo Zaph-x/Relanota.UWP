@@ -5,8 +5,9 @@ namespace Core.Objects
 {
     public class Tag
     {
-        public int Key {get;set;}
-        public string Name {get;set;}
-        public List<NoteTag> NoteTags {get;set;} = new List<NoteTag>();
+        public int Key { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public List<NoteTag> NoteTags { get; set; } = new List<NoteTag>();
     }
 }

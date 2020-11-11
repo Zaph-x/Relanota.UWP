@@ -41,12 +41,14 @@ namespace UWP.FrontEnd.Views
             MainPage.context.Tags.Load();
             NotesListView.ItemsSource = MainPage.context.Notes.Local.ToObservableCollection();
             TagsListView.ItemsSource = MainPage.context.Tags.Local.ToObservableCollection();
+            MainPage.Get.SetDividerNoteName("No Note Selected");
         }
 
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
             Note note = (sender as FrameworkElement).Tag as Note;
             note = MainPage.context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
+            MainPage.CurrentNote = note;
             this.Frame.Navigate(typeof(NoteEditor), note);
         }
     }

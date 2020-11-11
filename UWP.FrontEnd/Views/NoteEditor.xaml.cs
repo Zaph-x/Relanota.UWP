@@ -31,7 +31,6 @@ namespace UWP.FrontEnd.Views
     /// </summary>
     public sealed partial class NoteEditor : Page
     {
-        Note Note { get; set; } = null;
         public NoteEditor()
         {
 
@@ -40,17 +39,13 @@ namespace UWP.FrontEnd.Views
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             MainPage.Get.SetNavigationIndex(3);
-            if (e.Parameter != null)
+            if (MainPage.CurrentNote != null)
             {
-                Note = e.Parameter as Note;
-                EditorTextBox.Text = Note.Content;
-                RenderBlock.Text = Note.Content;
-                NoteNameTextBox.Text = Note.Name;
-                MainPage.Get.SetDividerNoteName(Note.Name);
-            }
-            else
-            {
-                Note = null;
+                EditorTextBox.Text = MainPage.CurrentNote.Content;
+                RenderBlock.Text = MainPage.CurrentNote.Content;
+                NoteNameTextBox.Text = MainPage.CurrentNote.Name;
+                MainPage.CurrentNote = MainPage.CurrentNote;
+                MainPage.Get.SetDividerNoteName(MainPage.CurrentNote.Name);
             }
         }
 
@@ -71,15 +66,15 @@ namespace UWP.FrontEnd.Views
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            if (Note == null)
+            if (MainPage.CurrentNote == null)
             {
-                Note = new Note() { Content = EditorTextBox.Text, Name = NoteNameTextBox.Text };
-                MainPage.context.Add(Note);
+                MainPage.CurrentNote = new Note() { Content = EditorTextBox.Text, Name = NoteNameTextBox.Text };
+                MainPage.context.Add(MainPage.CurrentNote);
                 MainPage.context.SaveChangesAsync();
             }
             else
             {
-                Note.Update(EditorTextBox.Text, NoteNameTextBox.Text, MainPage.context);
+                MainPage.CurrentNote.Update(EditorTextBox.Text, NoteNameTextBox.Text, MainPage.context);
             }
         }
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
