@@ -1,0 +1,35 @@
+﻿<Page
+    x:Class="UWP.FrontEnd.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:UWP.FrontEnd"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid>
+        <NavigationView
+            PaneTitle="Relanote"
+            IsTabStop="False"
+            IsBackButtonVisible="Collapsed"
+            IsBackEnabled="False" 
+            ItemInvoked="NavigationView_ItemInvoked"
+            x:Name="NavigationView"
+            >
+            <NavigationView.MenuItems>
+                <NavigationViewItem Icon="List" x:Uid="NotesNavItem" Content="Notes" Tag="list"/>
+                <NavigationViewItemSeparator/>
+                <NavigationViewItemHeader x:Name="NoteName" Content="New Note"/>
+                <NavigationViewItem x:Uid="EditorNavItem" Icon="Edit" Content="Editor" Tag="edit"/>
+                <NavigationViewItem x:Uid="TagsNavItem" Icon="Tag" Content="Tags" Tag="tags"/>
+                <NavigationViewItem x:Uid="ExportNavItem" Icon="Download" Content="Save Notes to File" Tag="export"/>
+                <NavigationViewItem x:Uid="HelpNavItem" Icon="Help" Content="Help" Tag="help"/>
+            </NavigationView.MenuItems>
+            
+            <NavigationView.AutoSuggestBox>
+                <AutoSuggestBox x:Name="SearchBox" QueryIcon="Find" FocusEngaged="SearchBox_FocusEngaged" />
+            </NavigationView.AutoSuggestBox>
+            <Frame x:Name="ContentFrame"  HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+        </NavigationView>
+    </Grid>
+</Page>
