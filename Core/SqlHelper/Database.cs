@@ -11,10 +11,11 @@ namespace Core.SqlHelper
         public DbSet<Note> Notes { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<NoteTag> NoteTags { get; set; }
+        public static string path = ".";
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            options.UseSqlite("Data Source=notes.db");
+            options.UseSqlite($"Data Source={path}/notes.db");
             base.OnConfiguring(options);
         }
 
