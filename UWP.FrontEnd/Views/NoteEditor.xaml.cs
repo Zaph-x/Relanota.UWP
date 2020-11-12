@@ -1,14 +1,22 @@
 ﻿using Core.Objects;
+using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Graphics.Imaging;
+using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
@@ -36,6 +44,34 @@ namespace UWP.FrontEnd.Views
 
             this.InitializeComponent();
         }
+
+        public async Task SaveImageToFileAsync(string fileName, string path, Uri uri)
+        {
+            using (var http = new HttpClient())
+            {
+
+                var response = await http.GetAsync(uri);
+                response.EnsureSuccessStatusCode();
+                var fileInfo = new FileInfo($"{path}\\{fileName}.jpg");
+                StorageFolder storageFolder = await StorageFolder.GetFolderFromPathAsync(path);
+                StorageFile storageFile = await storageFolder.CreateFileAsync($"{fileName}.jpg");
+
+                if (storageFile == null)
+                    return;
+
+                using (var ms = await response.Content.ReadAsStreamAsync())
+                {
+                    using (FileStream fs = File.Create(fileInfo.FullName))
+                    {
+                        ms.Seek(0, SeekOrigin.Begin);
+                        ms.CopyTo(fs);
+                    }
+
+                }
+            }
+
+        }
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             MainPage.Get.SetNavigationIndex(3);
@@ -47,11 +83,12 @@ namespace UWP.FrontEnd.Views
                 MainPage.CurrentNote = MainPage.CurrentNote;
                 MainPage.Get.SetDividerNoteName(MainPage.CurrentNote.Name);
             }
+            NoteEditorTextBox_TextChanged(this.EditorTextBox, null);
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            
+
         }
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -61,7 +98,27 @@ namespace UWP.FrontEnd.Views
 
         private void NoteEditorTextBox_TextChanged(object sender, RoutedEventArgs e)
         {
-            RenderBlock.Text = ((TextBox)sender).Text;
+            string text = ((TextBox)sender).Text;
+            MatchCollection matches = Regex.Matches(text, @"\$(.+?)\$");
+            foreach (Match match in matches)
+                if (match.Success)
+                {
+                    string encodedString = HttpUtility.UrlEncode(match.Groups[1].Value.Replace(" ", ""))
+                        .Replace("(", "%28")
+                        .Replace(")", "%29");
+                    string md5 = CreateMD5("https://latex.codecogs.com/png.latex?" + encodedString);
+                    if (!File.Exists(ApplicationData.Current.LocalFolder.Path + @"\" + md5 + ".jpg"))
+                    {
+                        if (match.Groups[1].Value.Length > 0)
+                            text = text.Replace(match.Groups[0].Value, "![latex math](https://latex.codecogs.com/png.latex?" + encodedString + ")");
+                    }
+                    else
+                    {
+                        text = text.Replace(match.Groups[0].Value, $"![cached image]({ApplicationData.Current.LocalFolder.Path + "\\" + md5}.jpg)");
+                    }
+
+                }
+            RenderBlock.Text = text;
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -90,14 +147,24 @@ namespace UWP.FrontEnd.Views
 
         }
 
-        private void MarkdownText_OnImageResolving(object sender, ImageResolvingEventArgs e)
+        private async void MarkdownText_OnImageResolving(object sender, ImageResolvingEventArgs e)
         {
             // This is basically the default implementation
+
             try
             {
                 if (e.Url.ToLower().StartsWith("http"))
                 {
-                    e.Image = new BitmapImage(new Uri(e.Url));
+                    string url = e.Url.Replace("(", "%28").Replace(")", "%29");
+                    BitmapImage image = new BitmapImage(new Uri(url));
+                    e.Image = image;
+
+                    string cachefilename = CreateMD5(url);
+
+                    await SaveImageToFileAsync(cachefilename, ApplicationData.Current.LocalFolder.Path, new Uri(url));
+
+                    //image.UriSource;
+                    //SaveImageToFileAsync(CreateMD5(e.Url), (BitmapImage)e.Image, ApplicationData.Current.LocalFolder.Path);
                 }
                 else
                 {
@@ -111,6 +178,26 @@ namespace UWP.FrontEnd.Views
             }
 
             e.Handled = true;
+        }
+
+
+
+        public static string CreateMD5(string input)
+        {
+            // Use input string to calculate MD5 hash
+            using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
+            {
+                byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+                byte[] hashBytes = md5.ComputeHash(inputBytes);
+
+                // Convert the byte array to hexadecimal string
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < hashBytes.Length; i++)
+                {
+                    sb.Append(hashBytes[i].ToString("X2"));
+                }
+                return sb.ToString();
+            }
         }
     }
 }
