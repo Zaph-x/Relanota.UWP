@@ -29,6 +29,8 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using Core.ExtensionClasses;
+using Core.Macros;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -99,25 +101,25 @@ namespace UWP.FrontEnd.Views
         private void NoteEditorTextBox_TextChanged(object sender, RoutedEventArgs e)
         {
             string text = ((TextBox)sender).Text;
-            MatchCollection matches = Regex.Matches(text, @"\$(.+?)\$");
-            foreach (Match match in matches)
-                if (match.Success)
-                {
-                    string encodedString = HttpUtility.UrlEncode(match.Groups[1].Value.Replace(" ", ""))
-                        .Replace("(", "%28")
-                        .Replace(")", "%29");
-                    string md5 = CreateMD5("https://latex.codecogs.com/png.latex?" + encodedString);
-                    if (!File.Exists(ApplicationData.Current.LocalFolder.Path + @"\" + md5 + ".jpg"))
-                    {
-                        if (match.Groups[1].Value.Length > 0)
-                            text = text.Replace(match.Groups[0].Value, "![latex math](https://latex.codecogs.com/png.latex?" + encodedString + ")");
-                    }
-                    else
-                    {
-                        text = text.Replace(match.Groups[0].Value, $"![cached image]({ApplicationData.Current.LocalFolder.Path + "\\" + md5}.jpg)");
-                    }
 
-                }
+            text = new MathMode(text).Process($"{ApplicationData.Current.LocalFolder.Path}");
+
+            //    {
+            //        string encodedString = HttpUtility.UrlEncode(match.Groups[1].Value.Replace(" ", ""))
+            //            .Replace("(", "%28")
+            //            .Replace(")", "%29");
+            //        string md5 = ("https://latex.codecogs.com/png.latex?" + encodedString).CreateMD5();
+            //        if (!File.Exists(ApplicationData.Current.LocalFolder.Path + @"\" + md5 + ".jpg"))
+            //        {
+            //            if (match.Groups[1].Value.Length > 0)
+            //                text = text.Replace(match.Groups[0].Value, "![latex math](https://latex.codecogs.com/png.latex?" + encodedString + ")");
+            //        }
+            //        else
+            //        {
+            //            text = text.Replace(match.Groups[0].Value, $"![cached image]({ApplicationData.Current.LocalFolder.Path + "\\" + md5}.jpg)");
+            //        }
+
+            //    }
             RenderBlock.Text = text;
         }
 
@@ -159,7 +161,7 @@ namespace UWP.FrontEnd.Views
                     BitmapImage image = new BitmapImage(new Uri(url));
                     e.Image = image;
 
-                    string cachefilename = CreateMD5(url);
+                    string cachefilename = url.CreateMD5();
 
                     await SaveImageToFileAsync(cachefilename, ApplicationData.Current.LocalFolder.Path, new Uri(url));
 
@@ -178,26 +180,6 @@ namespace UWP.FrontEnd.Views
             }
 
             e.Handled = true;
-        }
-
-
-
-        public static string CreateMD5(string input)
-        {
-            // Use input string to calculate MD5 hash
-            using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
-            {
-                byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
-                byte[] hashBytes = md5.ComputeHash(inputBytes);
-
-                // Convert the byte array to hexadecimal string
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < hashBytes.Length; i++)
-                {
-                    sb.Append(hashBytes[i].ToString("X2"));
-                }
-                return sb.ToString();
-            }
         }
     }
 }
