@@ -40,7 +40,8 @@ namespace UWP.FrontEnd
         {
             try
             {
-                await ApplicationData.Current.LocalFolder.CreateFileAsync("notes.db");
+                if (!File.Exists($@"{ApplicationData.Current.LocalFolder.Path}\notes.db"))
+                    await ApplicationData.Current.LocalFolder.CreateFileAsync("notes.db");
             }
             catch
             {

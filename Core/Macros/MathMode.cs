@@ -19,26 +19,32 @@ namespace Core.Macros
 
         public string Process(string cachePath)
         {
-            MatchCollection matches = Regex.Matches(Text, @"\$(.+?)\$");
+            //foreach (string line in Text.Split(Environment.NewLine.ToCharArray()))
+            //{
+            MatchCollection matches = Regex.Matches(Text, @".*?(?<!`)(\$(.+?(?<!\\))\$)[^`]*?", RegexOptions.None);
             foreach (Match match in matches)
+            {
                 if (match.Success)
                 {
-                    string encodedString = HttpUtility.UrlEncode(match.Groups[1].Value.Replace(" ", ""))
+                    string encodedString = Uri.EscapeUriString(Regex.Replace(match.Groups[2].Value.Trim(), @"\s+", " "))
                         .Replace("(", "%28")
                         .Replace(")", "%29");
                     string md5 = ("https://latex.codecogs.com/png.latex?" + encodedString).CreateMD5();
-                    //if (!File.Exists(ApplicationData.Current.LocalFolder.Path + @"\" + md5 + ".jpg"))
-                    if (!File.Exists(cachePath))
+                    if (md5 == "7D96D13FD3EFC5D8E09C59C200E7B304") // Empty query
+                        return Text;
+                    if (!File.Exists($@"{cachePath}\{md5}.jpg"))
                     {
-                        if (match.Groups[1].Value.Length > 0)
-                            Text = Text.Replace(match.Groups[0].Value, "![latex math](https://latex.codecogs.com/png.latex?" + encodedString + ")");
+                        if (match.Groups[2].Value.Length > 0)
+                            Text = Text.Replace(match.Groups[1].Value, "![latex math](https://latex.codecogs.com/png.latex?" + encodedString + ")");
                     }
                     else
                     {
-                        Text = Text.Replace(match.Groups[0].Value, $@"![cached image]({cachePath}\{md5}.jpg)");
+                        Text = Text.Replace(match.Groups[1].Value, $@"![cached image]({cachePath}\{md5}.jpg)");
                     }
 
                 }
+
+            }
             return Text;
         }
     }

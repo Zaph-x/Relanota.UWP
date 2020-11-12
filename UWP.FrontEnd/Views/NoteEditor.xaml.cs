@@ -53,7 +53,7 @@ namespace UWP.FrontEnd.Views
             {
 
                 var response = await http.GetAsync(uri);
-                response.EnsureSuccessStatusCode();
+                if (response.StatusCode != HttpStatusCode.OK) return;
                 var fileInfo = new FileInfo($"{path}\\{fileName}.jpg");
                 StorageFolder storageFolder = await StorageFolder.GetFolderFromPathAsync(path);
                 StorageFile storageFile = await storageFolder.CreateFileAsync($"{fileName}.jpg");
@@ -104,22 +104,7 @@ namespace UWP.FrontEnd.Views
 
             text = new MathMode(text).Process($"{ApplicationData.Current.LocalFolder.Path}");
 
-            //    {
-            //        string encodedString = HttpUtility.UrlEncode(match.Groups[1].Value.Replace(" ", ""))
-            //            .Replace("(", "%28")
-            //            .Replace(")", "%29");
-            //        string md5 = ("https://latex.codecogs.com/png.latex?" + encodedString).CreateMD5();
-            //        if (!File.Exists(ApplicationData.Current.LocalFolder.Path + @"\" + md5 + ".jpg"))
-            //        {
-            //            if (match.Groups[1].Value.Length > 0)
-            //                text = text.Replace(match.Groups[0].Value, "![latex math](https://latex.codecogs.com/png.latex?" + encodedString + ")");
-            //        }
-            //        else
-            //        {
-            //            text = text.Replace(match.Groups[0].Value, $"![cached image]({ApplicationData.Current.LocalFolder.Path + "\\" + md5}.jpg)");
-            //        }
 
-            //    }
             RenderBlock.Text = text;
         }
 
@@ -162,8 +147,15 @@ namespace UWP.FrontEnd.Views
                     e.Image = image;
 
                     string cachefilename = url.CreateMD5();
-
-                    await SaveImageToFileAsync(cachefilename, ApplicationData.Current.LocalFolder.Path, new Uri(url));
+                    try
+                    {
+                        if (!File.Exists($@"{ApplicationData.Current.LocalFolder.Path}\{cachefilename}.jpg"))
+                            await SaveImageToFileAsync(cachefilename, ApplicationData.Current.LocalFolder.Path, new Uri(url));
+                    }
+                    catch
+                    {
+                        // Do nothing
+                    }
 
                     //image.UriSource;
                     //SaveImageToFileAsync(CreateMD5(e.Url), (BitmapImage)e.Image, ApplicationData.Current.LocalFolder.Path);
