@@ -19,7 +19,7 @@
             <NavigationView.MenuItems>
                 <NavigationViewItem Icon="List" x:Uid="NotesNavItem" Content="Notes" Tag="list"/>
                 <NavigationViewItemSeparator/>
-                <NavigationViewItemHeader x:Name="NoteName" Content="New Note"/>
+                <NavigationViewItemHeader x:Name="NoteName" Content="No Note Selected"/>
                 <NavigationViewItem x:Uid="EditorNavItem" Icon="Edit" Content="Editor" Tag="edit"/>
                 <NavigationViewItem x:Uid="TagsNavItem" Icon="Tag" Content="Tags" Tag="tags"/>
                 <NavigationViewItem x:Uid="ExportNavItem" Icon="Download" Content="Save Notes to File" Tag="export"/>

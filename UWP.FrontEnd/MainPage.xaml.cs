@@ -52,6 +52,8 @@ namespace UWP.FrontEnd
                 Database.path = ApplicationData.Current.LocalFolder.Path;
                 context.Database.EnsureCreated();
                 context.Notes.Load();
+                context.NoteTags.Load();
+                context.Tags.Load();
             }
 
         }
@@ -78,6 +80,8 @@ namespace UWP.FrontEnd
             ("list", typeof(Home), null),
             ("edit", typeof(NoteEditor), CurrentNote),
             ("tags", typeof(TagsEditor), CurrentNote),
+            ("export", typeof(Export), null),
+            ("help", typeof(Help), null),
         };
 
         private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
@@ -93,7 +97,7 @@ namespace UWP.FrontEnd
             }
         }
 
-        private void NavView_Navigate(string navItemTag, NavigationTransitionInfo transitionInfo)
+        public void NavView_Navigate(string navItemTag, NavigationTransitionInfo transitionInfo)
         {
             Type _page = null;
             Note _note = null;

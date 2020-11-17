@@ -30,6 +30,19 @@ namespace Core.Objects
             context.SaveChanges();
         }
 
+        public void RemoveTag(Tag tag, Database context)
+        {
+            context.TryGetNoteTag(this, tag, out NoteTag noteTag);
+            this.NoteTags.Remove(noteTag);
+            context.TryUpdateManyToMany(this.NoteTags, this.NoteTags, x => x.TagKey);
+            if (!context.NoteTags.Any(nt => nt.Tag == noteTag.Tag))
+            {
+                context.NoteTags.Remove(noteTag);
+            }
+            context.SaveChanges();
+        }
+
+
         public void CheckInlineTags(Match match, Database context) {
             context.TryGetTag(match.Groups[1].Value, out Tag tag);
             this.AddTag(tag, context);
@@ -44,6 +57,31 @@ namespace Core.Objects
             this.NoteTags = context.NoteTags.Where(nt => nt.NoteKey == this.Key).Include(nt => nt.Tag).ToList();
             context.TryUpdateManyToMany(this.NoteTags, this.NoteTags, x => x.TagKey);
             context.SaveChanges();
+        }
+
+        public void Save(string content, string name, Database context)
+        {
+            this.Name = name.Trim();
+            this.Content = content.Trim();
+            context.Notes.Add(this);
+            this.NoteTags = context.NoteTags.Where(nt => nt.NoteKey == this.Key).Include(nt => nt.Tag).ToList();
+            context.TryUpdateManyToMany(this.NoteTags, this.NoteTags, x => x.TagKey);
+            context.SaveChanges();
+        }
+
+        public void Delete(Database context)
+        {
+            try
+            {
+                context.Notes.Remove(this);
+            } catch
+            {
+                return;
+            } finally
+            {
+                context.SaveChanges();
+            }
+            return;
         }
     }
 }

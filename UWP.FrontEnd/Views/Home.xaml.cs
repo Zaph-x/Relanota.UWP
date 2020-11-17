@@ -51,5 +51,48 @@ namespace UWP.FrontEnd.Views
             MainPage.CurrentNote = note;
             this.Frame.Navigate(typeof(NoteEditor), note);
         }
+
+        private void NotesListView_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            if (NotesListView.SelectedIndex >= 0)
+            {
+                Note note = NotesListView.SelectedItem as Note;
+                note = MainPage.context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
+                MainPage.CurrentNote = note;
+                this.Frame.Navigate(typeof(NoteEditor), note);
+            }
+        }
+
+        private void PreviewButton_Click(object sender, RoutedEventArgs e)
+        {
+            NotesListView.SelectedIndex = NotesListView.Items.IndexOf((sender as FrameworkElement).Tag as Note);
+        }
+
+        private async void DeleteButton_Click(object sender, RoutedEventArgs e)
+        {
+            Note note = (sender as FrameworkElement).Tag as Note;
+            ContentDialog deleteFileDialog = new ContentDialog
+            {
+                Title = "Delete note permanently?",
+                Content = "If you delete this note, you won't be able to recover it. Do you want to delete it?",
+                PrimaryButtonText = "Delete",
+                CloseButtonText = "Cancel"
+            };
+
+            ContentDialogResult result = await deleteFileDialog.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                note.Delete(MainPage.context);
+                NotesListView.Items.Remove(note);
+                //MainPage.Get.NavView_Navigate("list", null);
+                //MainPage.Get.SetNavigationIndex(0);
+            }
+            else
+            {
+                // The user clicked the CLoseButton, pressed ESC, Gamepad B, or the system back button.
+                // Do nothing.
+            }
+        }
     }
 }

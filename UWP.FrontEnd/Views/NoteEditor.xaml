@@ -5,7 +5,8 @@
     xmlns:local="using:UWP.FrontEnd.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:ex="using:Microsoft.Toolkit.Uwp.UI.Extensions"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" xmlns:objects="using:Core.Objects"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     >
@@ -58,25 +59,70 @@ FontFamily="Segoe MDL2 Assets"/>
                     </CommandBar.Content>
                     <AppBarButton Icon="Pictures" Label="Add Image" Click="ImportPictureButton_Click"/>
                     <AppBarSeparator/>
-                    <AppBarButton Icon="Add" Label="New Note" Click="NewNoteButton_Click"/>
-                    <AppBarButton Icon="Save" Label="Save Note" Click="SaveButton_Click"/>
-                    <AppBarButton Icon="Delete" Label="Delete Note" Click="DeleteButton_Click"/>
+                    <AppBarButton Icon="Add" AccessKey="N" Label="New Note" Click="NewNoteButton_Click">
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="N"/>
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+                    <AppBarButton Icon="Save" AccessKey="S" Label="Save Note" Click="SaveButton_Click">
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="S"/>
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+                    <AppBarButton Icon="Delete" AccessKey="Delete" Label="Delete Note" Click="DeleteButton_Click">
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="Delete"/>
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
                 </CommandBar>
             </Grid>
-
-            <ScrollViewer Grid.Column="3" VerticalScrollBarVisibility="Auto">
-                <controls:MarkdownTextBlock Grid.Row="3" 
-                                            x:Name="RenderBlock"
-                                            Padding="10"
-                                            CodeBackground="#dfdfdf"
-                                            CodeMargin="3"
-                                            CodePadding="9"
-                                            InlineCodeBackground="#dfdfdf"
-                                            InlineCodePadding="3 0 3 0"
-                                            InlineCodeForeground="#666"
-                                            ImageResolving="MarkdownText_OnImageResolving"/>
-            </ScrollViewer>
-            
+            <Grid Grid.Column="2" HorizontalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                    <controls:MarkdownTextBlock Grid.Row="3" 
+                                                x:Name="RenderBlock"
+                                                Padding="10"
+                                                CodeBackground="#dfdfdf"
+                                                CodeMargin="3"
+                                                CodePadding="9"
+                                                InlineCodeBackground="#dfdfdf"
+                                                InlineCodePadding="3 0 3 0"
+                                                InlineCodeForeground="#666"
+                                                ImageResolving="MarkdownText_OnImageResolving"
+                                                ImageStretch="UniformToFill"
+                                                CodeBlockResolving="RenderBlock_CodeBlockResolving"
+                                                LinkClicked="MarkdownText_LinkClicked"/>
+                </ScrollViewer>
+                <Grid Grid.Row="1">
+                    <controls:TokenizingTextBox x:Name="TagTokens" 
+                                                HorizontalAlignment="Stretch" 
+                                                PlaceholderText="Enter Tags" 
+                                                TokenDelimiter="," 
+                                                TextMemberPath="Text" 
+                                                TextChanged="TagTokens_TextChanged"
+                                                TokenItemAdded="TagTokens_TokenItemAdded"
+                                                TokenItemAdding="TagTokens_TokenItemAdding"
+                                                TokenItemRemoving="TagTokens_TokenItemRemoving"
+                                                QueryIcon="{ex:SymbolIconSource Symbol=Tag}">
+                        <controls:TokenizingTextBox.SuggestedItemTemplate>
+                            <DataTemplate x:DataType="objects:Tag">
+                                <StackPanel>
+                                    <TextBlock FontWeight="SemiBold" Text="{Binding Name}"/>
+                                    <TextBlock Foreground="#444" Text="{Binding Description}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </controls:TokenizingTextBox.SuggestedItemTemplate>
+                        <controls:TokenizingTextBox.TokenItemTemplate>
+                            <DataTemplate x:DataType="objects:Tag">
+                                <TextBlock FontWeight="SemiBold" Text="{Binding Name}" ToolTipService.ToolTip="{Binding Description}"/>
+                            </DataTemplate>
+                        </controls:TokenizingTextBox.TokenItemTemplate>
+                    </controls:TokenizingTextBox>
+                </Grid>
+            </Grid>
 
 
         </Grid>

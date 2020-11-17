@@ -9,15 +9,17 @@ using System.Web;
 
 namespace Core.Macros
 {
-    public class MathMode
+    public class MathMode : TextComponent
     {
         string Text { get; set; }
-        public MathMode(string text)
+        string CachePath { get; set; }
+        public MathMode(string text, string cachePath)
         {
             this.Text = text;
+            this.CachePath = cachePath;
         }
 
-        public string Process(string cachePath)
+        public override string WriteComponent()
         {
             //foreach (string line in Text.Split(Environment.NewLine.ToCharArray()))
             //{
@@ -32,14 +34,14 @@ namespace Core.Macros
                     string md5 = ("https://latex.codecogs.com/png.latex?" + encodedString).CreateMD5();
                     if (md5 == "7D96D13FD3EFC5D8E09C59C200E7B304") // Empty query
                         return Text;
-                    if (!File.Exists($@"{cachePath}\{md5}.jpg"))
+                    if (!File.Exists($@"{CachePath}\{md5}.jpg"))
                     {
                         if (match.Groups[2].Value.Length > 0)
                             Text = Text.Replace(match.Groups[1].Value, "![latex math](https://latex.codecogs.com/png.latex?" + encodedString + ")");
                     }
                     else
                     {
-                        Text = Text.Replace(match.Groups[1].Value, $@"![cached image]({cachePath}\{md5}.jpg)");
+                        Text = Text.Replace(match.Groups[1].Value, $@"![cached image]({CachePath}\{md5}.jpg)");
                     }
 
                 }

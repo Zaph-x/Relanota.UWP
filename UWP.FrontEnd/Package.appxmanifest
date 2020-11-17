@@ -9,14 +9,14 @@
 
     <Identity
       Name="4e08b2c7-7177-4ed4-aecc-97a7cf9c4933"
-      Publisher="CN=Mikkel"
+      Publisher="CN=Zaph-x"
       Version="1.0.0.0" />
 
     <mp:PhoneIdentity PhoneProductId="4e08b2c7-7177-4ed4-aecc-97a7cf9c4933" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
     <Properties>
         <DisplayName>UWP.FrontEnd</DisplayName>
-        <PublisherDisplayName>Mikkel</PublisherDisplayName>
+        <PublisherDisplayName>Zaph-x</PublisherDisplayName>
         <Logo>Assets\StoreLogo.png</Logo>
     </Properties>
 
