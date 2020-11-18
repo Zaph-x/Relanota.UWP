@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Core.SqlHelper;
@@ -29,21 +30,20 @@ namespace Core.Objects
             context.SaveChanges();
         }
 
-        public void Delete(Database context)
+        public void Delete(Database context, Action<string, string> callback)
         {
             try
             {
                 context.Tags.Remove(this);
-            }
-            catch
-            {
-                return;
-            }
-            finally
-            {
                 context.SaveChanges();
             }
-            return;
+            catch (Exception e)
+            {
+#if DEBUG
+                callback("An exception occoured", e.Message);
+#endif
+                return;
+            }
         }
     }
 }

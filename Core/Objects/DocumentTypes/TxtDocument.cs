@@ -25,12 +25,12 @@ namespace Core.Objects.DocumentTypes
 
         public string ConvertNotes()
         {
-            return string.Join("", Notes.Select(note => ConvertNote(note)));
+            return $"{ConvertRelations(Notes)}{string.Join("", Notes.Select(note => ConvertNote(note)))}";
         }
 
         public string ConvertTags(List<NoteTag> noteTags)
         {
-            return $"Tags: {string.Join(", ", noteTags.Select(noteTag => noteTag.Tag.Name))}{Environment.NewLine.Repeat(3)}";
+            return $"Tags: {string.Join(", ", noteTags.Select(noteTag => noteTag.Tag.Name))}{Environment.NewLine}";
         }
 
         public string ConvertTitle(string title)
@@ -51,6 +51,18 @@ namespace Core.Objects.DocumentTypes
             {
                 writer.Write(ConvertNotes());
             }
+        }
+
+        public string ConvertRelations(List<Note> notes)
+        {
+            string content = "";
+            List<string> tagNames = notes.SelectMany(note => note.NoteTags).Select(nt => nt.Tag.Name).Distinct().ToList();
+            tagNames.Sort();
+            foreach (string tagName in tagNames)
+            {
+                content += $"{tagName}{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", notes.Where(note => note.NoteTags.Select(nt => nt.Tag.Name).Distinct().Contains(tagName, StringComparer.InvariantCultureIgnoreCase)).Select(note => note.Name).Distinct())}{Environment.NewLine}";
+            }
+            return $"{content}{Environment.NewLine.Repeat(3)}";
         }
     }
 }

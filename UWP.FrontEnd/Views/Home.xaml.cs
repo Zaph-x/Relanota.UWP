@@ -3,6 +3,7 @@ using Core.SqlHelper;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -30,8 +31,10 @@ namespace UWP.FrontEnd.Views
             this.InitializeComponent();
             MainPage.context.Notes.Load();
             MainPage.context.Tags.Load();
-            NotesListView.ItemsSource = MainPage.context.Notes.Local.ToObservableCollection();
-            TagsListView.ItemsSource = MainPage.context.Tags.Local.ToObservableCollection();
+            ObservableCollection<Note> notesCollection = MainPage.context.Notes.Local.ToObservableCollection();
+            NotesListView.ItemsSource = notesCollection.OrderBy(note => note.Name);
+            ObservableCollection<Tag> tagsCollection = MainPage.context.Tags.Local.ToObservableCollection();
+            TagsListView.ItemsSource = tagsCollection.OrderBy(tag => tag.Name);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -39,8 +42,10 @@ namespace UWP.FrontEnd.Views
             base.OnNavigatedTo(e);
             MainPage.context.Notes.Load();
             MainPage.context.Tags.Load();
-            NotesListView.ItemsSource = MainPage.context.Notes.Local.ToObservableCollection();
-            TagsListView.ItemsSource = MainPage.context.Tags.Local.ToObservableCollection();
+            ObservableCollection<Note> notesCollection = MainPage.context.Notes.Local.ToObservableCollection(); ;
+            NotesListView.ItemsSource = notesCollection;
+            ObservableCollection < Tag > tagsCollection = MainPage.context.Tags.Local.ToObservableCollection();
+            TagsListView.ItemsSource = tagsCollection;
             MainPage.Get.SetDividerNoteName("No Note Selected");
         }
 
@@ -83,15 +88,43 @@ namespace UWP.FrontEnd.Views
 
             if (result == ContentDialogResult.Primary)
             {
-                note.Delete(MainPage.context);
+                note.Delete(MainPage.context, MainPage.Get.ShowMessageBox);
                 NotesListView.Items.Remove(note);
-                //MainPage.Get.NavView_Navigate("list", null);
-                //MainPage.Get.SetNavigationIndex(0);
             }
-            else
+        }
+
+        private void EditTagButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
             {
-                // The user clicked the CLoseButton, pressed ESC, Gamepad B, or the system back button.
-                // Do nothing.
+                Tag tag = (sender as FrameworkElement).Tag as Tag;
+                tag = MainPage.context.Tags.Include(t => t.NoteTags).ThenInclude(nt => nt.Note).First(t => t.Key == tag.Key);
+                MainPage.CurrentTag = tag;
+                this.Frame.Navigate(typeof(TagsEditor), tag);
+            }
+            catch (Exception ex)
+            {
+                MainPage.Get.ShowMessageBox(ex.Message, "");
+            }
+        }
+
+        private async void DeleteTagButton_Click(object sender, RoutedEventArgs e)
+        {
+            Tag tag = (sender as FrameworkElement).Tag as Tag;
+            ContentDialog deleteFileDialog = new ContentDialog
+            {
+                Title = "Delete tag permanently?",
+                Content = "If you delete this tag, you will remove any relations to the tag. Tou won't be able to recover it. Do you want to delete it?",
+                PrimaryButtonText = "Delete",
+                CloseButtonText = "Cancel"
+            };
+
+            ContentDialogResult result = await deleteFileDialog.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                tag.Delete(MainPage.context, MainPage.Get.ShowMessageBox);
+                TagsListView.Items.Remove(tag);
             }
         }
     }

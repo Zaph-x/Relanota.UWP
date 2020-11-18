@@ -14,8 +14,12 @@
             <ColumnDefinition/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <StackPanel Grid.Column="0">
-            <Grid Grid.Row="0" Grid.Column="0">
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition Width="auto"/>
@@ -28,28 +32,33 @@
                     <TextBox Grid.Row="0" x:Name="TagNameEditBox" PlaceholderText="Tag Name" HorizontalAlignment="Stretch"/>
                     <TextBox Grid.Row="1" x:Name="TagDescriptionEditBox" AcceptsReturn="True" PlaceholderText="Tag Description" HorizontalAlignment="Stretch" Height="80" MaxHeight="80"/>
                 </Grid>
-                <Button Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" FontFamily="Segoe MDL2 Assets" Content="&#xE74E;" Click="TagSaveButton_Click"/>
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Button Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" FontFamily="Segoe MDL2 Assets" Content="&#xE74E;" Click="TagSaveButton_Click"/>
+                </Grid>
             </Grid>
-            <ListView ItemContainerStyle="{StaticResource ListViewItemContainerStyle}" 
-                      x:Name="TagsListView" 
-                      Grid.Row="1" 
-                      Grid.Column="0"
-                      SelectionChanged="TagsListView_SelectionChanged">
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="objects:Tag">
-                        <Grid>
-                            <StackPanel HorizontalAlignment="Left">
-                                <TextBlock FontWeight="SemiBold" Text="{Binding Name}"/>
-                                <TextBlock Foreground="#444" Text="{Binding Description}"/>
-                            </StackPanel>
-                            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center">
-                                <Button FontFamily="Segoe MDL2 Assets" Content="&#xE70F;" VerticalAlignment="Stretch" Background="Transparent" Tag="{Binding}" Click="TagEditButton_Click"/>
-                            </StackPanel>
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </StackPanel>
+            <ScrollViewer Grid.Row="1">
+                <ListView ItemContainerStyle="{StaticResource ListViewItemContainerStyle}" 
+                              x:Name="TagsListView" 
+                              SelectionChanged="TagsListView_SelectionChanged">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="objects:Tag">
+                            <Grid>
+                                <StackPanel HorizontalAlignment="Left">
+                                    <TextBlock FontWeight="SemiBold" Text="{Binding Name}"/>
+                                    <TextBlock Foreground="#444" Text="{Binding Description}"/>
+                                </StackPanel>
+                                <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <Button FontFamily="Segoe MDL2 Assets" Content="&#xE70F;" VerticalAlignment="Stretch" Background="Transparent" Tag="{Binding}" Click="TagEditButton_Click"/>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </ScrollViewer>
+        </Grid>
         <StackPanel Grid.Column="1">
             <ListViewHeaderItem Content="Related Notes" />
             <ListView ItemContainerStyle="{StaticResource ListViewItemContainerStyle}" x:Name="RelatedNotesListView" DoubleTapped="RelatedNotesGrid_DoubleTapped">
@@ -70,7 +79,6 @@
                                     </Button.Flyout>
                                 </Button>
                                 <Button FontFamily="Segoe MDL2 Assets" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" Click="EditButton_Click"/>
-                                <!--<Button FontFamily="Segoe MDL2 Assets" Content="&#xE74D;" Tag="{Binding}" Background="Transparent" />-->
                             </StackPanel>
                         </Grid>
                     </DataTemplate>

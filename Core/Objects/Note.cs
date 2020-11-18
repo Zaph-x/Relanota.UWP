@@ -35,7 +35,7 @@ namespace Core.Objects
             context.TryGetNoteTag(this, tag, out NoteTag noteTag);
             this.NoteTags.Remove(noteTag);
             context.TryUpdateManyToMany(this.NoteTags, this.NoteTags, x => x.TagKey);
-            if (!context.NoteTags.Any(nt => nt.Tag == noteTag.Tag))
+            if (!context.NoteTags.Local.Any(nt => nt.Tag == noteTag.Tag))
             {
                 context.NoteTags.Remove(noteTag);
             }
@@ -69,19 +69,19 @@ namespace Core.Objects
             context.SaveChanges();
         }
 
-        public void Delete(Database context)
+        public void Delete(Database context, Action<string, string> callback)
         {
             try
             {
                 context.Notes.Remove(this);
-            } catch
-            {
-                return;
-            } finally
-            {
                 context.SaveChanges();
-            }
-            return;
+            } catch (Exception e)
+            {
+#if DEBUG
+                callback("An exception occoured", e.Message);
+#endif
+                return;
+            } 
         }
     }
 }

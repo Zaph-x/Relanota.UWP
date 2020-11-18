@@ -157,7 +157,7 @@ namespace UWP.FrontEnd.Views
 
             if (result == ContentDialogResult.Primary)
             {
-                MainPage.CurrentNote.Delete(MainPage.context);
+                MainPage.CurrentNote.Delete(MainPage.context, MainPage.Get.ShowMessageBox);
                 MainPage.Get.NavView_Navigate("list", null);
                 MainPage.Get.SetNavigationIndex(0);
             }
@@ -262,7 +262,7 @@ namespace UWP.FrontEnd.Views
         private void TagTokens_TokenItemAdding(TokenizingTextBox sender, TokenItemAddingEventArgs args)
         {
             Console.WriteLine(args);
-            if (MainPage.context.Tags.Any(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase)))
+            if (MainPage.context.Tags.Local.Any(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase)))
             {
                 Tag tag = MainPage.context.Tags.Local.First(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase));
                 args.Item = tag;
@@ -272,8 +272,10 @@ namespace UWP.FrontEnd.Views
             {
                 Tag tag = new Tag();
                 tag.Name = args.TokenText;
+                args.Item = tag;
                 MainPage.CurrentNote.AddTag(tag, MainPage.context);
             }
+            args.Cancel = false;
         }
 
         private void TagTokens_TokenItemRemoving(TokenizingTextBox sender, TokenItemRemovingEventArgs args)

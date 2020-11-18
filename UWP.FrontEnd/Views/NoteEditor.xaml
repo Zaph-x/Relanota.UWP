@@ -14,6 +14,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition/>
+            <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
@@ -52,29 +53,13 @@ FontFamily="Segoe MDL2 Assets"/>
                     <RowDefinition/>
                     <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
-                <TextBox x:Name="EditorTextBox" Grid.Row="0" TextChanged="NoteEditorTextBox_TextChanged" AcceptsReturn="True"/>
-                <CommandBar Grid.Row="1" HorizontalAlignment="Stretch">
-                    <CommandBar.Content>
-                        <TextBlock x:Name="WordCounter"></TextBlock>
-                    </CommandBar.Content>
-                    <AppBarButton Icon="Pictures" Label="Add Image" Click="ImportPictureButton_Click"/>
-                    <AppBarSeparator/>
-                    <AppBarButton Icon="Add" AccessKey="N" Label="New Note" Click="NewNoteButton_Click">
-                        <AppBarButton.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="N"/>
-                        </AppBarButton.KeyboardAccelerators>
-                    </AppBarButton>
-                    <AppBarButton Icon="Save" AccessKey="S" Label="Save Note" Click="SaveButton_Click">
-                        <AppBarButton.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="S"/>
-                        </AppBarButton.KeyboardAccelerators>
-                    </AppBarButton>
-                    <AppBarButton Icon="Delete" AccessKey="Delete" Label="Delete Note" Click="DeleteButton_Click">
-                        <AppBarButton.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="Delete"/>
-                        </AppBarButton.KeyboardAccelerators>
-                    </AppBarButton>
-                </CommandBar>
+                <TextBox x:Name="EditorTextBox" 
+                         Grid.Row="0" 
+                         TextChanged="NoteEditorTextBox_TextChanged" 
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         FontFamily="Consolas"/>
+                
             </Grid>
             <Grid Grid.Column="2" HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
@@ -92,12 +77,44 @@ FontFamily="Segoe MDL2 Assets"/>
                                                 InlineCodePadding="3 0 3 0"
                                                 InlineCodeForeground="#666"
                                                 ImageResolving="MarkdownText_OnImageResolving"
-                                                ImageStretch="UniformToFill"
                                                 CodeBlockResolving="RenderBlock_CodeBlockResolving"
                                                 LinkClicked="MarkdownText_LinkClicked"/>
                 </ScrollViewer>
                 <Grid Grid.Row="1">
-                    <controls:TokenizingTextBox x:Name="TagTokens" 
+                    
+                </Grid>
+            </Grid>
+
+
+        </Grid>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <CommandBar Grid.Column="0" HorizontalAlignment="Stretch">
+                <CommandBar.Content>
+                    <TextBlock x:Name="WordCounter"></TextBlock>
+                </CommandBar.Content>
+                <AppBarButton Icon="Pictures" Label="Add Image" Click="ImportPictureButton_Click"/>
+                <AppBarSeparator/>
+                <AppBarButton Icon="Add" AccessKey="N" Label="New Note" Click="NewNoteButton_Click">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="N"/>
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarButton Icon="Save" AccessKey="S" Label="Save Note" Click="SaveButton_Click">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="S"/>
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarButton Icon="Delete" AccessKey="Delete" Label="Delete Note" Click="DeleteButton_Click">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="Delete"/>
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+            </CommandBar>
+            <controls:TokenizingTextBox Grid.Column="1" x:Name="TagTokens" 
                                                 HorizontalAlignment="Stretch" 
                                                 PlaceholderText="Enter Tags" 
                                                 TokenDelimiter="," 
@@ -107,24 +124,20 @@ FontFamily="Segoe MDL2 Assets"/>
                                                 TokenItemAdding="TagTokens_TokenItemAdding"
                                                 TokenItemRemoving="TagTokens_TokenItemRemoving"
                                                 QueryIcon="{ex:SymbolIconSource Symbol=Tag}">
-                        <controls:TokenizingTextBox.SuggestedItemTemplate>
-                            <DataTemplate x:DataType="objects:Tag">
-                                <StackPanel>
-                                    <TextBlock FontWeight="SemiBold" Text="{Binding Name}"/>
-                                    <TextBlock Foreground="#444" Text="{Binding Description}"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </controls:TokenizingTextBox.SuggestedItemTemplate>
-                        <controls:TokenizingTextBox.TokenItemTemplate>
-                            <DataTemplate x:DataType="objects:Tag">
-                                <TextBlock FontWeight="SemiBold" Text="{Binding Name}" ToolTipService.ToolTip="{Binding Description}"/>
-                            </DataTemplate>
-                        </controls:TokenizingTextBox.TokenItemTemplate>
-                    </controls:TokenizingTextBox>
-                </Grid>
-            </Grid>
-
-
+                <controls:TokenizingTextBox.SuggestedItemTemplate>
+                    <DataTemplate x:DataType="objects:Tag">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="{Binding Name}"/>
+                            <TextBlock Foreground="#444" Text="{Binding Description}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </controls:TokenizingTextBox.SuggestedItemTemplate>
+                <controls:TokenizingTextBox.TokenItemTemplate>
+                    <DataTemplate x:DataType="objects:Tag">
+                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}" ToolTipService.ToolTip="{Binding Description}"/>
+                    </DataTemplate>
+                </controls:TokenizingTextBox.TokenItemTemplate>
+            </controls:TokenizingTextBox>
         </Grid>
     </Grid>
 </Page>

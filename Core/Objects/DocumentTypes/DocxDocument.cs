@@ -25,6 +25,11 @@ namespace Core.Objects.DocumentTypes
             throw new System.NotImplementedException();
         }
 
+        public string ConvertRelations(List<Note> notes)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public string ConvertTags(List<NoteTag> noteTags)
         {
             throw new System.NotImplementedException();

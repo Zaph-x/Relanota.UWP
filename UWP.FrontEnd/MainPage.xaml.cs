@@ -1,6 +1,7 @@
 ﻿using Core.Objects;
 using Core.SqlHelper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +13,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
 using Windows.UI;
+using Windows.UI.Notifications;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -34,6 +36,7 @@ namespace UWP.FrontEnd
     {
         public static Database context = new Database();
         public static Note CurrentNote = null;
+        public static Tag CurrentTag = null;
         public static MainPage Get { get; private set; }
 
         public async void ConnectDB()
@@ -68,6 +71,17 @@ namespace UWP.FrontEnd
             CoreApplicationViewTitleBar coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
             coreTitleBar.ExtendViewIntoTitleBar = true;
             ConnectDB();
+        }
+
+        public void ShowMessageBox(string header ,string message)
+        {
+            ToastContent content = new ToastContentBuilder()
+                .AddText(header, AdaptiveTextStyle.Base)
+                .AddText(message, AdaptiveTextStyle.Body)
+                .SetToastDuration(ToastDuration.Short)
+                .GetToastContent();
+            ToastNotification notification = new ToastNotification(content.GetXml());
+            ToastNotificationManager.CreateToastNotifier().Show(notification);
         }
 
         private void SearchBox_FocusEngaged(Control sender, FocusEngagedEventArgs args)

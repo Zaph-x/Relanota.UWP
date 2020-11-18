@@ -1,5 +1,7 @@
-﻿using Core.Objects;
+﻿using Core.Interfaces;
+using Core.Objects;
 using Core.Objects.DocumentTypes;
+using Core.Test.Objects.DocumentTypes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Toolkit.Uwp.UI;
 using Microsoft.Toolkit.Uwp.UI.Controls;
@@ -70,9 +72,13 @@ namespace UWP.FrontEnd.Views
             if (file != null)
             {
                 Stream stream = await file.OpenStreamForWriteAsync();
-
-                TxtDocument txtDocument = new TxtDocument(notes);
-                txtDocument.Export(stream);
+#pragma warning disable CS8509 // The switch expression does not handle all possible values of its input type (it is not exhaustive).
+                IDocumentType document = (type.ToLower()) switch {
+#pragma warning restore CS8509 // The switch expression does not handle all possible values of its input type (it is not exhaustive).
+                    ".txt" => new TxtDocument(notes),
+                    ".md" => new MdDocument(notes)
+                };
+                document.Export(stream);
             }
         }
 

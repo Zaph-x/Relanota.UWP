@@ -10,6 +10,7 @@ namespace Core.Interfaces
         string FileExtension {get;}
         void Export(Stream stream);
         string ConvertNotes();
+        string ConvertRelations(List<Note> notes);
         string ConvertNote(Note note);
         string ConvertTitle(string title);
         string ConvertTags(List<NoteTag> noteTags);

@@ -25,7 +25,6 @@ namespace UWP.FrontEnd.Views
     /// </summary>
     public sealed partial class TagsEditor : Page
     {
-        Tag CurrentTag { get; set; } = null;
         public TagsEditor()
         {
             this.InitializeComponent();
@@ -33,9 +32,23 @@ namespace UWP.FrontEnd.Views
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            MainPage.Get.SetNavigationIndex(4);
             base.OnNavigatedTo(e);
             FetchTags();
+            if (MainPage.CurrentTag != null)
+            {
+                TagNameEditBox.Text = MainPage.CurrentTag.Name;
+                TagDescriptionEditBox.Text = MainPage.CurrentTag.Description ?? "";
+                GetRelatedNotesFromTag(MainPage.CurrentTag);
+                TagsListView.ItemsSource = new ObservableCollection<Tag>();
+            }
             //TagsListView.ItemsSource = MainPage.CurrentNote?.NoteTags.Select(nt => nt.Tag) ?? new List<Tag>();
+        }
+
+        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+        {
+            MainPage.CurrentTag = null;
+            base.OnNavigatingFrom(e);
         }
 
         private void FetchTags()
@@ -50,6 +63,19 @@ namespace UWP.FrontEnd.Views
                 tags = MainPage.context.NoteTags.Include(nt => nt.Tag).Where(nt => nt.NoteKey == MainPage.CurrentNote.Key).Select(nt => nt.Tag).ToList();
             }
             TagsListView.ItemsSource = new ObservableCollection<Tag>(tags);
+        }
+
+        private void GetRelatedNotesFromTag(Tag tag)
+        {
+            List<Note> Notes = new List<Note>();
+            Notes = MainPage.context.Notes
+                    .Include(note => note.NoteTags)
+                    .ThenInclude(nt => nt.Tag)
+                    .Where(note => note.NoteTags
+                        .Select(nt => nt.Tag)
+                        .Any(t => t.Name.ToLower() == tag.Name.ToLower()))
+                    .ToList();
+            RelatedNotesListView.ItemsSource = new ObservableCollection<Note>(Notes);
         }
 
         private void TagsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -85,26 +111,24 @@ namespace UWP.FrontEnd.Views
         private void TagEditButton_Click(object sender, RoutedEventArgs e)
         {
             Tag tag = (sender as FrameworkElement).Tag as Tag;
-            CurrentTag = tag;
+            MainPage.CurrentTag = tag;
             TagNameEditBox.Text = tag.Name;
             TagDescriptionEditBox.Text = tag.Description ?? "";
         }
 
         private void TagSaveButton_Click(object sender, RoutedEventArgs e)
         {
-            if (CurrentTag != null)
+            if (MainPage.CurrentTag != null)
             {
-                CurrentTag.Update(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(), MainPage.context);
-                (sender as FrameworkElement).Tag = CurrentTag;
-                CurrentTag = null;
+                MainPage.CurrentTag.Update(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(), MainPage.context);
             }
             else
             {
-                CurrentTag.Save(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(), MainPage.context);
-                CurrentTag = null;
+                MainPage.CurrentTag.Save(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(), MainPage.context);
             }
             TagNameEditBox.Text = "";
             TagDescriptionEditBox.Text = "";
+            MainPage.CurrentTag = null;
             FetchTags();
 
         }

@@ -45,10 +45,16 @@ Maybe even tags" };
         [Test]
         public void Test_ConvertTags_ShouldConvertNoteTags()
         {
-            string expected = $"Tags: Test Tag, Other tag{Environment.NewLine.Repeat(3)}";
+            string expected = $"Tags: Test Tag, Other tag{Environment.NewLine}";
             string actual = doc.ConvertTags(note.NoteTags);
 
             Assert.AreEqual(expected, actual, "Tags were not converterd correctly.");
+        }
+
+        [Test]
+        public void Test_ConvertRelations_ShouldConvertNoteTags()
+        {
+            string expected = $"Tag: Test Tag, Other tag{Environment.NewLine}Related Notes: My cool Note{Environment.NewLine.Repeat(2)}";
         }
 
         [Test]
