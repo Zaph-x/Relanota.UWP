@@ -7,9 +7,10 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:objects="using:Core.Objects" 
-    xmlns:Windows10version1809="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 7)"
+    xmlns:Windows10version1809="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 7)" xmlns:interactivity="using:Microsoft.Xaml.Interactivity" xmlns:core="using:Microsoft.Xaml.Interactions.Core"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    Loaded="Page_Loaded">
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -24,22 +25,28 @@
             <ListViewHeaderItem Grid.Row="0" Content="Your Notes"/>
             <ScrollViewer Grid.Row="1">
                 <ListView x:Name="NotesListView"
+                          ItemsSource="{x:Bind NotesCollection}"
                           ItemContainerStyle="{StaticResource ListViewItemContainerStyle}"
                           HorizontalAlignment="Stretch"
                           SelectionMode="Single"
                           Background="Transparent"
                           SingleSelectionFollowsFocus="True"
-                          DoubleTapped="NotesListView_DoubleTapped">
+                          DoubleTapped="NotesListView_DoubleTapped"
+                          SelectionChanged="NoteListView_SelectionChanged"
+                          >
                     <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="objects:Note">
-                            <Grid >
+                        <DataTemplate>
+                            <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition/>
                                     <ColumnDefinition/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding Name}" HorizontalAlignment="Left"/>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button FontFamily="Segoe MDL2 Assets" Content="&#xE8FF;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to preview note" Click="PreviewButton_Click">
+                                <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding Name}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" x:Name="ButtonStack">
+                                    <Button FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE8FF;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to preview note" Click="PreviewButton_Click">
                                         <Button.Flyout>
                                             <Flyout Placement="BottomEdgeAlignedLeft" Windows10version1809:ShowMode="Transient">
                                                 <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -48,8 +55,8 @@
                                             </Flyout>
                                         </Button.Flyout>
                                     </Button>
-                                    <Button FontFamily="Segoe MDL2 Assets" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to edit note" Click="EditButton_Click"/>
-                                    <Button FontFamily="Segoe MDL2 Assets" Content="&#xE74D;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to delete note" Click="DeleteButton_Click"/>
+                                    <Button FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to edit note" Click="EditButton_Click"/>
+                                    <Button FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE74D;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to delete note" Click="DeleteButton_Click"/>
                                 </StackPanel>
                             </Grid>
                         </DataTemplate>
@@ -65,9 +72,12 @@
             <ListViewHeaderItem Grid.Row="0" Content="Tags"/>
             <ScrollViewer Grid.Row="1">
                 <ListView x:Name="TagsListView"
-                          ItemContainerStyle="{StaticResource ListViewItemContainerStyle}">
+                          ItemsSource="{x:Bind TagsCollection}"
+                          ItemContainerStyle="{StaticResource ListViewItemContainerStyle}"
+                          SelectionChanged="NoteListView_SelectionChanged"
+                          >
                     <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="objects:Tag">
+                        <DataTemplate>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition/>
@@ -75,8 +85,8 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="{Binding Name}" Grid.Column="0" HorizontalAlignment="Left"/>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button FontFamily="Segoe MDL2 Assets" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to edit tag" Click="EditTagButton_Click"/>
-                                    <Button FontFamily="Segoe MDL2 Assets" Content="&#xE74D;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to delete tag" Click="DeleteTagButton_Click"/>
+                                    <Button FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to edit tag" Click="EditTagButton_Click"/>
+                                    <Button FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE74D;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to delete tag" Click="DeleteTagButton_Click"/>
                                 </StackPanel>
                             </Grid>
                         </DataTemplate>

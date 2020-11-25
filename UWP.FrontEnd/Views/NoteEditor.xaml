@@ -58,7 +58,9 @@ FontFamily="Segoe MDL2 Assets"/>
                          TextChanged="NoteEditorTextBox_TextChanged" 
                          AcceptsReturn="True"
                          TextWrapping="Wrap"
-                         FontFamily="Consolas"/>
+                         FontFamily="Consolas"
+                         KeyDown="EditorTextBox_KeyDown"
+                         Paste="EditorTextBox_Paste"/>
                 
             </Grid>
             <Grid Grid.Column="2" HorizontalAlignment="Stretch">
@@ -78,7 +80,8 @@ FontFamily="Segoe MDL2 Assets"/>
                                                 InlineCodeForeground="#666"
                                                 ImageResolving="MarkdownText_OnImageResolving"
                                                 CodeBlockResolving="RenderBlock_CodeBlockResolving"
-                                                LinkClicked="MarkdownText_LinkClicked"/>
+                                                LinkClicked="MarkdownText_LinkClicked"
+                                                SchemeList="note"/>
                 </ScrollViewer>
                 <Grid Grid.Row="1">
                     
@@ -94,23 +97,30 @@ FontFamily="Segoe MDL2 Assets"/>
             </Grid.ColumnDefinitions>
             <CommandBar Grid.Column="0" HorizontalAlignment="Stretch">
                 <CommandBar.Content>
-                    <TextBlock x:Name="WordCounter"></TextBlock>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock x:Name="WordCounter" Margin="3"/>
+                        <TextBlock x:Name="UnsavedChangesText" Margin="3"/>
+                    </StackPanel>
                 </CommandBar.Content>
-                <AppBarButton Icon="Pictures" Label="Add Image" Click="ImportPictureButton_Click"/>
                 <AppBarSeparator/>
-                <AppBarButton Icon="Add" AccessKey="N" Label="New Note" Click="NewNoteButton_Click">
-                    <AppBarButton.KeyboardAccelerators>
-                        <KeyboardAccelerator Modifiers="Control" Key="N"/>
-                    </AppBarButton.KeyboardAccelerators>
-                </AppBarButton>
                 <AppBarButton Icon="Save" AccessKey="S" Label="Save Note" Click="SaveButton_Click">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control" Key="S"/>
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
-                <AppBarButton Icon="Delete" AccessKey="Delete" Label="Delete Note" Click="DeleteButton_Click">
+                <AppBarButton Icon="Delete" AccessKey="Del" Label="Delete Note" Click="DeleteButton_Click">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control" Key="Delete"/>
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarButton Icon="Add" AccessKey="N" Label="New Note" Click="NewNoteButton_Click">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="N"/>
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarButton Icon="Pictures" AccessKey="I" Label="Add Image" Click="ImportPictureButton_Click">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="I"/>
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
             </CommandBar>

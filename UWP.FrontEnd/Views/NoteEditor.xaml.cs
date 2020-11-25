@@ -1,31 +1,17 @@
 ﻿using Core.Objects;
-using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Web;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.Graphics.Imaging;
-using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.Storage.Streams;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
@@ -35,8 +21,12 @@ using Windows.UI;
 using Windows.UI.Xaml.Documents;
 using Microsoft.Toolkit.Uwp.UI;
 using System.Collections.ObjectModel;
-using Windows.UI.Popups;
 using Windows.System;
+using Windows.UI.Core;
+using Windows.UI.Xaml.Input;
+using System.Drawing;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage.Streams;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -48,17 +38,20 @@ namespace UWP.FrontEnd.Views
     public sealed partial class NoteEditor : Page
     {
         private int WordCount { get; set; } = 0;
-        private AdvancedCollectionView _acv { get; set; }
+        private AdvancedCollectionView Acv { get; set; }
+        public static bool IsSaved { get; set; } = true;
+        public static NoteEditor Get { get; private set; }
 
 
         public NoteEditor()
         {
+            Get = this;
             this.InitializeComponent();
             if (MainPage.CurrentNote == null) { TagTokens.IsEnabled = false; }
-            _acv = new AdvancedCollectionView(MainPage.context.Tags.ToList(), false);
-            _acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Tag.Name), SortDirection.Ascending));
-            _acv.Filter = itm => !TagTokens.Items.Contains(itm) && (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
-            TagTokens.SuggestedItemsSource = _acv;
+            Acv = new AdvancedCollectionView(MainPage.context.Tags.ToList(), false);
+            Acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Tag.Name), SortDirection.Ascending));
+            Acv.Filter = itm => !TagTokens.Items.Contains(itm) && (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
+            TagTokens.SuggestedItemsSource = Acv;
         }
 
         public async Task SaveImageToFileAsync(string fileName, string path, Uri uri)
@@ -66,16 +59,16 @@ namespace UWP.FrontEnd.Views
             using (var http = new HttpClient())
             {
 
-                var response = await http.GetAsync(uri);
+                HttpResponseMessage response = await http.GetAsync(uri);
                 if (response.StatusCode != HttpStatusCode.OK) return;
-                var fileInfo = new FileInfo($"{path}\\{fileName}.jpg");
+                FileInfo fileInfo = new FileInfo($"{path}\\{fileName}.jpg");
                 StorageFolder storageFolder = await StorageFolder.GetFolderFromPathAsync(path);
                 StorageFile storageFile = await storageFolder.CreateFileAsync($"{fileName}.jpg");
 
                 if (storageFile == null)
                     return;
 
-                using (var ms = await response.Content.ReadAsStreamAsync())
+                using (Stream ms = await response.Content.ReadAsStreamAsync())
                 {
                     using (FileStream fs = File.Create(fileInfo.FullName))
                     {
@@ -88,21 +81,44 @@ namespace UWP.FrontEnd.Views
 
         }
 
+        public async Task SaveImageToFileAsync(string fileName, string path, RandomAccessStreamReference stream)
+        {
+            FileInfo fileInfo = new FileInfo($"{path}\\{fileName}.jpg");
+            StorageFolder storageFolder = await StorageFolder.GetFolderFromPathAsync(path);
+            StorageFile storageFile = await storageFolder.CreateFileAsync($"{fileName}.jpg");
+
+            if (storageFile == null)
+                return;
+
+            using (FileStream fs = File.Create(fileInfo.FullName))
+            {
+                Stream baseStream = (await stream.OpenReadAsync()).AsStream();
+                baseStream.Seek(0, SeekOrigin.Begin);
+                baseStream.CopyTo(fs);
+            }
+
+
+
+        }
+        // [note](note://bayesian networks)
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             MainPage.Get.SetNavigationIndex(3);
             if (MainPage.CurrentNote != null)
             {
+                EditorTextBox.TextChanged -= NoteEditorTextBox_TextChanged;
                 EditorTextBox.Text = MainPage.CurrentNote.Content ?? "";
                 RenderBlock.Text = MainPage.CurrentNote.Content ?? "";
                 NoteNameTextBox.Text = MainPage.CurrentNote.Name ?? "";
+                EditorTextBox.TextChanged += NoteEditorTextBox_TextChanged;
                 MainPage.Get.SetDividerNoteName(MainPage.CurrentNote.Name ?? "New Note");
                 TagTokens.ItemsSource = new ObservableCollection<Tag>(MainPage.CurrentNote.NoteTags.Select(nt => nt.Tag));
+                NoteEditorTextBox_TextChanged(this.EditorTextBox, null);
+                SetSavedState(true);
             }
-            NoteEditorTextBox_TextChanged(this.EditorTextBox, null);
         }
 
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        protected override async void OnNavigatedFrom(NavigationEventArgs e)
         {
 
         }
@@ -126,11 +142,28 @@ namespace UWP.FrontEnd.Views
             else
                 WordCount = Regex.Split(text.Trim(), @"\s+").Length;
             WordCounter.Text = $"{WordCount} words.";
-
+            if (e != null && IsSaved)
+            {
+                SetSavedState(false);
+            }
         }
 
-        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        private async Task SaveAsync()
         {
+            if (string.IsNullOrWhiteSpace(NoteNameTextBox.Text))
+            {
+                IsSaved = false;
+                ContentDialog unsavedDialog = new ContentDialog
+                {
+                    Title = "We could not save that.",
+                    Content = "The note does not seem to have a name. Please provide a name to save the note.",
+                    PrimaryButtonText = "Okay"
+                };
+
+                await unsavedDialog.ShowAsync();
+                MainPage.Get.SetNavigationIndex(3);
+                return;
+            }
             if (MainPage.CurrentNote == null)
             {
                 MainPage.CurrentNote = new Note();
@@ -141,7 +174,15 @@ namespace UWP.FrontEnd.Views
             {
                 MainPage.CurrentNote.Update(EditorTextBox.Text, NoteNameTextBox.Text, MainPage.context);
             }
+            if (!IsSaved)
+            {
+                SetSavedState(true);
+            }
+        }
 
+        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            SaveAsync();
         }
         private async void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
@@ -158,6 +199,7 @@ namespace UWP.FrontEnd.Views
             if (result == ContentDialogResult.Primary)
             {
                 MainPage.CurrentNote.Delete(MainPage.context, MainPage.Get.ShowMessageBox);
+                SetSavedState(true);
                 MainPage.Get.NavView_Navigate("list", null);
                 MainPage.Get.SetNavigationIndex(0);
             }
@@ -191,14 +233,12 @@ namespace UWP.FrontEnd.Views
                 {
 
                 }
-                string imagePath = $@"![{file.DisplayName}]({{{{cache_dir}}}}\{file.Name})";
+                string imagePath = $@"![{file.DisplayName}]({{{{local_dir}}}}\{file.Name})";
                 var selectionIndex = EditorTextBox.SelectionStart;
                 EditorTextBox.Text = EditorTextBox.Text.Insert(selectionIndex, imagePath);
                 EditorTextBox.SelectionStart = selectionIndex + imagePath.Length;
-            }
-            else
-            {
-                RenderBlock.Text = "Operation cancelled.";
+                SetSavedState(false);
+
             }
         }
 
@@ -228,7 +268,7 @@ namespace UWP.FrontEnd.Views
                 else
                 {
                     string path = e.Url.Replace("{{cache_dir}}", ApplicationData.Current.LocalCacheFolder.Path);
-
+                    path = e.Url.Replace("{{local_dir}}", ApplicationData.Current.LocalFolder.Path);
                     e.Image = new BitmapImage(new Uri(path));
                 }
             }
@@ -255,7 +295,7 @@ namespace UWP.FrontEnd.Views
         {
             if (args.CheckCurrent() && args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
             {
-                _acv.RefreshFilter();
+                Acv.RefreshFilter();
             }
         }
 
@@ -275,13 +315,16 @@ namespace UWP.FrontEnd.Views
                 args.Item = tag;
                 MainPage.CurrentNote.AddTag(tag, MainPage.context);
             }
+            SetSavedState(false);
+
             args.Cancel = false;
         }
 
         private void TagTokens_TokenItemRemoving(TokenizingTextBox sender, TokenItemRemovingEventArgs args)
         {
             MainPage.CurrentNote.RemoveTag(args.Item as Tag, MainPage.context);
-            
+            SetSavedState(false);
+
         }
 
         private void TagTokens_TokenItemAdded(TokenizingTextBox sender, object data)
@@ -290,17 +333,108 @@ namespace UWP.FrontEnd.Views
             {
                 MainPage.CurrentNote.AddTag(tag, MainPage.context);
             }
+            SetSavedState(false);
         }
 
         private async void MarkdownText_LinkClicked(object sender, LinkClickedEventArgs e)
         {
-            if (!Uri.IsWellFormedUriString(e.Link, UriKind.Absolute))
+            if (e.Link.ToLower().StartsWith("note://"))
             {
-                await new MessageDialog("Masked relative links needs to be manually handled.").ShowAsync();
+                if (!IsSaved)
+                {
+                    await ShowUnsavedChangesDialog();
+                }
+                string noteName = Uri.UnescapeDataString(e.Link.Substring(7));
+
+                if (MainPage.context.TryGetNote(noteName, true, out Note note))
+                {
+                    MainPage.CurrentNote = note;
+
+                    OnNavigatedTo(null);
+                }
+                else
+                {
+                    ContentDialog errorDialog = new ContentDialog
+                    {
+                        Title = "We could not find that note.",
+                        Content = $"The note '{noteName}' could note be found in the database.",
+                        PrimaryButtonText = "Okay"
+                    };
+                    await errorDialog.ShowAsync();
+                }
+
+            }
+            else if (!Uri.IsWellFormedUriString(e.Link, UriKind.Absolute))
+            {
+                //await new MessageDialog("Masked relative links needs to be manually handled.").ShowAsync();
             }
             else
             {
                 await Launcher.LaunchUriAsync(new Uri(e.Link));
+            }
+        }
+
+        private void EditorTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            CoreVirtualKeyStates ctrlState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Control);
+            bool isCtrlDown = ctrlState == CoreVirtualKeyStates.Down;
+            if (!isCtrlDown || e.Key != VirtualKey.I)
+            {
+                // We don't want to block anything if it's not CTRL+I
+                return;
+            }
+            ImportPictureButton_Click(null, null);
+            e.Handled = true;
+        }
+
+        public static async Task ShowUnsavedChangesDialog()
+        {
+            ContentDialog unsavedDialog = new ContentDialog
+            {
+                Title = "You have unsaved changes.",
+                Content = "Do you wish to save these changes, before navigating? Picking No will delete these changes permanently.",
+                PrimaryButtonText = "Yes",
+                SecondaryButtonText = "No"
+            };
+
+            ContentDialogResult result = await unsavedDialog.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                await Get.SaveAsync();
+            }
+            else if (result == ContentDialogResult.Secondary)
+            {
+                Get.SetSavedState(true);
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        private void SetSavedState(bool isSaved)
+        {
+            IsSaved = isSaved;
+            UnsavedChangesText.Text = isSaved ? "" : "Unsaved Changes.";
+        }
+
+        private async void EditorTextBox_Paste(object sender, TextControlPasteEventArgs e)
+        {
+            TextBox tb = sender as TextBox;
+            DataPackageView dataPackageView = Clipboard.GetContent();
+            if (dataPackageView.Contains(StandardDataFormats.Bitmap))
+            {
+                e.Handled = true;
+
+                string fileName = $"Paste {DateTime.Now:ddMMyyyy hhmmss tt}";
+
+                await SaveImageToFileAsync(fileName, ApplicationData.Current.LocalFolder.Path, await dataPackageView.GetBitmapAsync());
+
+                string imagePath = $@"![{fileName}]({{{{local_dir}}}}\{fileName}.jpg)";
+                var selectionIndex = tb.SelectionStart;
+                tb.Text = tb.Text.Insert(selectionIndex, imagePath);
+                tb.SelectionStart = selectionIndex + imagePath.Length;
             }
         }
     }

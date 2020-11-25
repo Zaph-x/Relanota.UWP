@@ -26,7 +26,7 @@ namespace UWP.FrontEnd.Views
 
         private async void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            string fileName = (((sender as ComboBox).SelectedItem as ComboBoxItem).Content as string).ToLower();
+            string fileName = (((sender as ComboBox).SelectedItem as FrameworkElement).Tag as string).ToLower();
 
             StorageFolder assetDir = await Package.Current.InstalledLocation.GetFolderAsync(@"Assets/");
             StorageFile file = await assetDir.GetFileAsync($"{fileName}.md");

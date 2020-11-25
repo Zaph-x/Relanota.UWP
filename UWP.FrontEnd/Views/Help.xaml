@@ -19,6 +19,7 @@
             <ComboBox Width="200" SelectionChanged="ComboBox_SelectionChanged">
                 <ComboBoxItem Content="General" Tag="general"/>
                 <ComboBoxItem Content="Math" Tag="math"/>
+                <ComboBoxItem Content="Text Formatting" Tag="formatting"/>
             </ComboBox>
         </StackPanel>
         <controls:MarkdownTextBlock Margin="20" Grid.Row="1" x:Name="HelpView" Background="Transparent" LinkClicked="MarkdownText_LinkClicked"/>

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -26,15 +27,14 @@ namespace UWP.FrontEnd.Views
     /// </summary>
     public sealed partial class Home : Page
     {
+        ObservableCollection<Note> NotesCollection = new ObservableCollection<Note>();
+        ObservableCollection<Tag> TagsCollection = new ObservableCollection<Tag>();
+
         public Home()
         {
             this.InitializeComponent();
             MainPage.context.Notes.Load();
             MainPage.context.Tags.Load();
-            ObservableCollection<Note> notesCollection = MainPage.context.Notes.Local.ToObservableCollection();
-            NotesListView.ItemsSource = notesCollection.OrderBy(note => note.Name);
-            ObservableCollection<Tag> tagsCollection = MainPage.context.Tags.Local.ToObservableCollection();
-            TagsListView.ItemsSource = tagsCollection.OrderBy(tag => tag.Name);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -42,10 +42,8 @@ namespace UWP.FrontEnd.Views
             base.OnNavigatedTo(e);
             MainPage.context.Notes.Load();
             MainPage.context.Tags.Load();
-            ObservableCollection<Note> notesCollection = MainPage.context.Notes.Local.ToObservableCollection(); ;
-            NotesListView.ItemsSource = notesCollection;
-            ObservableCollection < Tag > tagsCollection = MainPage.context.Tags.Local.ToObservableCollection();
-            TagsListView.ItemsSource = tagsCollection;
+            NotesCollection = MainPage.context.Notes.Local.ToObservableCollection();
+            TagsCollection = MainPage.context.Tags.Local.ToObservableCollection();
             MainPage.Get.SetDividerNoteName("No Note Selected");
         }
 
@@ -126,6 +124,84 @@ namespace UWP.FrontEnd.Views
                 tag.Delete(MainPage.context, MainPage.Get.ShowMessageBox);
                 TagsListView.Items.Remove(tag);
             }
+        }
+
+        private void EntityList_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            ListViewItem item = sender as ListViewItem;
+            Grid grid = item.ContentTemplateRoot as Grid;
+
+
+            StackPanel panel = grid.Children.OfType<StackPanel>().Single();
+            foreach (Button button in panel.Children.OfType<Button>())
+            {
+                button.Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0));
+            }
+        }
+
+        private void EntityList_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+
+            ListViewItem item = sender as ListViewItem;
+            Grid grid = item.ContentTemplateRoot as Grid;
+            //grid.Data
+
+            StackPanel panel = grid.Children.OfType<StackPanel>().Single();
+            foreach (Button button in panel.Children.OfType<Button>())
+            {
+                button.Foreground = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+            }
+        }
+
+
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            foreach (var item in NotesListView.Items)
+            {
+                ListViewItem listItem = NotesListView.ContainerFromItem(item) as ListViewItem;
+                listItem.PointerEntered += EntityList_PointerEntered;
+                listItem.PointerExited += EntityList_PointerExited;
+
+            }
+
+            foreach (var item in TagsListView.Items)
+            {
+                ListViewItem listItem = TagsListView.ContainerFromItem(item) as ListViewItem;
+                listItem.PointerEntered += EntityList_PointerEntered;
+                listItem.PointerExited += EntityList_PointerExited;
+            }
+        }
+
+        private void NoteListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            foreach (var addedItem in e.AddedItems)
+            {
+                ListView lv = (sender as ListView);
+                ListViewItem item = lv.ContainerFromItem(addedItem) as ListViewItem;
+                Grid grid = item.ContentTemplateRoot as Grid;
+                //grid.Data
+                item.PointerExited -= EntityList_PointerExited;
+                StackPanel panel = grid.Children.OfType<StackPanel>().Single();
+                foreach (Button button in panel.Children.OfType<Button>())
+                {
+                    button.Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0));
+                }
+            }
+
+            foreach (var removedItem in e.RemovedItems)
+            {
+                ListView lv = (sender as ListView);
+                ListViewItem item = lv.ContainerFromItem(removedItem) as ListViewItem;
+                Grid grid = item.ContentTemplateRoot as Grid;
+                //grid.Data
+                item.PointerExited += EntityList_PointerExited;
+                StackPanel panel = grid.Children.OfType<StackPanel>().Single();
+                foreach (Button button in panel.Children.OfType<Button>())
+                {
+                    button.Foreground = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+                }
+            }
+
         }
     }
 }

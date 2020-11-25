@@ -13,7 +13,7 @@ Here you can get a list of all supported commands, as well as generate equations
 
 ## Example
 
-`$P(B) = \sum_a P(A,B)$`
+`$P(B) = \sum_A P(A,B)$`
 
 Becomes
 

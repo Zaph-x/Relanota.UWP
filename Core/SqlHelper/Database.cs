@@ -41,15 +41,35 @@ namespace Core.SqlHelper
 
         }
 
-        public void TryGetTag(string tagName, out Tag tag)
+
+        public bool TryGetNote(string name, bool full, out Note note)
         {
-            tag = Tags.FirstOrDefault(t => t.Name.ToLower() == tagName.ToLower()) ?? new Tag() { Name = tagName };
+            if (full)
+                note = this.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).AsEnumerable().FirstOrDefault(n => n.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+            else
+                note = this.Notes.FirstOrDefault(n => n.Name == name);
+            return note != null;
+        }
+        public bool TryGetNote(int id, bool full, out Note note)
+        {
+            if (full)
+                note = this.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).AsEnumerable().FirstOrDefault(n => n.Key == id);
+            else
+                note = this.Notes.FirstOrDefault(n => n.Key == id);
+            return note != null;
         }
 
-        public void TryGetNoteTag(Note note, Tag tag, out NoteTag noteTag)
+        public bool TryGetTag(string tagName, out Tag tag)
+        {
+            tag = Tags.FirstOrDefault(t => t.Name.ToLower() == tagName.ToLower()) ?? new Tag() { Name = tagName };
+            return tag != null;
+        }
+
+        public bool TryGetNoteTag(Note note, Tag tag, out NoteTag noteTag)
         {
             noteTag = NoteTags.FirstOrDefault(nt => nt.Note.Name.ToLower() == note.Name.ToLower() && nt.Tag.Name.ToLower() == tag.Name.ToLower()) 
                       ?? new NoteTag() { Note = note, Tag = tag };
+            return noteTag != null;
         }
     }
 

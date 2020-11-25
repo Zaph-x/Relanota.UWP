@@ -111,13 +111,13 @@ namespace UWP.FrontEnd
             }
         }
 
-        public void NavView_Navigate(string navItemTag, NavigationTransitionInfo transitionInfo)
+        public async void NavView_Navigate(string navItemTag, NavigationTransitionInfo transitionInfo)
         {
             Type _page = null;
             Note _note = null;
             if (navItemTag == "settings")
             {
-                //_page = typeof(SettingsPage);
+                _page = typeof(Settings);
             }
             else
             {
@@ -129,7 +129,18 @@ namespace UWP.FrontEnd
 
             if (!(_page is null) && !Type.Equals(preNavPageType, _page))
             {
-                if (navItemTag == "list") { CurrentNote = null; }
+                if (!NoteEditor.IsSaved)
+                {
+                    await NoteEditor.ShowUnsavedChangesDialog();
+                    if (!NoteEditor.IsSaved)
+                    {
+                        // The user chose save, but was unable to. We don't wish to delete the note
+                        return;
+                    }
+                }
+                if (navItemTag == "list") {
+                    CurrentNote = null; 
+                }
                 ContentFrame.Navigate(_page, _note, transitionInfo);
             }
         }
