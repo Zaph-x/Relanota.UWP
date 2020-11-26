@@ -122,6 +122,13 @@ FontFamily="Segoe MDL2 Assets"/>
                         <KeyboardAccelerator Modifiers="Control" Key="I"/>
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
+                <CommandBar.SecondaryCommands>
+                    <AppBarButton Icon="Share" AccessKey="G" Label="Share Note" Click="ShareNoteButton_Click">
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="G"/>
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+                </CommandBar.SecondaryCommands>
             </CommandBar>
             <controls:TokenizingTextBox Grid.Column="1" x:Name="TagTokens" 
                                                 HorizontalAlignment="Stretch" 

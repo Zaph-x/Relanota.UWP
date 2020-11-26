@@ -17,6 +17,14 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Microsoft.Toolkit.Uwp.Helpers;
 using UWP.FrontEnd.Views;
+using Windows.Storage;
+using Core.SqlHelper;
+using Microsoft.EntityFrameworkCore;
+using Core.Objects;
+using Microsoft.Toolkit.Uwp.Notifications;
+using Windows.UI.Notifications;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage.Streams;
 
 namespace UWP.FrontEnd
 {
@@ -26,6 +34,29 @@ namespace UWP.FrontEnd
     sealed partial class App : Application
     {
         private Frame rootFrame = null;
+        public static Database context = new Database();
+
+        public async Task ConnectDB()
+        {
+            try
+            {
+                if (!File.Exists($@"{ApplicationData.Current.LocalFolder.Path}\notes.db"))
+                    await ApplicationData.Current.LocalFolder.CreateFileAsync("notes.db");
+            }
+            catch
+            {
+                // File already exists
+            }
+            finally
+            {
+                Database.path = ApplicationData.Current.LocalFolder.Path;
+                context.Database.EnsureCreated();
+                context.Notes.Load();
+                context.NoteTags.Load();
+                context.Tags.Load();
+            }
+
+        }
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -79,6 +110,7 @@ namespace UWP.FrontEnd
         }
         protected override async void OnActivated(IActivatedEventArgs args)
         {
+            await ConnectDB();
             //base.OnActivated(args);
             if (args.Kind == ActivationKind.Protocol)
             {
@@ -97,36 +129,59 @@ namespace UWP.FrontEnd
 
                 if (args is ProtocolActivatedEventArgs eventArgs)
                 {
+                    ContentDialog errorDialog = new ContentDialog();
                     try
                     {
-                        if (eventArgs.Uri.OriginalString.Length == 12 && eventArgs.Uri.OriginalString.StartsWith("note://open/"))
+                        switch (eventArgs.Uri.Host.ToLower())
                         {
-                            rootFrame.Navigate(typeof(MainPage));
-                        } else if (eventArgs.Uri.OriginalString.StartsWith("note://open/"))
-                        {
-                            MainPage.Get.NavView_Navigate("edit", null);
+                            case "open":
+                                MainPage.Get.NavView_Navigate("edit", null);
 
-                            await NoteEditor.Get.NavigateToNoteFromUri(eventArgs.Uri.OriginalString.Substring(0, eventArgs.Uri.OriginalString.Length));
-                        } else
-                        {
-                            ContentDialog errorDialog = new ContentDialog
-                            {
-                                Title = "We did not understand that.",
-                                Content = $"You opened relanote from a link which lead to nowhere. You will instead be sent to the note list.",
-                                PrimaryButtonText = "Okay"
-                            };
-                            await errorDialog.ShowAsync();
-                            MainPage.Get.NavView_Navigate("list", null);
+                                await NoteEditor.Get.NavigateToNoteFromUri(eventArgs.Uri.OriginalString.Substring(0, eventArgs.Uri.OriginalString.Length));
+                                break;
+
+                            case "import":
+
+                                string serializedString = Uri.UnescapeDataString(eventArgs.Uri.LocalPath.Substring(1));
+
+                                if (Note.TryDeserialize(serializedString, context, out Note note))
+                                {
+                                    MainPage.CurrentNote = note;
+                                    MainPage.Get.SetNavigationIndex(3);
+                                    NoteEditor.IsProtocolNavigation = true;
+                                    MainPage.Get.NavView_Navigate("edit", null);
+                                }
+                                else
+                                {
+
+                                    errorDialog.Title = "We could not parse tgat bite.";
+                                    errorDialog.Content = $"No note could be parsed from the URI used to open Relanote. You will instead be sent to the note list.";
+                                    errorDialog.PrimaryButtonText = "Okay";
+                                    await errorDialog.ShowAsync();
+                                    MainPage.Get.SetNavigationIndex(0);
+                                    MainPage.Get.NavView_Navigate("list", null);
+                                }
+
+                                break;
+
+                            default:
+                                errorDialog.Title = "We did not understand that.";
+                                errorDialog.Content = $"You opened relanote from a link which lead to nowhere. You will instead be sent to the note list.";
+                                errorDialog.PrimaryButtonText = "Okay";
+                                await errorDialog.ShowAsync();
+                                MainPage.Get.SetNavigationIndex(0);
+                                MainPage.Get.NavView_Navigate("list", null);
+                                break;
                         }
-                    } catch (UriFormatException ex)
+                    }
+                    catch (UriFormatException ex)
                     {
-                        ContentDialog errorDialog = new ContentDialog
-                        {
-                            Title = "We did not understand that.",
-                            Content = $"You opened relanote from a link which could not be interpreted. We managed to recover the state of the application and you will now be sent to the note list.",
-                            PrimaryButtonText = "Okay"
-                        };
+
+                        errorDialog.Title = "We did not understand that.";
+                        errorDialog.Content = $"You opened relanote from a link which could not be interpreted. We managed to recover the state of the application and you will now be sent to the note list.";
+                        errorDialog.PrimaryButtonText = "Okay";
                         await errorDialog.ShowAsync();
+                        MainPage.Get.SetNavigationIndex(0);
                         MainPage.Get.NavView_Navigate("list", null);
                     }
                 }
@@ -154,6 +209,38 @@ namespace UWP.FrontEnd
             var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: Save application state and stop any background activity
             deferral.Complete();
+        }
+
+        public static void ShowMessageBox(string header, string message)
+        {
+            ToastContent content = new ToastContentBuilder()
+                .AddText(header, AdaptiveTextStyle.Base)
+                .AddText(message, AdaptiveTextStyle.Body)
+                .SetToastDuration(ToastDuration.Short)
+                .GetToastContent();
+            ToastNotification notification = new ToastNotification(content.GetXml());
+            ToastNotificationManager.CreateToastNotifier().Show(notification);
+        }
+
+        public static void SetClipboardContent(string content)
+        {
+            DataPackage dataPackage = new DataPackage();
+            dataPackage.SetText(content);
+            Clipboard.SetContent(dataPackage);
+        }
+
+        public static void SetClipboardContent(Uri content)
+        {
+            DataPackage dataPackage = new DataPackage();
+            dataPackage.SetWebLink(content);
+            Clipboard.SetContent(dataPackage);
+        }
+
+        public static void SetClipboardContent(RandomAccessStreamReference content)
+        {
+            DataPackage dataPackage = new DataPackage();
+            dataPackage.SetBitmap(content);
+            Clipboard.SetContent(dataPackage);
         }
     }
 }

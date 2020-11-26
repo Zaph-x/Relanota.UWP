@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using Core.SqlHelper;
 using Microsoft.EntityFrameworkCore;
@@ -67,6 +68,24 @@ namespace Core.Objects
             this.NoteTags = context.NoteTags.Where(nt => nt.NoteKey == this.Key).Include(nt => nt.Tag).ToList();
             context.TryUpdateManyToMany(this.NoteTags, this.NoteTags, x => x.TagKey);
             context.SaveChanges();
+        }
+
+        public static bool TryDeserialize(string serializedString, Database context, out Note note)
+        {
+            note = null;
+            Match match = Regex.Match(serializedString, @"\|(.+?)\|(.+?)\|");
+            if (match.Success)
+            {
+                note = new Note();
+                if (Convert.FromBase64String(match.Groups[1].Value) is byte[] noteName
+                    && Convert.FromBase64String(match.Groups[2].Value) is byte[] noteContent)
+                {
+                    note.Name = Encoding.Default.GetString(noteName);
+                    note.Content = Encoding.Default.GetString(noteContent);
+                }
+                return true;
+            }
+            return false;
         }
 
         public void Delete(Database context, Action<string, string> callback)

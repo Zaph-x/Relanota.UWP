@@ -27,6 +27,7 @@ using Windows.UI.Xaml.Input;
 using System.Drawing;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
+using System.Text;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -40,6 +41,7 @@ namespace UWP.FrontEnd.Views
         private int WordCount { get; set; } = 0;
         private AdvancedCollectionView Acv { get; set; }
         public static bool IsSaved { get; set; } = true;
+        public static bool IsProtocolNavigation { get; set; } = false;
         private static NoteEditor _instance { get; set; }
         public static NoteEditor Get => _instance ?? new NoteEditor();
 
@@ -49,7 +51,7 @@ namespace UWP.FrontEnd.Views
             _instance = this;
             this.InitializeComponent();
             if (MainPage.CurrentNote == null) { TagTokens.IsEnabled = false; }
-            Acv = new AdvancedCollectionView(MainPage.context.Tags.ToList(), false);
+            Acv = new AdvancedCollectionView(App.context.Tags.ToList(), false);
             Acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Tag.Name), SortDirection.Ascending));
             Acv.Filter = itm => !TagTokens.Items.Contains(itm) && (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
             TagTokens.SuggestedItemsSource = Acv;
@@ -116,7 +118,8 @@ namespace UWP.FrontEnd.Views
                 TagTokens.ItemsSource = new ObservableCollection<Tag>(MainPage.CurrentNote.NoteTags.Select(nt => nt.Tag));
                 TagTokens.IsEnabled = true;
                 NoteEditorTextBox_TextChanged(this.EditorTextBox, null);
-                SetSavedState(true);
+                if (!IsProtocolNavigation) SetSavedState(true);
+                else SetSavedState(false);
             }
         }
 
@@ -169,12 +172,12 @@ namespace UWP.FrontEnd.Views
             if (MainPage.CurrentNote == null)
             {
                 MainPage.CurrentNote = new Note();
-                MainPage.CurrentNote.Save(EditorTextBox.Text, NoteNameTextBox.Text, MainPage.context);
+                MainPage.CurrentNote.Save(EditorTextBox.Text, NoteNameTextBox.Text, App.context);
                 TagTokens.IsEnabled = true;
             }
             else
             {
-                MainPage.CurrentNote.Update(EditorTextBox.Text, NoteNameTextBox.Text, MainPage.context);
+                MainPage.CurrentNote.Update(EditorTextBox.Text, NoteNameTextBox.Text, App.context);
             }
             if (!IsSaved)
             {
@@ -200,7 +203,7 @@ namespace UWP.FrontEnd.Views
 
             if (result == ContentDialogResult.Primary)
             {
-                MainPage.CurrentNote.Delete(MainPage.context, MainPage.Get.ShowMessageBox);
+                MainPage.CurrentNote.Delete(App.context, App.ShowMessageBox);
                 SetSavedState(true);
                 MainPage.Get.NavView_Navigate("list", null);
                 MainPage.Get.SetNavigationIndex(0);
@@ -304,18 +307,18 @@ namespace UWP.FrontEnd.Views
         private void TagTokens_TokenItemAdding(TokenizingTextBox sender, TokenItemAddingEventArgs args)
         {
             Console.WriteLine(args);
-            if (MainPage.context.Tags.Local.Any(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase)))
+            if (App.context.Tags.Local.Any(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase)))
             {
-                Tag tag = MainPage.context.Tags.Local.First(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase));
+                Tag tag = App.context.Tags.Local.First(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase));
                 args.Item = tag;
-                MainPage.CurrentNote.AddTag(tag, MainPage.context);
+                MainPage.CurrentNote.AddTag(tag, App.context);
             }
             else
             {
                 Tag tag = new Tag();
                 tag.Name = args.TokenText;
                 args.Item = tag;
-                MainPage.CurrentNote.AddTag(tag, MainPage.context);
+                MainPage.CurrentNote.AddTag(tag, App.context);
             }
             SetSavedState(false);
 
@@ -324,7 +327,7 @@ namespace UWP.FrontEnd.Views
 
         private void TagTokens_TokenItemRemoving(TokenizingTextBox sender, TokenItemRemovingEventArgs args)
         {
-            MainPage.CurrentNote.RemoveTag(args.Item as Tag, MainPage.context);
+            MainPage.CurrentNote.RemoveTag(args.Item as Tag, App.context);
             SetSavedState(false);
 
         }
@@ -333,7 +336,7 @@ namespace UWP.FrontEnd.Views
         {
             if (data is Tag tag)
             {
-                MainPage.CurrentNote.AddTag(tag, MainPage.context);
+                MainPage.CurrentNote.AddTag(tag, App.context);
             }
             SetSavedState(false);
         }
@@ -427,7 +430,7 @@ namespace UWP.FrontEnd.Views
             }
             string noteName = Uri.UnescapeDataString(uri.Substring(12));
             File.AppendAllText($@"{ApplicationData.Current.LocalFolder.Path}\log.txt", $"{uri}");
-            if (MainPage.context.TryGetNote(noteName, true, out Note note))
+            if (App.context.TryGetNote(noteName, true, out Note note))
             {
                 MainPage.CurrentNote = note;
                 
@@ -444,6 +447,12 @@ namespace UWP.FrontEnd.Views
                 await errorDialog.ShowAsync();
                 MainPage.Get.NavView_Navigate("list", null);
             }
+        }
+
+        private void ShareNoteButton_Click(object sender, RoutedEventArgs e)
+        {
+            App.SetClipboardContent($"note://import/|{Convert.ToBase64String(Encoding.Default.GetBytes(MainPage.CurrentNote.Name))}|{Convert.ToBase64String(Encoding.Default.GetBytes(MainPage.CurrentNote.Content))}|");
+            App.ShowMessageBox("Note copied!", "A sharable link has been copied to your clipboard.");
         }
     }
 }

@@ -38,32 +38,11 @@ namespace UWP.FrontEnd
 
         public static bool IsDarkTheme => _uiSettings.GetColorValue(UIColorType.Background) == Colors.Black;
 
-        public static Database context = new Database();
         public static Note CurrentNote = null;
         public static Tag CurrentTag = null;
         public static MainPage Get { get; private set; }
 
-        public async void ConnectDB()
-        {
-            try
-            {
-                if (!File.Exists($@"{ApplicationData.Current.LocalFolder.Path}\notes.db"))
-                    await ApplicationData.Current.LocalFolder.CreateFileAsync("notes.db");
-            }
-            catch
-            {
-                // File already exists
-            }
-            finally
-            {
-                Database.path = ApplicationData.Current.LocalFolder.Path;
-                context.Database.EnsureCreated();
-                context.Notes.Load();
-                context.NoteTags.Load();
-                context.Tags.Load();
-            }
-
-        }
+        
 
         public MainPage()
         {
@@ -78,20 +57,9 @@ namespace UWP.FrontEnd
             }
             CoreApplicationViewTitleBar coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
             coreTitleBar.ExtendViewIntoTitleBar = true;
-            ConnectDB();
         }
 
-        public void ShowMessageBox(string header, string message)
-        {
-            ToastContent content = new ToastContentBuilder()
-                .AddText(header, AdaptiveTextStyle.Base)
-                .AddText(message, AdaptiveTextStyle.Body)
-                .SetToastDuration(ToastDuration.Short)
-                .GetToastContent();
-            ToastNotification notification = new ToastNotification(content.GetXml());
-            ToastNotificationManager.CreateToastNotifier().Show(notification);
-        }
-
+        
         private void SearchBox_FocusEngaged(Control sender, FocusEngagedEventArgs args)
         {
 

@@ -38,7 +38,7 @@ namespace UWP.FrontEnd.Views
         public Export()
         {
             this.InitializeComponent();
-            _acv = new AdvancedCollectionView(MainPage.context.Tags.ToList(), false);
+            _acv = new AdvancedCollectionView(App.context.Tags.ToList(), false);
             _acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Tag.Name), SortDirection.Ascending));
             _acv.Filter = itm => !TagTokens.Items.Contains(itm) && (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
             TagTokens.ItemsSource = new ObservableCollection<Tag>();
@@ -49,11 +49,11 @@ namespace UWP.FrontEnd.Views
             List<Note> notes = null;
             if (!filterTags.Any())
             {
-                notes = MainPage.context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).ToList();
+                notes = App.context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).ToList();
             }
             else
             {
-                notes = MainPage.context.Notes.Include(n => n.NoteTags)
+                notes = App.context.Notes.Include(n => n.NoteTags)
                     .ThenInclude(n => n.Tag)
                     .Where(n => n.NoteTags
                         .Select(nt => nt.Tag)
@@ -84,7 +84,7 @@ namespace UWP.FrontEnd.Views
 
         private void TagTokens_TokenItemAdding(TokenizingTextBox sender, TokenItemAddingEventArgs args)
         {
-            if (MainPage.context.Tags.Contains(args.Item as Tag))
+            if (App.context.Tags.Contains(args.Item as Tag))
             {
                 filterTags.Add(args.Item as Tag);
                 return;
