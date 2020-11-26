@@ -4,48 +4,59 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   IgnorableNamespaces="uap mp">
 
-    <Identity
-      Name="4e08b2c7-7177-4ed4-aecc-97a7cf9c4933"
-      Publisher="CN=Zaph-x"
-      Version="1.0.0.0" />
+  <Identity
+    Name="4e08b2c7-7177-4ed4-aecc-97a7cf9c4933"
+    Publisher="CN=Zaph-x"
+    Version="1.0.0.0" />
 
-    <mp:PhoneIdentity PhoneProductId="4e08b2c7-7177-4ed4-aecc-97a7cf9c4933" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="4e08b2c7-7177-4ed4-aecc-97a7cf9c4933" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
-    <Properties>
-        <DisplayName>UWP.FrontEnd</DisplayName>
-        <PublisherDisplayName>Zaph-x</PublisherDisplayName>
-        <Logo>Assets\StoreLogo.png</Logo>
-    </Properties>
+  <Properties>
+    <DisplayName>Relanote</DisplayName>
+    <PublisherDisplayName>Zaph-x</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
 
-    <Dependencies>
-        <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
-    </Dependencies>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
+  </Dependencies>
 
-    <Resources>
-        <Resource Language="x-generate"/>
-    </Resources>
+  <Resources>
+    <Resource Language="x-generate"/>
+  </Resources>
 
-    <Applications>
-        <Application Id="App"
-          Executable="$targetnametoken$.exe"
-          EntryPoint="UWP.FrontEnd.App">
-            <uap:VisualElements
-              DisplayName="Relanote"
-              Square150x150Logo="Assets\Square150x150Logo.png"
-              Square44x44Logo="Assets\Square44x44Logo.png"
-              Description="UWP.FrontEnd"
-              BackgroundColor="transparent">
-                <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
-                <uap:SplashScreen Image="Assets\SplashScreen.png" />
-            </uap:VisualElements>
-        </Application>
-    </Applications>
+  <Applications>
+    <Application Id="App"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="Relanote">
+      <Extensions>
+        <uap:Extension Category="windows.protocol">
+          <uap:Protocol Name="note">
+            <uap:Logo>Assets\StoreLogo.png</uap:Logo>
+            <uap:DisplayName>Relanote URI Scheme</uap:DisplayName>
+          </uap:Protocol>
+        </uap:Extension>
+      </Extensions>
+      <uap:VisualElements
+        DisplayName="Relanote"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png"
+        Description="Relanote"
+        BackgroundColor="transparent">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+        <uap:InitialRotationPreference>
+          <uap:Rotation Preference="landscape"/></uap:InitialRotationPreference>
+      </uap:VisualElements>
+    </Application>
+  </Applications>
 
-    <Capabilities>
-        <Capability Name="internetClient" />
-        <uap:Capability Name="picturesLibrary"/>
-    </Capabilities>
+  <Capabilities>
+    <Capability Name="internetClient" />
+    <uap:Capability Name="picturesLibrary"/>
+  </Capabilities>
 </Package>

@@ -12,16 +12,29 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal">
             <TextBlock VerticalAlignment="Center" FontSize="16" Margin="10 0" Text="Topic: "/>
-            <ComboBox Width="200" SelectionChanged="ComboBox_SelectionChanged">
+            <ComboBox Width="300" SelectionChanged="ComboBox_SelectionChanged">
                 <ComboBoxItem Content="General" Tag="general"/>
                 <ComboBoxItem Content="Math" Tag="math"/>
                 <ComboBoxItem Content="Text Formatting" Tag="formatting"/>
+                <ComboBoxItem Content="Inserting and Resizing Images" Tag="inserting_images"/>
             </ComboBox>
         </StackPanel>
-        <controls:MarkdownTextBlock Margin="20" Grid.Row="1" x:Name="HelpView" Background="Transparent" LinkClicked="MarkdownText_LinkClicked"/>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto">
+            <controls:MarkdownTextBlock CodeFontFamily="Consolas"
+                                        InlineCodeFontFamily="Consolas"
+                                        CodeMargin="3"
+                                        CodePadding="9"
+                                        Margin="20" 
+                                        InlineCodePadding="3 0 3 0"
+                                        x:Name="HelpView" 
+                                        Background="Transparent" 
+                                        LinkClicked="MarkdownText_LinkClicked"/>
+            <!--ScrollViewer.VerticalScrollBarVisibility="Auto" 
+                                        ScrollViewer.VerticalScrollMode="Enabled"-->
+        </ScrollViewer>
     </Grid>
 </Page>

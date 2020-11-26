@@ -133,9 +133,21 @@ namespace UWP.FrontEnd.Views
 
 
             StackPanel panel = grid.Children.OfType<StackPanel>().Single();
-            foreach (Button button in panel.Children.OfType<Button>())
+            if (MainPage.IsDarkTheme)
             {
-                button.Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0));
+                foreach (Button button in panel.Children.OfType<Button>())
+                {
+
+                    button.Foreground = new SolidColorBrush(Colors.Gainsboro);
+                }
+            }
+            else
+            {
+                foreach (Button button in panel.Children.OfType<Button>())
+                {
+
+                    button.Foreground = new SolidColorBrush(Colors.Black);
+                }
             }
         }
 
@@ -149,7 +161,7 @@ namespace UWP.FrontEnd.Views
             StackPanel panel = grid.Children.OfType<StackPanel>().Single();
             foreach (Button button in panel.Children.OfType<Button>())
             {
-                button.Foreground = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+                button.Foreground = new SolidColorBrush(Colors.Transparent);
             }
         }
 
@@ -182,10 +194,23 @@ namespace UWP.FrontEnd.Views
                 //grid.Data
                 item.PointerExited -= EntityList_PointerExited;
                 StackPanel panel = grid.Children.OfType<StackPanel>().Single();
-                foreach (Button button in panel.Children.OfType<Button>())
+
+                if (MainPage.IsDarkTheme)
                 {
-                    button.Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0));
+                    foreach (Button button in panel.Children.OfType<Button>())
+                    {
+
+                        button.Foreground = new SolidColorBrush(Colors.Gainsboro);
+                    }
                 }
+                else {
+                    foreach (Button button in panel.Children.OfType<Button>())
+                    {
+
+                        button.Foreground = new SolidColorBrush(Colors.Black);
+                    }
+                }
+
             }
 
             foreach (var removedItem in e.RemovedItems)
@@ -198,7 +223,7 @@ namespace UWP.FrontEnd.Views
                 StackPanel panel = grid.Children.OfType<StackPanel>().Single();
                 foreach (Button button in panel.Children.OfType<Button>())
                 {
-                    button.Foreground = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+                    button.Foreground = new SolidColorBrush(Colors.Transparent);
                 }
             }
 

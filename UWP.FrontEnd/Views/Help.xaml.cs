@@ -33,6 +33,7 @@ namespace UWP.FrontEnd.Views
 
             string text = File.ReadAllText(file.Path);
 
+            text = text.Replace("{{local_dir}}", ApplicationData.Current.LocalFolder.Path);
             text = text.Replace("{{cache_dir}}", ApplicationData.Current.LocalCacheFolder.Path);
 
             HelpView.Text = text;

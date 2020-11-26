@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
@@ -14,6 +15,8 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using Microsoft.Toolkit.Uwp.Helpers;
+using UWP.FrontEnd.Views;
 
 namespace UWP.FrontEnd
 {
@@ -22,6 +25,7 @@ namespace UWP.FrontEnd
     /// </summary>
     sealed partial class App : Application
     {
+        private Frame rootFrame = null;
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -39,7 +43,7 @@ namespace UWP.FrontEnd
         /// <param name="e">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
-            Frame rootFrame = Window.Current.Content as Frame;
+            rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
             // just ensure that the window is active
@@ -59,6 +63,7 @@ namespace UWP.FrontEnd
                 Window.Current.Content = rootFrame;
             }
 
+
             if (e.PrelaunchActivated == false)
             {
                 if (rootFrame.Content == null)
@@ -72,7 +77,37 @@ namespace UWP.FrontEnd
                 Window.Current.Activate();
             }
         }
+        protected override async void OnActivated(IActivatedEventArgs args)
+        {
+            //base.OnActivated(args);
+            if (args.Kind == ActivationKind.Protocol)
+            {
+                Frame rootFrame = Window.Current.Content as Frame;
+                if (rootFrame == null)
+                {
+                    rootFrame = new Frame();
+                    rootFrame.NavigationFailed += OnNavigationFailed;
+                    Window.Current.Content = rootFrame;
+                }
+                if (rootFrame.Content == null)
+                {
+                    rootFrame.Navigate(typeof(MainPage));
+                }
+                Window.Current.Activate();
 
+                if (args is ProtocolActivatedEventArgs eventArgs)
+                {
+                    MainPage.Get.NavView_Navigate("edit", null);
+                    await NoteEditor.Get.NavigateToNoteFromUri(eventArgs.Uri.OriginalString.Substring(0, eventArgs.Uri.OriginalString.Length - 1));
+                }
+                //else
+                //{
+                //    MainPage.Get.NavView_Navigate("list", null);
+                //}
+
+
+            }
+        }
         /// <summary>
         /// Invoked when Navigation to a certain page fails
         /// </summary>

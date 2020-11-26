@@ -34,6 +34,10 @@ namespace UWP.FrontEnd
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        private static UISettings _uiSettings = new UISettings();
+
+        public static bool IsDarkTheme => _uiSettings.GetColorValue(UIColorType.Background) == Colors.Black;
+
         public static Database context = new Database();
         public static Note CurrentNote = null;
         public static Tag CurrentTag = null;
@@ -67,13 +71,17 @@ namespace UWP.FrontEnd
             this.InitializeComponent();
             ApplicationViewTitleBar formattableTitleBar = ApplicationView.GetForCurrentView().TitleBar;
             formattableTitleBar.ButtonBackgroundColor = Colors.Transparent;
-            formattableTitleBar.ButtonForegroundColor = Colors.Black;
+            if (!IsDarkTheme)
+                formattableTitleBar.ButtonForegroundColor = Colors.Black;
+            else {
+                formattableTitleBar.ButtonForegroundColor = Colors.WhiteSmoke;
+            }
             CoreApplicationViewTitleBar coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
             coreTitleBar.ExtendViewIntoTitleBar = true;
             ConnectDB();
         }
 
-        public void ShowMessageBox(string header ,string message)
+        public void ShowMessageBox(string header, string message)
         {
             ToastContent content = new ToastContentBuilder()
                 .AddText(header, AdaptiveTextStyle.Base)
@@ -138,8 +146,9 @@ namespace UWP.FrontEnd
                         return;
                     }
                 }
-                if (navItemTag == "list") {
-                    CurrentNote = null; 
+                if (navItemTag == "list")
+                {
+                    CurrentNote = null;
                 }
                 ContentFrame.Navigate(_page, _note, transitionInfo);
             }

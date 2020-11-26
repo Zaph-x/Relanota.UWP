@@ -40,12 +40,13 @@ namespace UWP.FrontEnd.Views
         private int WordCount { get; set; } = 0;
         private AdvancedCollectionView Acv { get; set; }
         public static bool IsSaved { get; set; } = true;
-        public static NoteEditor Get { get; private set; }
+        private static NoteEditor _instance { get; set; }
+        public static NoteEditor Get => _instance ?? new NoteEditor();
 
 
         public NoteEditor()
         {
-            Get = this;
+            _instance = this;
             this.InitializeComponent();
             if (MainPage.CurrentNote == null) { TagTokens.IsEnabled = false; }
             Acv = new AdvancedCollectionView(MainPage.context.Tags.ToList(), false);
@@ -113,6 +114,7 @@ namespace UWP.FrontEnd.Views
                 EditorTextBox.TextChanged += NoteEditorTextBox_TextChanged;
                 MainPage.Get.SetDividerNoteName(MainPage.CurrentNote.Name ?? "New Note");
                 TagTokens.ItemsSource = new ObservableCollection<Tag>(MainPage.CurrentNote.NoteTags.Select(nt => nt.Tag));
+                TagTokens.IsEnabled = true;
                 NoteEditorTextBox_TextChanged(this.EditorTextBox, null);
                 SetSavedState(true);
             }
@@ -340,28 +342,7 @@ namespace UWP.FrontEnd.Views
         {
             if (e.Link.ToLower().StartsWith("note://"))
             {
-                if (!IsSaved)
-                {
-                    await ShowUnsavedChangesDialog();
-                }
-                string noteName = Uri.UnescapeDataString(e.Link.Substring(7));
-
-                if (MainPage.context.TryGetNote(noteName, true, out Note note))
-                {
-                    MainPage.CurrentNote = note;
-
-                    OnNavigatedTo(null);
-                }
-                else
-                {
-                    ContentDialog errorDialog = new ContentDialog
-                    {
-                        Title = "We could not find that note.",
-                        Content = $"The note '{noteName}' could note be found in the database.",
-                        PrimaryButtonText = "Okay"
-                    };
-                    await errorDialog.ShowAsync();
-                }
+                await NavigateToNoteFromUri(e.Link);
 
             }
             else if (!Uri.IsWellFormedUriString(e.Link, UriKind.Absolute))
@@ -435,6 +416,33 @@ namespace UWP.FrontEnd.Views
                 var selectionIndex = tb.SelectionStart;
                 tb.Text = tb.Text.Insert(selectionIndex, imagePath);
                 tb.SelectionStart = selectionIndex + imagePath.Length;
+            }
+        }
+
+        public async Task NavigateToNoteFromUri(string uri)
+        {
+            if (!IsSaved)
+            {
+                await ShowUnsavedChangesDialog();
+            }
+            string noteName = Uri.UnescapeDataString(uri.Substring(7));
+
+            if (MainPage.context.TryGetNote(noteName, true, out Note note))
+            {
+                MainPage.CurrentNote = note;
+                
+                OnNavigatedTo(null);
+            }
+            else
+            {
+                ContentDialog errorDialog = new ContentDialog
+                {
+                    Title = "We could not find that note.",
+                    Content = $"The note '{noteName}' could note be found in the database.",
+                    PrimaryButtonText = "Okay"
+                };
+                await errorDialog.ShowAsync();
+                MainPage.Get.NavView_Navigate("list", null);
             }
         }
     }
