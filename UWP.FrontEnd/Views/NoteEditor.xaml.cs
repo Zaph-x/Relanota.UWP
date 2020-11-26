@@ -425,8 +425,8 @@ namespace UWP.FrontEnd.Views
             {
                 await ShowUnsavedChangesDialog();
             }
-            string noteName = Uri.UnescapeDataString(uri.Substring(7));
-
+            string noteName = Uri.UnescapeDataString(uri.Substring(12));
+            File.AppendAllText($@"{ApplicationData.Current.LocalFolder.Path}\log.txt", $"{uri}");
             if (MainPage.context.TryGetNote(noteName, true, out Note note))
             {
                 MainPage.CurrentNote = note;

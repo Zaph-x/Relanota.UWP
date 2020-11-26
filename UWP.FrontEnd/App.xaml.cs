@@ -97,15 +97,39 @@ namespace UWP.FrontEnd
 
                 if (args is ProtocolActivatedEventArgs eventArgs)
                 {
-                    MainPage.Get.NavView_Navigate("edit", null);
-                    await NoteEditor.Get.NavigateToNoteFromUri(eventArgs.Uri.OriginalString.Substring(0, eventArgs.Uri.OriginalString.Length - 1));
+                    try
+                    {
+                        if (eventArgs.Uri.OriginalString.Length == 12 && eventArgs.Uri.OriginalString.StartsWith("note://open/"))
+                        {
+                            rootFrame.Navigate(typeof(MainPage));
+                        } else if (eventArgs.Uri.OriginalString.StartsWith("note://open/"))
+                        {
+                            MainPage.Get.NavView_Navigate("edit", null);
+
+                            await NoteEditor.Get.NavigateToNoteFromUri(eventArgs.Uri.OriginalString.Substring(0, eventArgs.Uri.OriginalString.Length));
+                        } else
+                        {
+                            ContentDialog errorDialog = new ContentDialog
+                            {
+                                Title = "We did not understand that.",
+                                Content = $"You opened relanote from a link which lead to nowhere. You will instead be sent to the note list.",
+                                PrimaryButtonText = "Okay"
+                            };
+                            await errorDialog.ShowAsync();
+                            MainPage.Get.NavView_Navigate("list", null);
+                        }
+                    } catch (UriFormatException ex)
+                    {
+                        ContentDialog errorDialog = new ContentDialog
+                        {
+                            Title = "We did not understand that.",
+                            Content = $"You opened relanote from a link which could not be interpreted. We managed to recover the state of the application and you will now be sent to the note list.",
+                            PrimaryButtonText = "Okay"
+                        };
+                        await errorDialog.ShowAsync();
+                        MainPage.Get.NavView_Navigate("list", null);
+                    }
                 }
-                //else
-                //{
-                //    MainPage.Get.NavView_Navigate("list", null);
-                //}
-
-
             }
         }
         /// <summary>
