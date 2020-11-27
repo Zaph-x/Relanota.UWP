@@ -42,8 +42,8 @@ namespace UWP.FrontEnd.Views
             base.OnNavigatedTo(e);
             App.context.Notes.Load();
             App.context.Tags.Load();
-            NotesCollection = App.context.Notes.Local.ToObservableCollection();
-            TagsCollection = App.context.Tags.Local.ToObservableCollection();
+            NotesCollection = new ObservableCollection<Note>(App.context.Notes.Local.OrderBy(note => note.Name));
+            TagsCollection = new ObservableCollection<Tag>(App.context.Tags.Local.OrderBy(tag => tag.Name));
             MainPage.Get.SetDividerNoteName("No Note Selected");
         }
 
@@ -86,8 +86,8 @@ namespace UWP.FrontEnd.Views
 
             if (result == ContentDialogResult.Primary)
             {
+                NotesCollection.Remove(note);
                 note.Delete(App.context, App.ShowMessageBox);
-                NotesListView.Items.Remove(note);
             }
         }
 
