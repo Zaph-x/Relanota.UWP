@@ -201,7 +201,7 @@ namespace UWP.FrontEnd.Views
                 WordCount = 0;
             else
                 WordCount = Regex.Split(text.Trim(), @"\s+").Length;
-            WordCounter.Text = $"{WordCount} words.";
+            WordCounter.Text = $"{WordCount} word" + ((WordCount != 1) ? "s" : "");
             if (State == NoteEditorState.ProtocolNavigating && IsSaved)
             {
                 SetSavedState(false);
