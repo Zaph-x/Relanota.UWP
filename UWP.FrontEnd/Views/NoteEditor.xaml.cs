@@ -28,6 +28,7 @@ using System.Drawing;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
 using System.Text;
+using System.Threading;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -44,14 +45,47 @@ namespace UWP.FrontEnd.Views
         public static bool IsProtocolNavigation { get; set; } = false;
         private static NoteEditor _instance { get; set; }
         public static NoteEditor Get => _instance ?? new NoteEditor();
+        private NoteEditorState _state { get; set; }
+        public NoteEditorState State {
+            get => _state;
+            set {
+                switch (value)
+                {
+                    case NoteEditorState.Ready:
+                        _state = value;
+                        break;
+                    case NoteEditorState.Saving:
+                        Save();
+                        break;
+                    case NoteEditorState.SaveCompleted:
+                        SetTagsState(true);
+                        SetSavedState(true);
+                        break;
+                    case NoteEditorState.SaveError:
+                        ShowUnsavablePrompt();
+                        if (string.IsNullOrWhiteSpace(NoteNameTextBox.Text))
+                            SetSavedState(true);
+                        else
+                            SetSavedState(false);
+                        break;
+                        _state = value;
+                    case NoteEditorState.Loading:
+                        break;
+                    case NoteEditorState.LoadError:
+                        break;
 
+                }
+            }
+        }
+        Timer _timer;
+        int _interval = 1000;
 
         public NoteEditor()
         {
             _instance = this;
             this.InitializeComponent();
             if (MainPage.CurrentNote == null) { TagTokens.IsEnabled = false; }
-            Acv = new AdvancedCollectionView(App.context.Tags.ToList(), false);
+            Acv = new AdvancedCollectionView(App.Context.Tags.ToList(), false);
             Acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Tag.Name), SortDirection.Ascending));
             Acv.Filter = itm => !TagTokens.Items.Contains(itm) && (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
             TagTokens.SuggestedItemsSource = Acv;
@@ -111,21 +145,47 @@ namespace UWP.FrontEnd.Views
             {
                 EditorTextBox.TextChanged -= NoteEditorTextBox_TextChanged;
                 EditorTextBox.Text = MainPage.CurrentNote.Content ?? "";
-                RenderBlock.Text = MainPage.CurrentNote.Content ?? "";
+                RenderBlock.Text = $"# {NoteNameTextBox.Text}\n{Regex.Replace(MainPage.CurrentNote.Content ?? "", @"(?<!\n)\r", Environment.NewLine)}";
                 NoteNameTextBox.Text = MainPage.CurrentNote.Name ?? "";
                 EditorTextBox.TextChanged += NoteEditorTextBox_TextChanged;
                 MainPage.Get.SetDividerNoteName(MainPage.CurrentNote.Name ?? "New Note");
                 TagTokens.ItemsSource = new ObservableCollection<Tag>(MainPage.CurrentNote.NoteTags.Select(nt => nt.Tag));
                 TagTokens.IsEnabled = true;
                 NoteEditorTextBox_TextChanged(this.EditorTextBox, null);
+                SetSavedState(true);
                 if (!IsProtocolNavigation) SetSavedState(true);
                 else SetSavedState(false);
             }
+            else
+            {
+                SetTagsState(false);
+            }
+            _timer = new Timer(Tick, null, _interval, Timeout.Infinite);
+            State = NoteEditorState.Ready;
         }
 
-        protected override async void OnNavigatedFrom(NavigationEventArgs e)
+        private async void Tick(object state)
         {
+            try
+            {
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+               {
+                   string text = EditorTextBox.Text ?? "";
+                   text = new MathMode(text, $"{ApplicationData.Current.LocalCacheFolder.Path}").WriteComponent();
 
+                   RenderBlock.Text = $"# {NoteNameTextBox.Text}\n" + Regex.Replace(text, @"(?<!\n)\r", Environment.NewLine);
+               });
+
+            }
+            finally
+            {
+                _timer?.Change(_interval, Timeout.Infinite);
+            }
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            _timer = null;
         }
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -137,57 +197,66 @@ namespace UWP.FrontEnd.Views
         {
             string text = ((TextBox)sender).Text;
 
-            text = new MathMode(text, $"{ApplicationData.Current.LocalCacheFolder.Path}").WriteComponent();
-
-
-            RenderBlock.Text = $"# {NoteNameTextBox.Text}\n" + Regex.Replace(text, @"(?<!\n)\r", Environment.NewLine);
-
             if (string.IsNullOrWhiteSpace(text))
                 WordCount = 0;
             else
                 WordCount = Regex.Split(text.Trim(), @"\s+").Length;
             WordCounter.Text = $"{WordCount} words.";
-            if (e != null && IsSaved)
+            if (State == NoteEditorState.ProtocolNavigating && IsSaved)
             {
                 SetSavedState(false);
             }
         }
 
-        private async Task SaveAsync()
+        private async void ShowUnsavablePrompt()
+        {
+            IsSaved = false;
+            ContentDialog unsavedDialog = new ContentDialog
+            {
+                Title = "We could not save that.",
+                Content = "The note does not seem to have a name. Please provide a name to save the note.",
+                PrimaryButtonText = "Okay"
+            };
+
+            await unsavedDialog.ShowAsync();
+            MainPage.Get.SetNavigationIndex(3);
+        }
+
+        private void Save()
         {
             if (string.IsNullOrWhiteSpace(NoteNameTextBox.Text))
             {
-                IsSaved = false;
-                ContentDialog unsavedDialog = new ContentDialog
-                {
-                    Title = "We could not save that.",
-                    Content = "The note does not seem to have a name. Please provide a name to save the note.",
-                    PrimaryButtonText = "Okay"
-                };
-
-                await unsavedDialog.ShowAsync();
-                MainPage.Get.SetNavigationIndex(3);
+                State = NoteEditorState.SaveError;
                 return;
             }
             if (MainPage.CurrentNote == null)
             {
-                MainPage.CurrentNote = new Note();
-                MainPage.CurrentNote.Save(EditorTextBox.Text, NoteNameTextBox.Text, App.context);
-                TagTokens.IsEnabled = true;
+                if (App.Context.TryGetNote(NoteNameTextBox.Text, true, out Note note))
+                {
+                    MainPage.CurrentNote = note;
+                    note.Update($"{note.Content}\n\n{EditorTextBox.Text}", NoteNameTextBox.Text, App.Context);
+                    TagTokens.ItemsSource = new ObservableCollection<Tag>(MainPage.CurrentNote.NoteTags.Select(nt => nt.Tag));
+                    EditorTextBox.Text = $"{note.Content}";
+                    TagTokens.IsEnabled = true;
+                }
+                else
+                {
+                    MainPage.CurrentNote = note;
+                    MainPage.CurrentNote.Save(EditorTextBox.Text, NoteNameTextBox.Text, App.Context);
+                    TagTokens.IsEnabled = true;
+                }
+
             }
             else
             {
-                MainPage.CurrentNote.Update(EditorTextBox.Text, NoteNameTextBox.Text, App.context);
+                MainPage.CurrentNote.Update(EditorTextBox.Text, NoteNameTextBox.Text, App.Context);
             }
-            if (!IsSaved)
-            {
-                SetSavedState(true);
-            }
+            State = NoteEditorState.SaveCompleted;
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            SaveAsync();
+            State = NoteEditorState.Saving;
         }
         private async void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
@@ -203,14 +272,15 @@ namespace UWP.FrontEnd.Views
 
             if (result == ContentDialogResult.Primary)
             {
-                MainPage.CurrentNote.Delete(App.context, App.ShowMessageBox);
+                // The user chose to delete the note
+                MainPage.CurrentNote.Delete(App.Context, App.ShowMessageBox);
                 SetSavedState(true);
                 MainPage.Get.NavView_Navigate("list", null);
                 MainPage.Get.SetNavigationIndex(0);
             }
             else
             {
-                // The user clicked the CLoseButton, pressed ESC, Gamepad B, or the system back button.
+                // The user clicked the CLoseButton, pressed ESC, or the system back button.
                 // Do nothing.
             }
         }
@@ -220,6 +290,7 @@ namespace UWP.FrontEnd.Views
         }
         private async void ImportPictureButton_Click(object sender, RoutedEventArgs e)
         {
+            // Set up file picker
             FileOpenPicker fileOpenPicker = new FileOpenPicker();
             fileOpenPicker.FileTypeFilter.Add(".jpg");
             fileOpenPicker.FileTypeFilter.Add(".jpeg");
@@ -227,20 +298,25 @@ namespace UWP.FrontEnd.Views
             fileOpenPicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
 
             StorageFile file = await fileOpenPicker.PickSingleFileAsync();
+
+            // Make sure a file was actually created
             if (file != null)
             {
                 // Application now has read/write access to the picked file
                 try
                 {
+                    // Copy it to the local directory
                     file = await file.CopyAsync(ApplicationData.Current.LocalCacheFolder);
                 }
                 catch
                 {
 
                 }
+                // Insert reference into the textbox and set save state to false
                 string imagePath = $@"![{file.DisplayName}]({{{{local_dir}}}}\{file.Name})";
                 var selectionIndex = EditorTextBox.SelectionStart;
                 EditorTextBox.Text = EditorTextBox.Text.Insert(selectionIndex, imagePath);
+                // Make sure cursor is at the end of the image insert
                 EditorTextBox.SelectionStart = selectionIndex + imagePath.Length;
                 SetSavedState(false);
 
@@ -253,15 +329,20 @@ namespace UWP.FrontEnd.Views
 
             try
             {
+                // check if the image is from online. Find on disk
                 if (e.Url.ToLower().StartsWith("http"))
                 {
+                    // Fix urls
                     string url = e.Url.Replace("(", "%28").Replace(")", "%29");
+                    // Get Bitmap from URL
                     BitmapImage image = new BitmapImage(new Uri(url));
                     e.Image = image;
 
+                    // Generate name for local storage
                     string cachefilename = url.CreateMD5();
                     try
                     {
+                        // Download if the file does not exist
                         if (!File.Exists($@"{ApplicationData.Current.LocalCacheFolder.Path}\{cachefilename}.jpg"))
                             await SaveImageToFileAsync(cachefilename, ApplicationData.Current.LocalCacheFolder.Path, new Uri(url));
                     }
@@ -272,8 +353,9 @@ namespace UWP.FrontEnd.Views
                 }
                 else
                 {
+                    // Make sure we convert long file names to smaller shorter ones
                     string path = e.Url.Replace("{{cache_dir}}", ApplicationData.Current.LocalCacheFolder.Path);
-                    path = e.Url.Replace("{{local_dir}}", ApplicationData.Current.LocalFolder.Path);
+                    path = path.Replace("{{local_dir}}", ApplicationData.Current.LocalFolder.Path);
                     e.Image = new BitmapImage(new Uri(path));
                 }
             }
@@ -288,6 +370,7 @@ namespace UWP.FrontEnd.Views
 
         private void RenderBlock_CodeBlockResolving(object sender, CodeBlockResolvingEventArgs e)
         {
+            // TODO: Add more language support later
             if (e.CodeLanguage == "CUSTOM")
             {
                 e.Handled = true;
@@ -298,6 +381,7 @@ namespace UWP.FrontEnd.Views
 
         private void TagTokens_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
         {
+            // Make sure the event is fired because of the user
             if (args.CheckCurrent() && args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
             {
                 Acv.RefreshFilter();
@@ -306,19 +390,19 @@ namespace UWP.FrontEnd.Views
 
         private void TagTokens_TokenItemAdding(TokenizingTextBox sender, TokenItemAddingEventArgs args)
         {
-            Console.WriteLine(args);
-            if (App.context.Tags.Local.Any(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase)))
+            // If the tag exists, use it. Otherwise create a new tag.
+            if (App.Context.Tags.Local.Any(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase)))
             {
-                Tag tag = App.context.Tags.Local.First(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase));
+                Tag tag = App.Context.Tags.Local.First(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase));
                 args.Item = tag;
-                MainPage.CurrentNote.AddTag(tag, App.context);
+                MainPage.CurrentNote.AddTag(tag, App.Context);
             }
             else
             {
                 Tag tag = new Tag();
                 tag.Name = args.TokenText;
                 args.Item = tag;
-                MainPage.CurrentNote.AddTag(tag, App.context);
+                MainPage.CurrentNote.AddTag(tag, App.Context);
             }
             SetSavedState(false);
 
@@ -327,33 +411,31 @@ namespace UWP.FrontEnd.Views
 
         private void TagTokens_TokenItemRemoving(TokenizingTextBox sender, TokenItemRemovingEventArgs args)
         {
-            MainPage.CurrentNote.RemoveTag(args.Item as Tag, App.context);
+            MainPage.CurrentNote.RemoveTag(args.Item as Tag, App.Context);
             SetSavedState(false);
 
         }
 
         private void TagTokens_TokenItemAdded(TokenizingTextBox sender, object data)
         {
+            // Only act on tag objects
             if (data is Tag tag)
             {
-                MainPage.CurrentNote.AddTag(tag, App.context);
+                MainPage.CurrentNote.AddTag(tag, App.Context);
             }
             SetSavedState(false);
         }
 
         private async void MarkdownText_LinkClicked(object sender, LinkClickedEventArgs e)
         {
-            if (e.Link.ToLower().StartsWith("note://"))
+            if (!Uri.IsWellFormedUriString(e.Link, UriKind.Absolute))
             {
-                await NavigateToNoteFromUri(e.Link);
-
-            }
-            else if (!Uri.IsWellFormedUriString(e.Link, UriKind.Absolute))
-            {
+                // TODO implement a default handler for this
                 //await new MessageDialog("Masked relative links needs to be manually handled.").ShowAsync();
             }
             else
             {
+                // Handle any known protocol
                 await Launcher.LaunchUriAsync(new Uri(e.Link));
             }
         }
@@ -367,7 +449,9 @@ namespace UWP.FrontEnd.Views
                 // We don't want to block anything if it's not CTRL+I
                 return;
             }
+            // Import picture, which is what should ACTUALLY happen
             ImportPictureButton_Click(null, null);
+            // Suppres default CTRL + I  ->  Inserts tab character
             e.Handled = true;
         }
 
@@ -385,14 +469,17 @@ namespace UWP.FrontEnd.Views
 
             if (result == ContentDialogResult.Primary)
             {
-                await Get.SaveAsync();
+                // Change state as user requested
+                Get.State = NoteEditorState.Saving;
             }
             else if (result == ContentDialogResult.Secondary)
             {
+                // Simulate saved note to escape save loop
                 Get.SetSavedState(true);
             }
             else
             {
+                // No action taken. Return to view
                 return;
             }
         }
@@ -401,39 +488,46 @@ namespace UWP.FrontEnd.Views
         {
             IsSaved = isSaved;
             UnsavedChangesText.Text = isSaved ? "" : "Unsaved Changes.";
+            State = NoteEditorState.Ready;
         }
 
         private async void EditorTextBox_Paste(object sender, TextControlPasteEventArgs e)
         {
+            // Get the target text box and data package
             TextBox tb = sender as TextBox;
             DataPackageView dataPackageView = Clipboard.GetContent();
+
+            // Check if data is an image
             if (dataPackageView.Contains(StandardDataFormats.Bitmap))
             {
-                e.Handled = true;
-
+                // Generate file name and save image
                 string fileName = $"Paste {DateTime.Now:ddMMyyyy hhmmss tt}";
-
                 await SaveImageToFileAsync(fileName, ApplicationData.Current.LocalFolder.Path, await dataPackageView.GetBitmapAsync());
 
+                // Insert image into note, at current position
                 string imagePath = $@"![{fileName}]({{{{local_dir}}}}\{fileName}.jpg)";
-                var selectionIndex = tb.SelectionStart;
+                int selectionIndex = tb.SelectionStart;
                 tb.Text = tb.Text.Insert(selectionIndex, imagePath);
                 tb.SelectionStart = selectionIndex + imagePath.Length;
+
+                e.Handled = true;
             }
         }
 
         public async Task NavigateToNoteFromUri(string uri)
         {
+            // Check if the note has been saved.
             if (!IsSaved)
             {
                 await ShowUnsavedChangesDialog();
             }
+            // We have note checked if the note is saved. We can continue
             string noteName = Uri.UnescapeDataString(uri.Substring(12));
-            File.AppendAllText($@"{ApplicationData.Current.LocalFolder.Path}\log.txt", $"{uri}");
-            if (App.context.TryGetNote(noteName, true, out Note note))
+            
+            if (App.Context.TryGetNote(noteName, true, out Note note))
             {
+                // The note was found. We must now fill the view.
                 MainPage.CurrentNote = note;
-                
                 OnNavigatedTo(null);
             }
             else
@@ -441,18 +535,77 @@ namespace UWP.FrontEnd.Views
                 ContentDialog errorDialog = new ContentDialog
                 {
                     Title = "We could not find that note.",
-                    Content = $"The note '{noteName}' could note be found in the database.",
-                    PrimaryButtonText = "Okay"
+                    Content = $"The note '{noteName}' could note be found in the database. Do you wish to create it?",
+                    PrimaryButtonText = "Yes",
+                    CloseButtonText = "No"
                 };
-                await errorDialog.ShowAsync();
-                MainPage.Get.NavView_Navigate("list", null);
+                ContentDialogResult result = await errorDialog.ShowAsync();
+
+                if (result == ContentDialogResult.Primary)
+                {
+                    // Always check if the note is saved
+                    if (!IsSaved)
+                    {
+                        await ShowUnsavedChangesDialog();
+                        if (State == NoteEditorState.SaveError)
+                        {
+                            return;
+                        }
+                    }
+                    // Only set note name and save
+                    NoteNameTextBox.Text = noteName;
+                    EditorTextBox.Text = "";
+                    State = NoteEditorState.Saving;
+                }
+                else
+                {
+                    // The user specified they don't want to create the note. Therefore we should go to the note list
+                    MainPage.Get.NavView_Navigate("list", null);
+                }
+
             }
         }
 
         private void ShareNoteButton_Click(object sender, RoutedEventArgs e)
         {
-            App.SetClipboardContent($"note://import/|{Convert.ToBase64String(Encoding.Default.GetBytes(MainPage.CurrentNote.Name))}|{Convert.ToBase64String(Encoding.Default.GetBytes(MainPage.CurrentNote.Content))}|");
+            // Quick copy content of the note. Does not have to be saved.
+            App.SetClipboardContent($"note://import/|{Convert.ToBase64String(Encoding.Default.GetBytes(NoteNameTextBox.Text))}|{Convert.ToBase64String(Encoding.Default.GetBytes(EditorTextBox.Text))}|");
             App.ShowMessageBox("Note copied!", "A sharable link has been copied to your clipboard.");
         }
+
+        private void SetTagsState(bool activate)
+        {
+            TagTokens.PlaceholderText = activate ? "Enter Tags" : "Save the note to enter tags";
+        }
+
+        private void CopyLinkButton_Click(object sender, RoutedEventArgs e)
+        {
+            // We only want to get a link if there is a saved note open
+            if (MainPage.CurrentNote != null)
+            {
+                App.SetClipboardContent($"note://open/{MainPage.CurrentNote.Name}");
+                App.ShowMessageBox("Link copied!", "A link to the current note has been copied.");
+            }
+            else
+            {
+                App.ShowMessageBox("Could not link to note!", "You can only link to notes stored in the note database.");
+            }
+        }
+    }
+
+    public enum NoteEditorState
+    {
+        // OK states
+        Ready = 0,
+        Saving = 1,
+        Loading = 2,
+        SaveCompleted = 4,
+        ProtocolNavigating = 64,
+
+
+        // Error states
+        SaveError = 8,
+        LoadError = 16,
+        Error = 32,
     }
 }

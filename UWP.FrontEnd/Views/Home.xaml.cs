@@ -33,24 +33,24 @@ namespace UWP.FrontEnd.Views
         public Home()
         {
             this.InitializeComponent();
-            App.context.Notes.Load();
-            App.context.Tags.Load();
+            App.Context.Notes.Load();
+            App.Context.Tags.Load();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            App.context.Notes.Load();
-            App.context.Tags.Load();
-            NotesCollection = new ObservableCollection<Note>(App.context.Notes.Local.OrderBy(note => note.Name));
-            TagsCollection = new ObservableCollection<Tag>(App.context.Tags.Local.OrderBy(tag => tag.Name));
+            App.Context.Notes.Load();
+            App.Context.Tags.Load();
+            NotesCollection = new ObservableCollection<Note>(App.Context.Notes.Local.OrderBy(note => note.Name));
+            TagsCollection = new ObservableCollection<Tag>(App.Context.Tags.Local.OrderBy(tag => tag.Name));
             MainPage.Get.SetDividerNoteName("No Note Selected");
         }
 
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
             Note note = (sender as FrameworkElement).Tag as Note;
-            note = App.context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
+            note = App.Context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
             MainPage.CurrentNote = note;
             this.Frame.Navigate(typeof(NoteEditor), note);
         }
@@ -60,7 +60,7 @@ namespace UWP.FrontEnd.Views
             if (NotesListView.SelectedIndex >= 0)
             {
                 Note note = NotesListView.SelectedItem as Note;
-                note = App.context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
+                note = App.Context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
                 MainPage.CurrentNote = note;
                 this.Frame.Navigate(typeof(NoteEditor), note);
             }
@@ -87,7 +87,7 @@ namespace UWP.FrontEnd.Views
             if (result == ContentDialogResult.Primary)
             {
                 NotesCollection.Remove(note);
-                note.Delete(App.context, App.ShowMessageBox);
+                note.Delete(App.Context, App.ShowMessageBox);
             }
         }
 
@@ -96,7 +96,7 @@ namespace UWP.FrontEnd.Views
             try
             {
                 Tag tag = (sender as FrameworkElement).Tag as Tag;
-                tag = App.context.Tags.Include(t => t.NoteTags).ThenInclude(nt => nt.Note).First(t => t.Key == tag.Key);
+                tag = App.Context.Tags.Include(t => t.NoteTags).ThenInclude(nt => nt.Note).First(t => t.Key == tag.Key);
                 MainPage.CurrentTag = tag;
                 this.Frame.Navigate(typeof(TagsEditor), tag);
             }
@@ -121,7 +121,7 @@ namespace UWP.FrontEnd.Views
 
             if (result == ContentDialogResult.Primary)
             {
-                tag.Delete(App.context, App.ShowMessageBox);
+                tag.Delete(App.Context, App.ShowMessageBox);
                 TagsListView.Items.Remove(tag);
             }
         }

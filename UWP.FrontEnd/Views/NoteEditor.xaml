@@ -128,18 +128,23 @@ FontFamily="Segoe MDL2 Assets"/>
                             <KeyboardAccelerator Modifiers="Control" Key="G"/>
                         </AppBarButton.KeyboardAccelerators>
                     </AppBarButton>
+                    <AppBarButton Icon="Link" AccessKey="L" Label="Copy Link to Note" Click="CopyLinkButton_Click">
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="L"/>
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
                 </CommandBar.SecondaryCommands>
             </CommandBar>
             <controls:TokenizingTextBox Grid.Column="1" x:Name="TagTokens" 
-                                                HorizontalAlignment="Stretch" 
-                                                PlaceholderText="Enter Tags" 
-                                                TokenDelimiter="," 
-                                                TextMemberPath="Text" 
-                                                TextChanged="TagTokens_TextChanged"
-                                                TokenItemAdded="TagTokens_TokenItemAdded"
-                                                TokenItemAdding="TagTokens_TokenItemAdding"
-                                                TokenItemRemoving="TagTokens_TokenItemRemoving"
-                                                QueryIcon="{ex:SymbolIconSource Symbol=Tag}">
+                                        HorizontalAlignment="Stretch" 
+                                        PlaceholderText="Enter Tags" 
+                                        TokenDelimiter="," 
+                                        TextMemberPath="Text" 
+                                        TextChanged="TagTokens_TextChanged"
+                                        TokenItemAdding="TagTokens_TokenItemAdding"
+                                        TokenItemAdded="TagTokens_TokenItemAdded"
+                                        TokenItemRemoving="TagTokens_TokenItemRemoving"
+                                        QueryIcon="{ex:SymbolIconSource Symbol=Tag}">
                 <controls:TokenizingTextBox.SuggestedItemTemplate>
                     <DataTemplate x:DataType="objects:Tag">
                         <StackPanel>

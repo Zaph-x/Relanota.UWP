@@ -49,9 +49,15 @@
                                     <Button FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE8FF;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to preview note" Click="PreviewButton_Click">
                                         <Button.Flyout>
                                             <Flyout Placement="BottomEdgeAlignedLeft">
-                                                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                                    <controls:MarkdownTextBlock Width="400" MaxHeight="600" Text="{Binding Content}" Background="Transparent"/>
-                                                </ScrollViewer>
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="*" MaxHeight="600"/>
+                                                    </Grid.RowDefinitions>
+                                                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto">
+                                                        <controls:MarkdownTextBlock  ScrollViewer.VerticalScrollBarVisibility="Auto" Width="400" Text="{Binding Content}" Background="Transparent"/>
+                                                    </ScrollViewer>
+                                                </Grid>
+                                                
                                             </Flyout>
                                         </Button.Flyout>
                                     </Button>

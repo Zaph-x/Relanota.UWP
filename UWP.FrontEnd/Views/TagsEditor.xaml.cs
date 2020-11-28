@@ -56,11 +56,11 @@ namespace UWP.FrontEnd.Views
             List<Tag> tags = new List<Tag>();
             if (MainPage.CurrentNote == null)
             {
-                tags = App.context.Tags.ToList();
+                tags = App.Context.Tags.ToList();
             }
             else
             {
-                tags = App.context.NoteTags.Include(nt => nt.Tag).Where(nt => nt.NoteKey == MainPage.CurrentNote.Key).Select(nt => nt.Tag).ToList();
+                tags = App.Context.NoteTags.Include(nt => nt.Tag).Where(nt => nt.NoteKey == MainPage.CurrentNote.Key).Select(nt => nt.Tag).ToList();
             }
             TagsListView.ItemsSource = new ObservableCollection<Tag>(tags);
         }
@@ -68,7 +68,7 @@ namespace UWP.FrontEnd.Views
         private void GetRelatedNotesFromTag(Tag tag)
         {
             List<Note> Notes = new List<Note>();
-            Notes = App.context.Notes
+            Notes = App.Context.Notes
                     .Include(note => note.NoteTags)
                     .ThenInclude(nt => nt.Tag)
                     .Where(note => note.NoteTags
@@ -84,7 +84,7 @@ namespace UWP.FrontEnd.Views
             {
                 Tag tag = TagsListView.SelectedItem as Tag;
                 List<Note> Notes = new List<Note>();
-                Notes = App.context.Notes
+                Notes = App.Context.Notes
                     .Include(note => note.NoteTags)
                     .ThenInclude(nt => nt.Tag)
                     .Where(note => note.NoteTags
@@ -120,11 +120,11 @@ namespace UWP.FrontEnd.Views
         {
             if (MainPage.CurrentTag != null)
             {
-                MainPage.CurrentTag.Update(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(), App.context);
+                MainPage.CurrentTag.Update(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(), App.Context);
             }
             else
             {
-                MainPage.CurrentTag.Save(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(), App.context);
+                MainPage.CurrentTag.Save(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(), App.Context);
             }
             TagNameEditBox.Text = "";
             TagDescriptionEditBox.Text = "";
@@ -136,7 +136,7 @@ namespace UWP.FrontEnd.Views
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
             Note note = (sender as FrameworkElement).Tag as Note;
-            note = App.context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
+            note = App.Context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
             MainPage.CurrentNote = note;
             this.Frame.Navigate(typeof(NoteEditor), note);
         }

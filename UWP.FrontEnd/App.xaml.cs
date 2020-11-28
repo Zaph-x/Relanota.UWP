@@ -34,7 +34,7 @@ namespace UWP.FrontEnd
     sealed partial class App : Application
     {
         private Frame rootFrame = null;
-        public static Database context = new Database();
+        public static Database Context = new Database();
 
         public async Task ConnectDB()
         {
@@ -50,10 +50,10 @@ namespace UWP.FrontEnd
             finally
             {
                 Database.path = ApplicationData.Current.LocalFolder.Path;
-                context.Database.EnsureCreated();
-                context.Notes.Load();
-                context.NoteTags.Load();
-                context.Tags.Load();
+                Context.Database.EnsureCreated();
+                Context.Notes.Load();
+                Context.NoteTags.Load();
+                Context.Tags.Load();
             }
 
         }
@@ -65,6 +65,7 @@ namespace UWP.FrontEnd
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            ConnectDB();
         }
 
         /// <summary>
@@ -110,7 +111,6 @@ namespace UWP.FrontEnd
         }
         protected override async void OnActivated(IActivatedEventArgs args)
         {
-            await ConnectDB();
             //base.OnActivated(args);
             if (args.Kind == ActivationKind.Protocol)
             {
@@ -132,6 +132,7 @@ namespace UWP.FrontEnd
                     ContentDialog errorDialog = new ContentDialog();
                     try
                     {
+                        NoteEditor.Get.State = NoteEditorState.ProtocolNavigating;
                         switch (eventArgs.Uri.Host.ToLower())
                         {
                             case "open":
@@ -144,7 +145,7 @@ namespace UWP.FrontEnd
 
                                 string serializedString = Uri.UnescapeDataString(eventArgs.Uri.LocalPath.Substring(1));
 
-                                if (Note.TryDeserialize(serializedString, context, out Note note))
+                                if (Note.TryDeserialize(serializedString, Context, out Note note))
                                 {
                                     MainPage.CurrentNote = note;
                                     MainPage.Get.SetNavigationIndex(3);

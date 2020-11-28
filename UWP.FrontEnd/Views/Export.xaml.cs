@@ -32,34 +32,42 @@ namespace UWP.FrontEnd.Views
     /// </summary>
     public sealed partial class Export : Page
     {
-        private AdvancedCollectionView _acv { get; set; }
+        private AdvancedCollectionView Acv { get; set; }
 
-        List<Tag> filterTags = new List<Tag>();
         public Export()
         {
             this.InitializeComponent();
-            _acv = new AdvancedCollectionView(App.context.Tags.ToList(), false);
-            _acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Tag.Name), SortDirection.Ascending));
-            _acv.Filter = itm => !TagTokens.Items.Contains(itm) && (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
+            Acv = new AdvancedCollectionView(App.Context.Tags.ToList(), false);
+            Acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Tag.Name), SortDirection.Ascending));
+            Acv.Filter = itm => !TagTokens.Items.Contains(itm) && (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
             TagTokens.ItemsSource = new ObservableCollection<Tag>();
+            TagTokens.SuggestedItemsSource = Acv;
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            if (MainPage.CurrentNote == null)
+            {
+                OnlyThisCheckbox.Visibility = Visibility.Collapsed;
+                OnlyThisText.Visibility = Visibility.Collapsed;
+            }
         }
 
         private async void ExportButton_Click(object sender, RoutedEventArgs e)
         {
             List<Note> notes = null;
-            if (!filterTags.Any())
+            if (OnlyThisCheckbox.IsChecked ?? false)
             {
-                notes = App.context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).ToList();
+                notes = new List<Note>() { MainPage.CurrentNote };
+            }
+            else if (!TagTokens.Items.Any())
+            {
+                notes = App.Context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).ToList();
             }
             else
             {
-                notes = App.context.Notes.Include(n => n.NoteTags)
-                    .ThenInclude(n => n.Tag)
-                    .Where(n => n.NoteTags
-                        .Select(nt => nt.Tag)
-                        .Intersect(filterTags)
-                        .Any())
-                    .ToList();
+                notes = App.Context.Notes.Include(n => n.NoteTags).ThenInclude(nt => nt.Tag).ToList();
+                notes = notes.Where(note => note.NoteTags.Select(nt => nt.Tag).Intersect(TagTokens.Items).Any()).ToList();
             }
             FileSavePicker fileSavePicker = new FileSavePicker();
             string type = (FileFormatPicker.SelectedItem as FrameworkElement).Tag as string;
@@ -71,6 +79,10 @@ namespace UWP.FrontEnd.Views
             StorageFile file = await fileSavePicker.PickSaveFileAsync();
             if (file != null)
             {
+                if (File.Exists(file.Path))
+                {
+                    File.Delete(file.Path);
+                }
                 Stream stream = await file.OpenStreamForWriteAsync();
 #pragma warning disable CS8509 // The switch expression does not handle all possible values of its input type (it is not exhaustive).
                 IDocumentType document = (type.ToLower()) switch {
@@ -84,12 +96,37 @@ namespace UWP.FrontEnd.Views
 
         private void TagTokens_TokenItemAdding(TokenizingTextBox sender, TokenItemAddingEventArgs args)
         {
-            if (App.context.Tags.Contains(args.Item as Tag))
+            // If the tag exists, use it. Otherwise cancel the event.
+            if (App.Context.Tags.Local.Any(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase)))
             {
-                filterTags.Add(args.Item as Tag);
+                Tag tag = App.Context.Tags.Local.First(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase));
+                args.Item = tag;
+
+                args.Cancel = false;
                 return;
             }
             args.Cancel = true;
+        }
+
+        private void TagTokens_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        {
+            // Make sure the event is fired because of the user
+            if (args.CheckCurrent() && args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
+            {
+                Acv.RefreshFilter();
+            }
+        }
+
+        private void OnlyThisCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+            ByTagText.Visibility = Visibility.Collapsed;
+            TagTokens.Visibility = Visibility.Collapsed;
+        }
+
+        private void OnlyThisCheckbox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            ByTagText.Visibility = Visibility.Visible;
+            TagTokens.Visibility = Visibility.Visible;
         }
     }
 }

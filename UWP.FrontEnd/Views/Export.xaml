@@ -31,13 +31,16 @@
                     <ComboBoxItem Content="Text (*.txt)" Tag=".txt"/>
                     <!--<ComboBoxItem Content="Sqlite Database (*.db)" Tag=".db"/>-->
                 </ComboBox>
-                <TextBlock VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" Text="Export Notes By Tag" Margin="0 0 10 0"/>
+                <TextBlock x:Name="OnlyThisText" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" Text="Export This Note Only" Margin="0 0 10 0"/>
+                <CheckBox x:Name="OnlyThisCheckbox" VerticalAlignment="Center" Grid.Row="1" Grid.Column="1" Checked="OnlyThisCheckbox_Checked" Unchecked="OnlyThisCheckbox_Unchecked"/>
+                <TextBlock x:Name="ByTagText" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0" Text="Export Notes By Tag" Margin="0 0 10 0"/>
                 <controls:TokenizingTextBox x:Name="TagTokens" 
-                                            Grid.Row="1" 
+                                            Grid.Row="2" 
                                             Grid.Column="1" 
                                             ToolTipService.ToolTip="Leave blank for all notes." 
                                             PlaceholderText="Enter Tags"
                                             TokenItemAdding="TagTokens_TokenItemAdding"
+                                            TextChanged="TagTokens_TextChanged"
                                             QueryIcon="{ex:SymbolIconSource Symbol=Tag}">
                     <controls:TokenizingTextBox.SuggestedItemTemplate>
                         <DataTemplate x:DataType="objects:Tag">
