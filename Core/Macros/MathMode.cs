@@ -23,7 +23,7 @@ namespace Core.Macros
         {
             //foreach (string line in Text.Split(Environment.NewLine.ToCharArray()))
             //{
-            MatchCollection matches = Regex.Matches(Text, @".*?(?<!`)(\$(.+?(?<!\\))\$)[^`]*?", RegexOptions.None);
+            MatchCollection matches = Regex.Matches(Text, @"(?<!`)(\$(.+?(?<!\\))\$)", RegexOptions.None);
             foreach (Match match in matches)
             {
                 if (match.Success)

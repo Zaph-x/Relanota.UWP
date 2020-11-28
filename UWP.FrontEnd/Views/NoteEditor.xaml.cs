@@ -171,7 +171,8 @@ namespace UWP.FrontEnd.Views
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
                {
                    string text = EditorTextBox.Text ?? "";
-                   text = new MathMode(text, $"{ApplicationData.Current.LocalCacheFolder.Path}").WriteComponent();
+                   if (EditorTextBox.Text.Contains("$"))
+                       text = new MathMode(text, $"{ApplicationData.Current.LocalCacheFolder.Path}").WriteComponent();
 
                    RenderBlock.Text = $"# {NoteNameTextBox.Text}\n" + Regex.Replace(text, @"(?<!\n)\r", Environment.NewLine);
                });
@@ -523,7 +524,7 @@ namespace UWP.FrontEnd.Views
             }
             // We have note checked if the note is saved. We can continue
             string noteName = Uri.UnescapeDataString(uri.Substring(12));
-            
+
             if (App.Context.TryGetNote(noteName, true, out Note note))
             {
                 // The note was found. We must now fill the view.
@@ -583,7 +584,7 @@ namespace UWP.FrontEnd.Views
             // We only want to get a link if there is a saved note open
             if (MainPage.CurrentNote != null)
             {
-                App.SetClipboardContent($"note://open/{MainPage.CurrentNote.Name}");
+                App.SetClipboardContent($"note://open/{Uri.EscapeDataString(MainPage.CurrentNote.Name)}");
                 App.ShowMessageBox("Link copied!", "A link to the current note has been copied.");
             }
             else
