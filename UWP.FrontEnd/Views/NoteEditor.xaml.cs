@@ -241,7 +241,7 @@ namespace UWP.FrontEnd.Views
                 }
                 else
                 {
-                    MainPage.CurrentNote = note;
+                    MainPage.CurrentNote = new Note();
                     MainPage.CurrentNote.Save(EditorTextBox.Text, NoteNameTextBox.Text, App.Context);
                     TagTokens.IsEnabled = true;
                 }
