@@ -27,21 +27,17 @@ namespace UWP.FrontEnd.Views
     /// </summary>
     public sealed partial class Home : Page
     {
-        ObservableCollection<Note> NotesCollection = new ObservableCollection<Note>();
-        ObservableCollection<Tag> TagsCollection = new ObservableCollection<Tag>();
+        ObservableCollection<Note> NotesCollection { get; set; }
+        ObservableCollection<Tag> TagsCollection { get; set; }
 
         public Home()
         {
             this.InitializeComponent();
-            App.Context.Notes.Load();
-            App.Context.Tags.Load();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            App.Context.Notes.Load();
-            App.Context.Tags.Load();
             NotesCollection = new ObservableCollection<Note>(App.Context.Notes.Local.OrderBy(note => note.Name));
             TagsCollection = new ObservableCollection<Tag>(App.Context.Tags.Local.OrderBy(tag => tag.Name));
             MainPage.Get.SetDividerNoteName("No Note Selected");
@@ -59,10 +55,11 @@ namespace UWP.FrontEnd.Views
         {
             if (NotesListView.SelectedIndex >= 0)
             {
-                Note note = NotesListView.SelectedItem as Note;
-                note = App.Context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
-                MainPage.CurrentNote = note;
-                this.Frame.Navigate(typeof(NoteEditor), note);
+                NotesListView.SelectedItem = App.Context.Notes.Include(n => n.NoteTags)
+                                                .ThenInclude(n => n.Tag)
+                                                .First(n => n.Key == (NotesListView.SelectedItem as Note).Key);
+                MainPage.CurrentNote = (NotesListView.SelectedItem as Note);
+                this.Frame.Navigate(typeof(NoteEditor), (NotesListView.SelectedItem as Note));
             }
         }
 
@@ -73,7 +70,6 @@ namespace UWP.FrontEnd.Views
 
         private async void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-            Note note = (sender as FrameworkElement).Tag as Note;
             ContentDialog deleteFileDialog = new ContentDialog
             {
                 Title = "Delete note permanently?",
@@ -86,8 +82,8 @@ namespace UWP.FrontEnd.Views
 
             if (result == ContentDialogResult.Primary)
             {
-                NotesCollection.Remove(note);
-                note.Delete(App.Context, App.ShowMessageBox);
+                NotesCollection.Remove((sender as FrameworkElement).Tag as Note);
+                ((sender as FrameworkElement).Tag as Note).Delete(App.Context, App.ShowMessageBox);
             }
         }
 
@@ -95,10 +91,11 @@ namespace UWP.FrontEnd.Views
         {
             try
             {
-                Tag tag = (sender as FrameworkElement).Tag as Tag;
-                tag = App.Context.Tags.Include(t => t.NoteTags).ThenInclude(nt => nt.Note).First(t => t.Key == tag.Key);
-                MainPage.CurrentTag = tag;
-                this.Frame.Navigate(typeof(TagsEditor), tag);
+                (sender as FrameworkElement).Tag = App.Context.Tags.Include(t => t.NoteTags)
+                                                            .ThenInclude(nt => nt.Note)
+                                                            .First(t => t.Key == ((sender as FrameworkElement).Tag as Tag).Key);
+                MainPage.CurrentTag = ((sender as FrameworkElement).Tag as Tag);
+                this.Frame.Navigate(typeof(TagsEditor), ((sender as FrameworkElement).Tag as Tag));
             }
             catch (Exception ex)
             {
@@ -108,7 +105,6 @@ namespace UWP.FrontEnd.Views
 
         private async void DeleteTagButton_Click(object sender, RoutedEventArgs e)
         {
-            Tag tag = (sender as FrameworkElement).Tag as Tag;
             ContentDialog deleteFileDialog = new ContentDialog
             {
                 Title = "Delete tag permanently?",
@@ -121,21 +117,17 @@ namespace UWP.FrontEnd.Views
 
             if (result == ContentDialogResult.Primary)
             {
-                tag.Delete(App.Context, App.ShowMessageBox);
-                TagsListView.Items.Remove(tag);
+                ((sender as FrameworkElement).Tag as Tag).Delete(App.Context, App.ShowMessageBox);
+                TagsListView.Items.Remove(((sender as FrameworkElement).Tag as Tag));
             }
         }
 
         private void EntityList_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
-            ListViewItem item = sender as ListViewItem;
-            Grid grid = item.ContentTemplateRoot as Grid;
-
-
-            StackPanel panel = grid.Children.OfType<StackPanel>().Single();
             if (MainPage.IsDarkTheme)
             {
-                foreach (Button button in panel.Children.OfType<Button>())
+                foreach (Button button in ((sender as ListViewItem).ContentTemplateRoot as Grid)
+                                            .Children.OfType<StackPanel>().Single().Children.OfType<Button>())
                 {
 
                     button.Foreground = new SolidColorBrush(Colors.Gainsboro);
@@ -143,9 +135,9 @@ namespace UWP.FrontEnd.Views
             }
             else
             {
-                foreach (Button button in panel.Children.OfType<Button>())
+                foreach (Button button in ((sender as ListViewItem).ContentTemplateRoot as Grid)
+                                            .Children.OfType<StackPanel>().Single().Children.OfType<Button>())
                 {
-
                     button.Foreground = new SolidColorBrush(Colors.Black);
                 }
             }
@@ -153,13 +145,8 @@ namespace UWP.FrontEnd.Views
 
         private void EntityList_PointerExited(object sender, PointerRoutedEventArgs e)
         {
-
-            ListViewItem item = sender as ListViewItem;
-            Grid grid = item.ContentTemplateRoot as Grid;
-            //grid.Data
-
-            StackPanel panel = grid.Children.OfType<StackPanel>().Single();
-            foreach (Button button in panel.Children.OfType<Button>())
+            foreach (Button button in ((sender as ListViewItem).ContentTemplateRoot as Grid)
+                                            .Children.OfType<StackPanel>().Single().Children.OfType<Button>())
             {
                 button.Foreground = new SolidColorBrush(Colors.Transparent);
             }
@@ -170,17 +157,16 @@ namespace UWP.FrontEnd.Views
         {
             foreach (var item in NotesListView.Items)
             {
-                ListViewItem listItem = NotesListView.ContainerFromItem(item) as ListViewItem;
-                listItem.PointerEntered += EntityList_PointerEntered;
-                listItem.PointerExited += EntityList_PointerExited;
+                (NotesListView.ContainerFromItem(item) as ListViewItem).PointerEntered += EntityList_PointerEntered;
+                (NotesListView.ContainerFromItem(item) as ListViewItem).PointerExited += EntityList_PointerExited;
 
             }
 
             foreach (var item in TagsListView.Items)
             {
                 ListViewItem listItem = TagsListView.ContainerFromItem(item) as ListViewItem;
-                listItem.PointerEntered += EntityList_PointerEntered;
-                listItem.PointerExited += EntityList_PointerExited;
+                (TagsListView.ContainerFromItem(item) as ListViewItem).PointerEntered += EntityList_PointerEntered;
+                (TagsListView.ContainerFromItem(item) as ListViewItem).PointerExited += EntityList_PointerExited;
             }
         }
 
@@ -188,25 +174,23 @@ namespace UWP.FrontEnd.Views
         {
             foreach (var addedItem in e.AddedItems)
             {
-                ListView lv = (sender as ListView);
-                ListViewItem item = lv.ContainerFromItem(addedItem) as ListViewItem;
-                Grid grid = item.ContentTemplateRoot as Grid;
-                //grid.Data
-                item.PointerExited -= EntityList_PointerExited;
-                StackPanel panel = grid.Children.OfType<StackPanel>().Single();
+                ((sender as ListView).ContainerFromItem(addedItem) as ListViewItem).PointerExited -= EntityList_PointerExited;
+
 
                 if (MainPage.IsDarkTheme)
                 {
-                    foreach (Button button in panel.Children.OfType<Button>())
+                    foreach (Button button in (((sender as ListView).ContainerFromItem(addedItem) as ListViewItem).ContentTemplateRoot as Grid)
+                                                .Children.OfType<StackPanel>().Single().Children.OfType<Button>())
                     {
 
                         button.Foreground = new SolidColorBrush(Colors.Gainsboro);
                     }
                 }
-                else {
-                    foreach (Button button in panel.Children.OfType<Button>())
+                else
+                {
+                    foreach (Button button in (((sender as ListView).ContainerFromItem(addedItem) as ListViewItem).ContentTemplateRoot as Grid)
+                                                .Children.OfType<StackPanel>().Single().Children.OfType<Button>())
                     {
-
                         button.Foreground = new SolidColorBrush(Colors.Black);
                     }
                 }
@@ -215,13 +199,9 @@ namespace UWP.FrontEnd.Views
 
             foreach (var removedItem in e.RemovedItems)
             {
-                ListView lv = (sender as ListView);
-                ListViewItem item = lv.ContainerFromItem(removedItem) as ListViewItem;
-                Grid grid = item.ContentTemplateRoot as Grid;
-                //grid.Data
-                item.PointerExited += EntityList_PointerExited;
-                StackPanel panel = grid.Children.OfType<StackPanel>().Single();
-                foreach (Button button in panel.Children.OfType<Button>())
+                ((sender as ListView).ContainerFromItem(removedItem) as ListViewItem).PointerExited += EntityList_PointerExited;
+                foreach (Button button in (((sender as ListView).ContainerFromItem(removedItem) as ListViewItem).ContentTemplateRoot as Grid)
+                                                .Children.OfType<StackPanel>().Single().Children.OfType<Button>())
                 {
                     button.Foreground = new SolidColorBrush(Colors.Transparent);
                 }
