@@ -24,11 +24,11 @@ using System.Collections.ObjectModel;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Input;
-using System.Drawing;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
 using System.Text;
 using System.Threading;
+using Core.Objects.Entities;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -45,7 +45,7 @@ namespace UWP.FrontEnd.Views
         public static bool IsProtocolNavigation { get; set; } = false;
         private static NoteEditor _instance { get; set; }
         public static NoteEditor Get => _instance ?? new NoteEditor();
-        private NoteEditorState _state { get; set; }
+        private static NoteEditorState _state { get; set; }
         public NoteEditorState State {
             get => _state;
             set {
@@ -60,6 +60,7 @@ namespace UWP.FrontEnd.Views
                     case NoteEditorState.SaveCompleted:
                         SetTagsState(true);
                         SetSavedState(true);
+                        MainPage.Get.LogRecentAccess(MainPage.CurrentNote);
                         break;
                     case NoteEditorState.SaveError:
                         ShowUnsavablePrompt();
@@ -67,12 +68,17 @@ namespace UWP.FrontEnd.Views
                             SetSavedState(true);
                         else
                             SetSavedState(false);
-                        break;
                         _state = value;
+                        break;
                     case NoteEditorState.Loading:
                         break;
                     case NoteEditorState.LoadError:
                         break;
+                    case NoteEditorState.RecentNavigation:
+                        _state = value;
+                        break;
+                    default:
+                        throw new NotImplementedException("Specified state is not implemented");
 
                 }
             }
@@ -86,7 +92,7 @@ namespace UWP.FrontEnd.Views
             this.InitializeComponent();
             if (MainPage.CurrentNote == null) { TagTokens.IsEnabled = false; }
             Acv = new AdvancedCollectionView(App.Context.Tags.ToList(), false);
-            Acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Tag.Name), SortDirection.Ascending));
+            Acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Entities.Tag.Name), SortDirection.Ascending));
             Acv.Filter = itm => !TagTokens.Items.Contains(itm) && (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
             TagTokens.SuggestedItemsSource = Acv;
         }
@@ -151,8 +157,11 @@ namespace UWP.FrontEnd.Views
                 MainPage.Get.SetDividerNoteName(MainPage.CurrentNote.Name ?? "New Note");
                 TagTokens.ItemsSource = new ObservableCollection<Tag>(MainPage.CurrentNote.NoteTags.Select(nt => nt.Tag));
                 TagTokens.IsEnabled = true;
+                if (MainPage.CurrentNote.TryGetFullNote(App.Context, out Note note) && State != NoteEditorState.RecentNavigation)
+                {
+                    MainPage.Get.LogRecentAccess(note);
+                }
                 NoteEditorTextBox_TextChanged(this.EditorTextBox, null);
-                SetSavedState(true);
                 if (!IsProtocolNavigation) SetSavedState(true);
                 else SetSavedState(false);
             }
@@ -180,13 +189,20 @@ namespace UWP.FrontEnd.Views
             }
             finally
             {
-                _timer?.Change(_interval, Timeout.Infinite);
+                try
+                {
+                    _timer?.Change(_interval, Timeout.Infinite);
+                }
+                catch (ObjectDisposedException e)
+                {
+                    // Object has been disposed
+                }
             }
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            _timer = null;
+            _timer.Dispose();
         }
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -203,7 +219,7 @@ namespace UWP.FrontEnd.Views
             else
                 WordCount = Regex.Split(text.Trim(), @"\s+").Length;
             WordCounter.Text = $"{WordCount} word" + ((WordCount != 1) ? "s" : "");
-            if (State == NoteEditorState.ProtocolNavigating && IsSaved)
+            if (State != NoteEditorState.ProtocolNavigating && IsSaved)
             {
                 SetSavedState(false);
             }
@@ -488,7 +504,7 @@ namespace UWP.FrontEnd.Views
         private void SetSavedState(bool isSaved)
         {
             IsSaved = isSaved;
-            UnsavedChangesText.Text = isSaved ? "" : "Unsaved Changes.";
+            UnsavedChangesText.Text = State == NoteEditorState.SaveCompleted ? "Changes Saved!" : "Unsaved Changes.";
             State = NoteEditorState.Ready;
         }
 
@@ -592,6 +608,30 @@ namespace UWP.FrontEnd.Views
                 App.ShowMessageBox("Could not link to note!", "You can only link to notes stored in the note database.");
             }
         }
+
+        private void CollapsePreviewPane_Click(object sender, RoutedEventArgs e)
+        {
+            RenderColumn.Width = new GridLength(RenderColumn.MinWidth);
+            EditorColumn.Width = new GridLength(1, GridUnitType.Star);
+        }
+
+        private void CollapseEditorPane_Click(object sender, RoutedEventArgs e)
+        {
+            EditorColumn.Width = new GridLength(EditorColumn.MinWidth);
+            RenderColumn.Width = new GridLength(1, GridUnitType.Star);
+        }
+
+        private void GridSplitter_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            e.Handled = true;
+            EditorColumn.Width = new GridLength(1, GridUnitType.Star);
+            RenderColumn.Width = new GridLength(1, GridUnitType.Star);
+        }
+
+        private void GridSplitter_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            GridSplitter.Background = new SolidColorBrush(Color.FromArgb(0xff, 0xcc, 0xcc, 0xcc));
+        }
     }
 
     public enum NoteEditorState
@@ -602,6 +642,7 @@ namespace UWP.FrontEnd.Views
         Loading = 2,
         SaveCompleted = 4,
         ProtocolNavigating = 64,
+        RecentNavigation = 128,
 
 
         // Error states

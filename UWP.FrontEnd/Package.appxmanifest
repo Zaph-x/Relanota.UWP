@@ -6,7 +6,7 @@
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap mp">
+  IgnorableNamespaces="uap mp rescap">
 
   <Identity
     Name="4e08b2c7-7177-4ed4-aecc-97a7cf9c4933"
@@ -58,5 +58,7 @@
   <Capabilities>
     <Capability Name="internetClient" />
     <uap:Capability Name="picturesLibrary"/>
+    <rescap:Capability Name="broadFileSystemAccess"/>
+    <rescap:Capability Name="confirmAppClose" />
   </Capabilities>
 </Package>

@@ -1,5 +1,6 @@
 ﻿using Core.Interfaces;
 using Core.Objects;
+using Core.Objects.Entities;
 using System;
 using System.Collections.Generic;
 using System.IO;

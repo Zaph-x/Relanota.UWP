@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Core.Objects;
+using Core.Objects.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Core.SqlHelper

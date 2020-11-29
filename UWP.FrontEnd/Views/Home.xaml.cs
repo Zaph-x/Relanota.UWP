@@ -1,4 +1,5 @@
 ﻿using Core.Objects;
+using Core.Objects.Entities;
 using Core.SqlHelper;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -206,6 +207,11 @@ namespace UWP.FrontEnd.Views
                     button.Foreground = new SolidColorBrush(Colors.Transparent);
                 }
             }
+
+        }
+
+        private void KeyboardAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        {
 
         }
     }

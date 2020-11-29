@@ -1,6 +1,7 @@
 ﻿using Core.Interfaces;
 using Core.Objects;
 using Core.Objects.DocumentTypes;
+using Core.Objects.Entities;
 using Core.Test.Objects.DocumentTypes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Toolkit.Uwp.UI;
@@ -15,6 +16,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.Storage.Provider;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -38,7 +40,7 @@ namespace UWP.FrontEnd.Views
         {
             this.InitializeComponent();
             Acv = new AdvancedCollectionView(App.Context.Tags.ToList(), false);
-            Acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Tag.Name), SortDirection.Ascending));
+            Acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Entities.Tag.Name), SortDirection.Ascending));
             Acv.Filter = itm => !TagTokens.Items.Contains(itm) && (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
             TagTokens.ItemsSource = new ObservableCollection<Tag>();
             TagTokens.SuggestedItemsSource = Acv;
@@ -60,7 +62,7 @@ namespace UWP.FrontEnd.Views
             {
                 notes = new List<Note>() { MainPage.CurrentNote };
             }
-            else if (!TagTokens.Items.Any())
+            else if (TagTokens.Items.Count == 1)
             {
                 notes = App.Context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).ToList();
             }
@@ -79,18 +81,24 @@ namespace UWP.FrontEnd.Views
             StorageFile file = await fileSavePicker.PickSaveFileAsync();
             if (file != null)
             {
-                if (File.Exists(file.Path))
-                {
-                    File.Delete(file.Path);
-                }
-                Stream stream = await file.OpenStreamForWriteAsync();
+                CachedFileManager.DeferUpdates(file);
 #pragma warning disable CS8509 // The switch expression does not handle all possible values of its input type (it is not exhaustive).
-                IDocumentType document = (type.ToLower()) switch {
+                IDocumentType document = (type.ToLower()) switch
+                {
 #pragma warning restore CS8509 // The switch expression does not handle all possible values of its input type (it is not exhaustive).
                     ".txt" => new TxtDocument(notes),
                     ".md" => new MdDocument(notes)
                 };
-                document.Export(stream);
+                await FileIO.WriteTextAsync(file, document.ConvertNotes(), Windows.Storage.Streams.UnicodeEncoding.Utf8);
+                FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
+                if (status != FileUpdateStatus.Complete)
+                {
+                    App.ShowMessageBox("The notes file could not be saved", "An error occured, and we cannot save the note.");
+                    return;
+                }
+                //                BufferedStream stream = await file.OpenStreamForWriteAsync() as BufferedStream;
+                //                stream.Flush();
+                //document.Export(stream);
             }
         }
 

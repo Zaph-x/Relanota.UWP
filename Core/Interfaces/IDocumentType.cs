@@ -1,6 +1,7 @@
 using System.IO;
 using System.Collections.Generic;
 using Core.Objects;
+using Core.Objects.Entities;
 
 namespace Core.Interfaces
 {

@@ -25,6 +25,7 @@ using Microsoft.Toolkit.Uwp.Notifications;
 using Windows.UI.Notifications;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
+using Core.Objects.Entities;
 
 namespace UWP.FrontEnd
 {
@@ -108,6 +109,9 @@ namespace UWP.FrontEnd
                 // Ensure the current window is active
                 Window.Current.Activate();
             }
+
+            Context.Notes.Load();
+            Context.Tags.Load();
         }
         protected override async void OnActivated(IActivatedEventArgs args)
         {

@@ -4,6 +4,7 @@ using Core.ExtensionClasses;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using Core.Objects.Entities;
 
 namespace Core.Objects.DocumentTypes
 {

@@ -5,8 +5,46 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d"
-    xmlns:local="using:UWP.FrontEnd">
+    xmlns:local="using:UWP.FrontEnd"
+    xmlns:Custom="using:Microsoft.Toolkit.Uwp.UI.Controls">
     <Application.Resources>
+        <SolidColorBrush x:Key="SystemControlSplitterPointerOver" Color="{ThemeResource SystemBaseLowColor}"/>
+        <SolidColorBrush x:Key="SystemControlSplitterPressed" Color="{ThemeResource SystemBaseHighColor}"/>
+        <Style x:Key="CustomGridSplitter" TargetType="Custom:GridSplitter">
+            <Setter Property="IsTabStop" Value="True"/>
+            <Setter Property="UseSystemFocusVisuals" Value="True"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="IsFocusEngagementEnabled" Value="True"/>
+            <Setter Property="MinWidth" Value="16"/>
+            <Setter Property="MinHeight" Value="16"/>
+            <Setter Property="Background" Value="{ThemeResource SystemControlHighlightChromeHighBrush}"/>
+            <Setter Property="GripperForeground" Value="{ThemeResource SystemControlForegroundAltHighBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Custom:GridSplitter">
+                        <Grid x:Name="RootGrid" Background="{TemplateBinding Background}">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="GridSplitterStates">
+                                    <VisualState x:Name="Normal"/>
+                                    <VisualState x:Name="PointerOver">
+                                        <VisualState.Setters>
+                                            <Setter Target="RootGrid.Background" Value="{ThemeResource SystemControlSplitterPointerOver}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <VisualState.Setters>
+                                            <Setter Target="RootGrid.Background" Value="{ThemeResource SystemControlHighlightChromeHighBrush}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <ContentPresenter Content="{TemplateBinding Element}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="ListViewItemContainerStyle" TargetType="ListViewItem">
             <Setter Property="FontFamily" Value="{ThemeResource ContentControlThemeFontFamily}"/>
             <Setter Property="FontSize" Value="{ThemeResource ControlContentThemeFontSize}"/>

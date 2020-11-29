@@ -4,13 +4,15 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:UWP.FrontEnd"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:objects="using:Core.Objects.Entities"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Grid>
         <NavigationView
             PaneTitle="Relanote"
             IsTabStop="False"
+            IsPaneOpen="True"
             IsBackButtonVisible="Collapsed"
             IsBackEnabled="False" 
             ItemInvoked="NavigationView_ItemInvoked"
@@ -24,10 +26,18 @@
                 <NavigationViewItem x:Uid="TagsNavItem" Icon="Tag" Content="Tags" Tag="tags"/>
                 <NavigationViewItem x:Uid="ExportNavItem" Icon="Download" Content="Save Notes to File" Tag="export"/>
                 <NavigationViewItem x:Uid="HelpNavItem" Icon="Help" Content="Help" Tag="help"/>
+                <NavigationViewItemHeader x:Name="Recent" Content="Recently Accessed Notes"/>
             </NavigationView.MenuItems>
             
             <NavigationView.AutoSuggestBox>
-                <AutoSuggestBox x:Name="SearchBox" QueryIcon="Find" FocusEngaged="SearchBox_FocusEngaged" />
+                <AutoSuggestBox x:Name="SearchBox" 
+                                QueryIcon="Find" 
+                                FocusEngaged="SearchBox_FocusEngaged" 
+                                TextChanged="SearchBox_TextChanged"
+                                QuerySubmitted="SearchBox_QuerySubmitted"
+                                SuggestionChosen="SearchBox_SuggestionChosen"
+                                >
+                </AutoSuggestBox>
             </NavigationView.AutoSuggestBox>
             <Frame x:Name="ContentFrame"  HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
         </NavigationView>

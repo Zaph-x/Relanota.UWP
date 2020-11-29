@@ -6,7 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ex="using:Microsoft.Toolkit.Uwp.UI.Extensions"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" xmlns:objects="using:Core.Objects"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" 
+    xmlns:objects="using:Core.Objects.Entities"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     >
@@ -30,25 +31,12 @@
         </Grid>
         <Grid Grid.Row="1" Visibility="Visible">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition x:Name="EditorColumn" Width="*"/>
                 <ColumnDefinition Width="auto"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition x:Name="RenderColumn" Width="*"/>
             </Grid.ColumnDefinitions>
-            <!--Grid splitter-->
-            <controls:GridSplitter x:Name="GridSplitter" Grid.Column="1" Grid.Row="1" Width="2" VerticalAlignment="Stretch" ResizeDirection="Auto" >
-                <controls:GridSplitter.Element>
-                    <Grid>
-                        <TextBlock HorizontalAlignment="Center"  
-                                   IsHitTestVisible="False"
-                                   VerticalAlignment="Center" 
-                                   Text="&#xE784;"
-                                   Foreground="Black" 
-FontFamily="Segoe MDL2 Assets"/>
-                    </Grid>
-                </controls:GridSplitter.Element>
-            </controls:GridSplitter>
             <!--Editor and viewer-->
-            <Grid Grid.Column="0" Grid.Row="0">
+            <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition Height="auto"/>
@@ -60,8 +48,9 @@ FontFamily="Segoe MDL2 Assets"/>
                          TextWrapping="Wrap"
                          FontFamily="Consolas"
                          KeyDown="EditorTextBox_KeyDown"
+                         IsFocusEngaged="False"
                          Paste="EditorTextBox_Paste"/>
-                
+
             </Grid>
             <Grid Grid.Column="2" HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
@@ -83,9 +72,46 @@ FontFamily="Segoe MDL2 Assets"/>
                                                 SchemeList="note"/>
                 </ScrollViewer>
                 <Grid Grid.Row="1">
-                    
+
                 </Grid>
             </Grid>
+            <!--Grid splitter-->
+            <controls:GridSplitter Style="{StaticResource CustomGridSplitter}" x:Name="GridSplitter" 
+                                   Grid.Column="1" 
+                                   Width="7" 
+                                   Background="#CCCCCC"
+                                   VerticalAlignment="Stretch" 
+                                   ResizeDirection="Columns"
+                                   DoubleTapped="GridSplitter_DoubleTapped"
+                                   >
+                <controls:GridSplitter.Element>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Button Grid.Row="0" Height="200" Padding="0" Background="Transparent" Click="CollapsePreviewPane_Click">
+                            <Button.Content>
+                                <TextBlock FontFamily="Segoe MDL2 Assets" Padding="0" Margin="0">&#xE76C;</TextBlock>
+                            </Button.Content>
+                        </Button>
+                        <TextBlock HorizontalAlignment="Center"  
+                                   Grid.Row="1"
+                                   IsHitTestVisible="False"
+                                   VerticalAlignment="Center" 
+                                   Text="&#xE784;"
+                                   Foreground="Black" 
+FontFamily="Segoe MDL2 Assets"/>
+                        <Button Grid.Row="2" Height="200" Padding="0" Background="Transparent" Click="CollapseEditorPane_Click">
+                            <Button.Content>
+                                <TextBlock FontFamily="Segoe MDL2 Assets" Padding="0" Margin="0">&#xE76B;</TextBlock>
+                            </Button.Content>
+                        </Button>
+                    </Grid>
+                </controls:GridSplitter.Element>
+            </controls:GridSplitter>
+            
 
 
         </Grid>

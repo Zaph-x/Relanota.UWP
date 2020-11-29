@@ -22,7 +22,23 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <ListViewHeaderItem Grid.Row="0" Content="Your Notes"/>
+            <ListViewHeaderItem Grid.Row="0" >
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Your Notes" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" AccessKey="N" Background="Transparent" Margin="10 0">
+                        <Button.Content>
+                            <TextBlock FontFamily="Segoe MDL2 Assets" VerticalAlignment="Bottom">&#xE710;</TextBlock>
+                        </Button.Content>
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="N" Modifiers="Control" Invoked="KeyboardAccelerator_Invoked"/>
+                        </Button.KeyboardAccelerators>
+                    </Button>
+                </Grid>
+            </ListViewHeaderItem>
             <ScrollViewer Grid.Row="1">
                 <ListView x:Name="NotesListView"
                           ItemsSource="{x:Bind NotesCollection}"
@@ -46,6 +62,7 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding Name}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                 <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" x:Name="ButtonStack">
+                                    <Button FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to edit note" Click="EditButton_Click"/>
                                     <Button FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE8FF;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to preview note" Click="PreviewButton_Click">
                                         <Button.Flyout>
                                             <Flyout Placement="BottomEdgeAlignedLeft">
@@ -61,7 +78,6 @@
                                             </Flyout>
                                         </Button.Flyout>
                                     </Button>
-                                    <Button FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to edit note" Click="EditButton_Click"/>
                                     <Button FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE74D;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to delete note" Click="DeleteButton_Click"/>
                                 </StackPanel>
                             </Grid>
