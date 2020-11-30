@@ -227,6 +227,18 @@ namespace UWP.FrontEnd
             ToastNotificationManager.CreateToastNotifier().Show(notification);
         }
 
+        public static async Task ShowErrorDialogAsync(string title, string content, string primaryButtonText)
+        {
+            ContentDialog errorDialog = new ContentDialog
+            {
+                Title = title,
+                Content = content,
+                PrimaryButtonText = primaryButtonText
+            };
+
+            await errorDialog.ShowAsync();
+        }
+
         public static void SetClipboardContent(string content)
         {
             DataPackage dataPackage = new DataPackage();

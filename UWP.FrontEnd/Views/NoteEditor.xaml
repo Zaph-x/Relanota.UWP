@@ -66,6 +66,7 @@
                                                 CodeMargin="3"
                                                 CodePadding="9"
                                                 InlineCodePadding="3 0 3 0"
+                                                CodeBackground="#DEDEDE"
                                                 ImageResolving="MarkdownText_OnImageResolving"
                                                 CodeBlockResolving="RenderBlock_CodeBlockResolving"
                                                 LinkClicked="MarkdownText_LinkClicked"
@@ -123,7 +124,7 @@ FontFamily="Segoe MDL2 Assets"/>
             <CommandBar Grid.Column="0" HorizontalAlignment="Stretch">
                 <CommandBar.Content>
                     <StackPanel Orientation="Horizontal" Margin="5">
-                        <TextBlock x:Name="WordCounter" Margin="3"/>
+                        <TextBlock x:Name="WordCounter" Margin="3" Text="0 words"/>
                         <TextBlock x:Name="UnsavedChangesText" Margin="3"/>
                     </StackPanel>
                 </CommandBar.Content>

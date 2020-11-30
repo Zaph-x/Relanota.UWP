@@ -29,12 +29,12 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="Your Notes" VerticalAlignment="Center"/>
-                    <Button Grid.Column="1" AccessKey="N" Background="Transparent" Margin="10 0">
+                    <Button Grid.Column="1" AccessKey="N" Background="Transparent" Margin="10 0" Click="AddNew_Click">
                         <Button.Content>
                             <TextBlock FontFamily="Segoe MDL2 Assets" VerticalAlignment="Bottom">&#xE710;</TextBlock>
                         </Button.Content>
                         <Button.KeyboardAccelerators>
-                            <KeyboardAccelerator Key="N" Modifiers="Control" Invoked="KeyboardAccelerator_Invoked"/>
+                            <KeyboardAccelerator Key="N" Modifiers="Control"/>
                         </Button.KeyboardAccelerators>
                     </Button>
                 </Grid>

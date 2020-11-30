@@ -29,6 +29,7 @@ using Windows.Storage.Streams;
 using System.Text;
 using System.Threading;
 using Core.Objects.Entities;
+using System.ComponentModel;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -65,7 +66,7 @@ namespace UWP.FrontEnd.Views
                     case NoteEditorState.SaveError:
                         ShowUnsavablePrompt();
                         if (string.IsNullOrWhiteSpace(NoteNameTextBox.Text))
-                            SetSavedState(true);
+                            SetSavedState(false);
                         else
                             SetSavedState(false);
                         _state = value;
@@ -77,6 +78,9 @@ namespace UWP.FrontEnd.Views
                     case NoteEditorState.RecentNavigation:
                         _state = value;
                         break;
+                    case NoteEditorState.WorkerCanceled:
+                        _state = value;
+                        break;
                     default:
                         throw new NotImplementedException("Specified state is not implemented");
 
@@ -85,6 +89,7 @@ namespace UWP.FrontEnd.Views
         }
         Timer _timer;
         int _interval = 1000;
+        BackgroundWorker changesWorker = new BackgroundWorker();
 
         public NoteEditor()
         {
@@ -95,6 +100,28 @@ namespace UWP.FrontEnd.Views
             Acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Entities.Tag.Name), SortDirection.Ascending));
             Acv.Filter = itm => !TagTokens.Items.Contains(itm) && (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
             TagTokens.SuggestedItemsSource = Acv;
+            changesWorker.DoWork += ChangesWorker_DoWork;
+            changesWorker.RunWorkerCompleted += ChangesWorker_RunWorkerCompleted;
+            changesWorker.WorkerSupportsCancellation = true;
+        }
+
+        public bool AreTextboxesEmpty() => string.IsNullOrWhiteSpace(NoteNameTextBox.Text) && string.IsNullOrWhiteSpace(EditorTextBox.Text);
+
+        private void ChangesWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (State != NoteEditorState.WorkerCanceled)
+                UnsavedChangesText.Text = "";
+            State = NoteEditorState.Ready;
+        }
+
+        private void ChangesWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                if (changesWorker.CancellationPending)
+                    break;
+                Thread.Sleep(200);
+            }
         }
 
         public async Task SaveImageToFileAsync(string fileName, string path, Uri uri)
@@ -162,8 +189,7 @@ namespace UWP.FrontEnd.Views
                     MainPage.Get.LogRecentAccess(note);
                 }
                 NoteEditorTextBox_TextChanged(this.EditorTextBox, null);
-                if (!IsProtocolNavigation) SetSavedState(true);
-                else SetSavedState(false);
+                if (State == NoteEditorState.ProtocolNavigating) SetSavedState(false);
             }
             else
             {
@@ -200,8 +226,16 @@ namespace UWP.FrontEnd.Views
             }
         }
 
+        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+        {
+            if (MainPage.CurrentNote == null && string.IsNullOrWhiteSpace(NoteNameTextBox.Text) && string.IsNullOrWhiteSpace(EditorTextBox.Text))
+                SetSavedState(true);
+            base.OnNavigatingFrom(e);
+        }
+
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
+
             _timer.Dispose();
         }
 
@@ -219,7 +253,7 @@ namespace UWP.FrontEnd.Views
             else
                 WordCount = Regex.Split(text.Trim(), @"\s+").Length;
             WordCounter.Text = $"{WordCount} word" + ((WordCount != 1) ? "s" : "");
-            if (State != NoteEditorState.ProtocolNavigating && IsSaved)
+            if (!(State == NoteEditorState.ProtocolNavigating || State == NoteEditorState.RecentNavigation) && IsSaved)
             {
                 SetSavedState(false);
             }
@@ -501,11 +535,23 @@ namespace UWP.FrontEnd.Views
             }
         }
 
+
         private void SetSavedState(bool isSaved)
         {
             IsSaved = isSaved;
-            UnsavedChangesText.Text = State == NoteEditorState.SaveCompleted ? "Changes Saved!" : "Unsaved Changes.";
-            State = NoteEditorState.Ready;
+            if (isSaved)
+            {
+                UnsavedChangesText.Text = "Changes Saved!";
+                if (!changesWorker.IsBusy)
+                    changesWorker.RunWorkerAsync();
+                State = NoteEditorState.Ready;
+            }
+            else
+            {
+                UnsavedChangesText.Text = "Unsaved Changes.";
+                changesWorker.CancelAsync();
+                State = NoteEditorState.WorkerCanceled;
+            }
         }
 
         private async void EditorTextBox_Paste(object sender, TextControlPasteEventArgs e)
@@ -523,6 +569,7 @@ namespace UWP.FrontEnd.Views
 
                 // Insert image into note, at current position
                 string imagePath = $@"![{fileName}]({{{{local_dir}}}}\{fileName}.jpg)";
+                App.SetClipboardContent(imagePath);
                 int selectionIndex = tb.SelectionStart;
                 tb.Text = tb.Text.Insert(selectionIndex, imagePath);
                 tb.SelectionStart = selectionIndex + imagePath.Length;
@@ -649,5 +696,6 @@ namespace UWP.FrontEnd.Views
         SaveError = 8,
         LoadError = 16,
         Error = 32,
+        WorkerCanceled = 256,
     }
 }

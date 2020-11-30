@@ -214,5 +214,10 @@ namespace UWP.FrontEnd.Views
         {
 
         }
+
+        private void AddNew_Click(object sender, RoutedEventArgs e)
+        {
+            MainPage.Get.NavView_Navigate("edit", null);
+        }
     }
 }
