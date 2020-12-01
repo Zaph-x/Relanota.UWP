@@ -136,33 +136,28 @@ namespace UWP.FrontEnd
                     ContentDialog errorDialog = new ContentDialog();
                     try
                     {
-                        NoteEditor.Get.State = NoteEditorState.ProtocolNavigating;
                         switch (eventArgs.Uri.Host.ToLower())
                         {
                             case "open":
+                                NoteEditor.Get.State = NoteEditorState.ProtocolNavigating;
                                 MainPage.Get.NavView_Navigate("edit", null);
 
                                 await NoteEditor.Get.NavigateToNoteFromUri(eventArgs.Uri.OriginalString.Substring(0, eventArgs.Uri.OriginalString.Length));
                                 break;
 
                             case "import":
-
+                                NoteEditor.Get.State = NoteEditorState.ProtocolImportNavigation;
                                 string serializedString = Uri.UnescapeDataString(eventArgs.Uri.LocalPath.Substring(1));
 
                                 if (Note.TryDeserialize(serializedString, Context, out Note note))
                                 {
                                     MainPage.CurrentNote = note;
                                     MainPage.Get.SetNavigationIndex(3);
-                                    NoteEditor.IsProtocolNavigation = true;
                                     MainPage.Get.NavView_Navigate("edit", null);
                                 }
                                 else
                                 {
-
-                                    errorDialog.Title = "We could not parse tgat bite.";
-                                    errorDialog.Content = $"No note could be parsed from the URI used to open Relanote. You will instead be sent to the note list.";
-                                    errorDialog.PrimaryButtonText = "Okay";
-                                    await errorDialog.ShowAsync();
+                                    await ShowDialog("We could not parse that note.", $"No note could be parsed from the URI used to open Relanote. You will instead be sent to the note list.", "Okay");
                                     MainPage.Get.SetNavigationIndex(0);
                                     MainPage.Get.NavView_Navigate("list", null);
                                 }
@@ -170,10 +165,7 @@ namespace UWP.FrontEnd
                                 break;
 
                             default:
-                                errorDialog.Title = "We did not understand that.";
-                                errorDialog.Content = $"You opened relanote from a link which lead to nowhere. You will instead be sent to the note list.";
-                                errorDialog.PrimaryButtonText = "Okay";
-                                await errorDialog.ShowAsync();
+                                await ShowDialog("We did not understand that one.", $"You opened relanote from a link which lead to nowhere. You will instead be sent to the note list.", "Okay");
                                 MainPage.Get.SetNavigationIndex(0);
                                 MainPage.Get.NavView_Navigate("list", null);
                                 break;

@@ -56,7 +56,6 @@
   </Applications>
 
   <Capabilities>
-    <rescap:Capability Name="broadFileSystemAccess"/>
     <rescap:Capability Name="confirmAppClose" />
     <Capability Name="internetClient"/>
   </Capabilities>

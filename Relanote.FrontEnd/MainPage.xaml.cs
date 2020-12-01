@@ -8,6 +8,7 @@ using UWP.FrontEnd.Views;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
 using Windows.UI;
+using Windows.UI.Core.Preview;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
@@ -61,6 +62,21 @@ namespace UWP.FrontEnd
             Acv.Filter = itm => (itm as string).Contains(SearchBox.Text, StringComparison.InvariantCultureIgnoreCase);
             SearchBox.ItemsSource = Acv;
             RecentSpacerIndex = NavigationView.MenuItems.IndexOf(NavigationView.MenuItems.First(itm => (itm as NavigationViewItemBase).Content?.ToString() == "Recently Accessed Notes"));
+            SystemNavigationManagerPreview.GetForCurrentView().CloseRequested += MainPage_CloseRequested;
+        }
+
+        private async void MainPage_CloseRequested(object sender, SystemNavigationCloseRequestedPreviewEventArgs e)
+        {
+            e.Handled = true;
+            if (!NoteEditor.IsSaved)
+            {
+                await NoteEditor.ShowUnsavedChangesDialog();
+                if (!NoteEditor.IsSaved)
+                {
+                    return;
+                }
+            }
+            App.Current.Exit();
         }
 
         public void LogRecentAccess(Note note)

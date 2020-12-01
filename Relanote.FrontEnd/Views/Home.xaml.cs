@@ -48,6 +48,7 @@ namespace UWP.FrontEnd.Views
         {
             Note note = (sender as FrameworkElement).Tag as Note;
             note = App.Context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
+            NoteEditor.Get.State = NoteEditorState.ListNavigation;
             MainPage.CurrentNote = note;
             this.Frame.Navigate(typeof(NoteEditor), note);
         }
@@ -60,6 +61,7 @@ namespace UWP.FrontEnd.Views
                                                 .ThenInclude(n => n.Tag)
                                                 .First(n => n.Key == (NotesListView.SelectedItem as Note).Key);
                 MainPage.CurrentNote = (NotesListView.SelectedItem as Note);
+                NoteEditor.Get.State = NoteEditorState.ListNavigation;
                 this.Frame.Navigate(typeof(NoteEditor), (NotesListView.SelectedItem as Note));
             }
         }
