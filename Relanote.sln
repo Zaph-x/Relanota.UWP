@@ -9,7 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{007F68EA
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core.Test", "Tests\Core.Test\Core.Test.csproj", "{337A0B0E-79ED-437B-8B0A-FCB18514E7C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UWP.FrontEnd", "UWP.FrontEnd\UWP.FrontEnd.csproj", "{1371FB06-0919-4132-8EF8-A6869C164488}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Relanote.FrontEnd", "UWP.FrontEnd\Relanote.FrontEnd.csproj", "{1371FB06-0919-4132-8EF8-A6869C164488}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
