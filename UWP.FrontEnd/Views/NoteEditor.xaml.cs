@@ -241,7 +241,6 @@ namespace UWP.FrontEnd.Views
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-
         }
 
         private void NoteEditorTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -262,14 +261,7 @@ namespace UWP.FrontEnd.Views
         private async void ShowUnsavablePrompt()
         {
             IsSaved = false;
-            ContentDialog unsavedDialog = new ContentDialog
-            {
-                Title = "We could not save that.",
-                Content = "The note does not seem to have a name. Please provide a name to save the note.",
-                PrimaryButtonText = "Okay"
-            };
-
-            await unsavedDialog.ShowAsync();
+            await App.ShowDialog("We could not save that.", "The note does not seem to have a name. Please provide a name to save the note.", "Okay");
             MainPage.Get.SetNavigationIndex(3);
         }
 
@@ -284,11 +276,8 @@ namespace UWP.FrontEnd.Views
             {
                 if (App.Context.TryGetNote(NoteNameTextBox.Text, true, out Note note))
                 {
-                    MainPage.CurrentNote = note;
                     note.Update($"{note.Content}\n\n{EditorTextBox.Text}", NoteNameTextBox.Text, App.Context);
-                    TagTokens.ItemsSource = new ObservableCollection<Tag>(MainPage.CurrentNote.NoteTags.Select(nt => nt.Tag));
-                    EditorTextBox.Text = $"{note.Content}";
-                    TagTokens.IsEnabled = true;
+                    SetCurrentEditorNote(note);
                 }
                 else
                 {
@@ -305,40 +294,34 @@ namespace UWP.FrontEnd.Views
             State = NoteEditorState.SaveCompleted;
         }
 
+        private void SetCurrentEditorNote(Note note)
+        {
+            MainPage.CurrentNote = note;
+            TagTokens.ItemsSource = new ObservableCollection<Tag>(MainPage.CurrentNote.NoteTags.Select(nt => nt.Tag));
+            EditorTextBox.Text = $"# {note.Name}\n{note.Content}";
+            TagTokens.IsEnabled = true;
+        }
+
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             State = NoteEditorState.Saving;
         }
         private async void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-            ContentDialog deleteFileDialog = new ContentDialog
-            {
-                Title = "Delete note permanently?",
-                Content = "If you delete this note, you won't be able to recover it. Do you want to delete it?",
-                PrimaryButtonText = "Delete",
-                CloseButtonText = "Cancel"
-            };
-
-            ContentDialogResult result = await deleteFileDialog.ShowAsync();
-
-            if (result == ContentDialogResult.Primary)
-            {
+            await App.ShowDialog("Delete note permanently?", "If you delete this note, you won't be able to recover it. Do you want to delete it?", "Delete", () => {
                 // The user chose to delete the note
                 MainPage.CurrentNote.Delete(App.Context, App.ShowMessageBox);
                 SetSavedState(true);
                 MainPage.Get.NavView_Navigate("list", null);
                 MainPage.Get.SetNavigationIndex(0);
-            }
-            else
-            {
-                // The user clicked the CLoseButton, pressed ESC, or the system back button.
-                // Do nothing.
-            }
+            }, 
+            "Cancel", null);
         }
         private void NewNoteButton_Click(object sender, RoutedEventArgs e)
         {
 
         }
+
         private async void ImportPictureButton_Click(object sender, RoutedEventArgs e)
         {
             // Set up file picker

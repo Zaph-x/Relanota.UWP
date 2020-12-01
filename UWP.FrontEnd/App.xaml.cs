@@ -227,7 +227,7 @@ namespace UWP.FrontEnd
             ToastNotificationManager.CreateToastNotifier().Show(notification);
         }
 
-        public static async Task ShowErrorDialogAsync(string title, string content, string primaryButtonText)
+        public static async Task ShowDialog(string title, string content, string primaryButtonText)
         {
             ContentDialog errorDialog = new ContentDialog
             {
@@ -237,6 +237,92 @@ namespace UWP.FrontEnd
             };
 
             await errorDialog.ShowAsync();
+        }
+
+
+
+        public static async Task ShowDialog(string title, string content, string primaryButtonText, Action primaryCommand)
+        {
+            ContentDialog errorDialog = new ContentDialog
+            {
+                Title = title,
+                Content = content,
+                PrimaryButtonText = primaryButtonText
+            };
+
+            ContentDialogResult result = await errorDialog.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                primaryCommand?.Invoke();
+            }
+        }
+
+        public static async Task ShowDialog(string title, string content, string primaryButtonText, Action primaryCommand, Action fallback)
+        {
+            ContentDialog errorDialog = new ContentDialog
+            {
+                Title = title,
+                Content = content,
+                PrimaryButtonText = primaryButtonText
+            };
+
+            ContentDialogResult result = await errorDialog.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                primaryCommand?.Invoke();
+            }
+            else
+            {
+                fallback?.Invoke();
+            }
+        }
+
+        public static async Task ShowDialog(string title, string content, string primaryButtonText, Action primaryCommand, string secondaryButtonText, Action secondaryCommand)
+        {
+            ContentDialog errorDialog = new ContentDialog
+            {
+                Title = title,
+                Content = content,
+                PrimaryButtonText = primaryButtonText,
+                SecondaryButtonText = secondaryButtonText
+            };
+
+            ContentDialogResult result = await errorDialog.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                primaryCommand?.Invoke();
+            }
+            else if (result == ContentDialogResult.Secondary)
+            {
+                secondaryCommand?.Invoke();
+            }
+        }
+
+        public static async Task ShowDialog(string title, string content, string primaryButtonText, Action primaryCommand, string secondaryButtonText, Action secondaryCommand, Action fallback)
+        {
+            ContentDialog errorDialog = new ContentDialog
+            {
+                Title = title,
+                Content = content,
+                PrimaryButtonText = primaryButtonText
+            };
+
+            ContentDialogResult result = await errorDialog.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                primaryCommand?.Invoke();
+            }
+            else if (result == ContentDialogResult.Secondary)
+            {
+                secondaryCommand?.Invoke();
+            } else
+            {
+                fallback?.Invoke();
+            }
         }
 
         public static void SetClipboardContent(string content)

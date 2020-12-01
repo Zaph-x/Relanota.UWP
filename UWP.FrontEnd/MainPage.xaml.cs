@@ -195,7 +195,7 @@ namespace UWP.FrontEnd
             else
             {
                 // If the note no longer exists in the context, we want to let the user know, and remove it from the list.
-                await App.ShowErrorDialogAsync("We could not find that note.", $"The note '{tagNote.Name}' could note be found in the database.", "Okay");
+                await App.ShowDialog("We could not find that note.", $"The note '{tagNote.Name}' could note be found in the database.", "Okay");
                 recentlyAccessed.Remove(tagNote);
                 NavigationView.MenuItems.Remove(args.InvokedItemContainer);
 
@@ -228,7 +228,7 @@ namespace UWP.FrontEnd
             }
             var preNavPageType = ContentFrame.CurrentSourcePageType;
 
-            if (!(_page is null) && !Type.Equals(preNavPageType, _page))
+            if (!(_page is null) && !Equals(preNavPageType, _page))
             {
                 if (!NoteEditor.IsSaved && !NoteEditor.Get.AreTextboxesEmpty())
                 {
@@ -276,32 +276,27 @@ namespace UWP.FrontEnd
             Note note = App.Context.Notes.AsEnumerable().FirstOrDefault(n => n.Name.Equals(sender.Text, StringComparison.InvariantCultureIgnoreCase));
             if (note == null)
             {
-                ContentDialog errorDialog = new ContentDialog
-                {
-                    Title = "We could not find that note.",
-                    Content = $"The note '{sender.Text}' could note be found in the database. Do you wish to create it?",
-                    PrimaryButtonText = "Yes",
-                    CloseButtonText = "No"
-                };
-                ContentDialogResult result = await errorDialog.ShowAsync();
-
-                if (result == ContentDialogResult.Primary)
-                {
-                    note = new Note()
+                await App.ShowDialog("We could not find that note.", $"The note '{sender.Text}' could note be found in the database. Do you wish to create it?",
+                    "Yes", () =>
                     {
-                        Name = sender.Text
-                    };
-                    note.Save("", sender.Text, App.Context);
-                }
-                else
-                {
-                    SearchBox.Text = "";
-                    return;
-                }
-
+                        note = new Note()
+                        {
+                            Name = sender.Text
+                        };
+                        note.Save("", sender.Text, App.Context);
+                        CurrentNote = note;
+                        NavView_Navigate("edit", null);
+                    },
+                    "No", () =>
+                    {
+                        SearchBox.Text = "";
+                    });
+            } else
+            {
+                CurrentNote = note;
+                NavView_Navigate("edit", null);
             }
-            CurrentNote = note;
-            NavView_Navigate("edit", null);
+
         }
     }
 }
