@@ -142,6 +142,10 @@ namespace UWP.FrontEnd
                 content += $"{note.Key}{Environment.NewLine}";
             }
             content = content.Trim();
+            while (!file.IsAvailable)
+            {
+
+            }
             await FileIO.WriteTextAsync(file, content, Windows.Storage.Streams.UnicodeEncoding.Utf8);
         }
 
