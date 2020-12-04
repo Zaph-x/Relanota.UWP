@@ -98,6 +98,7 @@
                           ItemsSource="{x:Bind TagsCollection}"
                           ItemContainerStyle="{StaticResource ListViewItemContainerStyle}"
                           SelectionChanged="NoteListView_SelectionChanged"
+                          DoubleTapped="TagsListView_DoubleTapped"
                           >
                     <ListView.ItemTemplate>
                         <DataTemplate>

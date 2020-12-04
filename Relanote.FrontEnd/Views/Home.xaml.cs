@@ -221,5 +221,17 @@ namespace UWP.FrontEnd.Views
         {
             MainPage.Get.NavView_Navigate("edit", null);
         }
+
+        private void TagsListView_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            if (TagsListView.SelectedIndex >= 0)
+            {
+                TagsListView.SelectedItem = App.Context.Tags.Include(n => n.NoteTags)
+                                                .ThenInclude(n => n.Note)
+                                                .First(n => n.Key == (TagsListView.SelectedItem as Tag).Key);
+                MainPage.CurrentTag = (TagsListView.SelectedItem as Tag);
+                this.Frame.Navigate(typeof(TagsEditor), (TagsListView.SelectedItem as Tag));
+            }
+        }
     }
 }

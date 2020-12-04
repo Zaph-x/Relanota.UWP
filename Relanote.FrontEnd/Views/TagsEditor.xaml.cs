@@ -104,6 +104,7 @@ namespace UWP.FrontEnd.Views
         {
             if (RelatedNotesListView.SelectedIndex >= 0)
             {
+                NoteEditor.SetState(NoteEditorState.Navigation);
                 MainPage.CurrentNote = RelatedNotesListView.SelectedItem as Note;
                 this.Frame.Navigate(typeof(NoteEditor), RelatedNotesListView.SelectedItem as Note);
             }
@@ -139,6 +140,7 @@ namespace UWP.FrontEnd.Views
             Note note = (sender as FrameworkElement).Tag as Note;
             note = App.Context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
             MainPage.CurrentNote = note;
+            NoteEditor.SetState(NoteEditorState.Navigation);
             this.Frame.Navigate(typeof(NoteEditor), note);
         }
     }
