@@ -60,11 +60,13 @@ namespace UWP.FrontEnd.Views
                     case NoteEditorState.SaveCompleted:
                         SetTagsState(true);
                         SetSavedState(true);
+                        MainPage.Get.OnNoteSave(MainPage.CurrentNote.Name);
+                        MainPage.Get.SetDividerNoteName(MainPage.CurrentNote.Name);
                         MainPage.Get.LogRecentAccess(MainPage.CurrentNote);
                         break;
                     case NoteEditorState.SaveError:
                         ShowUnsavablePrompt();
-                        State = NoteEditorState.NotSaved;
+                        SetState(NoteEditorState.NotSaved);
                         _state = value;
                         break;
                     case NoteEditorState.Loading:
@@ -117,7 +119,7 @@ namespace UWP.FrontEnd.Views
         {
             if (State != NoteEditorState.WorkerCanceled)
                 UnsavedChangesText.Text = "";
-            State = NoteEditorState.Ready;
+            SetState(NoteEditorState.Ready);
         }
 
         private void ChangesWorker_DoWork(object sender, DoWorkEventArgs e)
@@ -201,7 +203,7 @@ namespace UWP.FrontEnd.Views
                 SetTagsState(false);
             }
             _timer = new Timer(Tick, null, _interval, Timeout.Infinite);
-            State = NoteEditorState.Ready;
+            SetState(NoteEditorState.Ready);
         }
 
         private async void Tick(object state)
@@ -257,7 +259,7 @@ namespace UWP.FrontEnd.Views
             else
                 WordCount = Regex.Split(text.Trim(), @"\s+").Length;
             WordCounter.Text = $"{WordCount} word" + ((WordCount != 1) ? "s" : "");
-            if ((State ^ NoteEditorState.Navigation) == NoteEditorState.NotSaved)
+            if ((State ^ NoteEditorState.Navigation) == NoteEditorState.NotSaved || State == NoteEditorState.Ready)
             {
                 SetSavedState(false);
             }
@@ -296,7 +298,7 @@ namespace UWP.FrontEnd.Views
             {
                 MainPage.CurrentNote.Update(EditorTextBox.Text, NoteNameTextBox.Text, App.Context);
             }
-            State = NoteEditorState.SaveCompleted;
+            SetState(NoteEditorState.SaveCompleted);
         }
 
         private void SetCurrentEditorNote(Note note)
@@ -309,7 +311,7 @@ namespace UWP.FrontEnd.Views
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            State = NoteEditorState.Saving;
+            SetState(NoteEditorState.Saving);
         }
         private async void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
@@ -510,7 +512,7 @@ namespace UWP.FrontEnd.Views
             if (result == ContentDialogResult.Primary)
             {
                 // Change state as user requested
-                Get.State = NoteEditorState.Saving;
+                SetState(NoteEditorState.Saving);
             }
             else if (result == ContentDialogResult.Secondary)
             {
@@ -533,13 +535,13 @@ namespace UWP.FrontEnd.Views
                 UnsavedChangesText.Text = "Changes Saved!";
                 if (!changesWorker.IsBusy)
                     changesWorker.RunWorkerAsync();
-                State = NoteEditorState.Ready;
+                SetState(NoteEditorState.Ready);
             }
             else
             {
                 UnsavedChangesText.Text = "Unsaved Changes.";
                 changesWorker.CancelAsync();
-                State = NoteEditorState.WorkerCanceled;
+                SetState(NoteEditorState.WorkerCanceled);
             }
         }
 
@@ -608,7 +610,7 @@ namespace UWP.FrontEnd.Views
                     // Only set note name and save
                     NoteNameTextBox.Text = noteName;
                     EditorTextBox.Text = "";
-                    State = NoteEditorState.Saving;
+                    SetState(NoteEditorState.Saving);
                 }
                 else
                 {
@@ -664,9 +666,9 @@ namespace UWP.FrontEnd.Views
             RenderColumn.Width = new GridLength(1, GridUnitType.Star);
         }
 
-        private void GridSplitter_PointerExited(object sender, PointerRoutedEventArgs e)
+        public static void SetState(NoteEditorState state)
         {
-            GridSplitter.Background = new SolidColorBrush(Color.FromArgb(0xff, 0xcc, 0xcc, 0xcc));
+            Get.State = state;
         }
     }
 
@@ -686,6 +688,7 @@ namespace UWP.FrontEnd.Views
         WorkerCanceled =            0b_0001_0000_0000,
         Navigation =                0b_0010_1100_0000,
         ProtocolImportNavigation =  0b_0010_1111_0000,
+        SearchNavigation =          0b_0001_1100_0000
 
 
         // Error states

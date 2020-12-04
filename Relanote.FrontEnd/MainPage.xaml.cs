@@ -79,6 +79,15 @@ namespace UWP.FrontEnd
             App.Current.Exit();
         }
 
+        public void OnNoteSave(string newName)
+        {
+            if (!(NavigationView.MenuItems[RecentSpacerIndex + 1] as NavigationViewItemBase).Content.ToString().Equals(newName, StringComparison.InvariantCultureIgnoreCase))
+            {
+                (NavigationView.MenuItems[RecentSpacerIndex + 1] as NavigationViewItemBase).Content = newName;
+            }
+            Acv = new AdvancedCollectionView(App.Context.Notes.Select(n => n.Name).ToList(), false);
+        }
+
         public void LogRecentAccess(Note note)
         {
             if (!recentlyAccessed.Any())
@@ -301,6 +310,7 @@ namespace UWP.FrontEnd
                         };
                         note.Save("", sender.Text, App.Context);
                         CurrentNote = note;
+                        NoteEditor.SetState(NoteEditorState.SearchNavigation);
                         NavView_Navigate("edit", null);
                     },
                     "No", () =>
@@ -309,7 +319,9 @@ namespace UWP.FrontEnd
                     });
             } else
             {
+                NavView_Navigate("list", null);
                 CurrentNote = note;
+                NoteEditor.SetState(NoteEditorState.SearchNavigation);
                 NavView_Navigate("edit", null);
             }
 
