@@ -47,8 +47,8 @@
                          AcceptsReturn="True"
                          TextWrapping="Wrap"
                          FontFamily="Consolas"
-                         KeyDown="EditorTextBox_KeyDown"
                          IsFocusEngaged="False"
+                         KeyDown="EditorTextBox_KeyDown"
                          Paste="EditorTextBox_Paste"/>
 
             </Grid>

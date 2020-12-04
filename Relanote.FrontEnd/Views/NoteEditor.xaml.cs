@@ -348,7 +348,8 @@ namespace UWP.FrontEnd.Views
                 try
                 {
                     // Copy it to the local directory
-                    file = await file.CopyAsync(ApplicationData.Current.LocalCacheFolder);
+                    file = await file.CopyAsync(ApplicationData.Current.LocalFolder, file.Name, NameCollisionOption.GenerateUniqueName);
+                    await file.RenameAsync(file.Name.Replace(" ", "_"));
                 }
                 catch
                 {
@@ -480,21 +481,6 @@ namespace UWP.FrontEnd.Views
                 // Handle any known protocol
                 await Launcher.LaunchUriAsync(new Uri(e.Link));
             }
-        }
-
-        private void EditorTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
-        {
-            CoreVirtualKeyStates ctrlState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Control);
-            bool isCtrlDown = ctrlState == CoreVirtualKeyStates.Down;
-            if (!isCtrlDown || e.Key != VirtualKey.I)
-            {
-                // We don't want to block anything if it's not CTRL+I
-                return;
-            }
-            // Import picture, which is what should ACTUALLY happen
-            ImportPictureButton_Click(null, null);
-            // Suppres default CTRL + I  ->  Inserts tab character
-            e.Handled = true;
         }
 
         public static async Task ShowUnsavedChangesDialog()
@@ -669,6 +655,19 @@ namespace UWP.FrontEnd.Views
         public static void SetState(NoteEditorState state)
         {
             Get.State = state;
+        }
+
+        private void EditorTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            bool ctrlIsPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
+            switch (c: ctrlIsPressed, k: e.OriginalKey)
+            {
+                case (true, VirtualKey.I):
+                    ImportPictureButton_Click(null, null);
+                    e.Handled = true;
+                    EditorTextBox.Focus(FocusState.Programmatic);
+                    break;
+            }
         }
     }
 
