@@ -4,6 +4,7 @@ using Microsoft.Toolkit.Uwp.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UWP.FrontEnd.Views;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
@@ -85,7 +86,11 @@ namespace UWP.FrontEnd
             {
                 (NavigationView.MenuItems[RecentSpacerIndex + 1] as NavigationViewItemBase).Content = newName;
             }
+            
             Acv = new AdvancedCollectionView(App.Context.Notes.Select(n => n.Name).ToList(), false);
+            Acv.SortDescriptions.Add(new SortDescription(SortDirection.Ascending));
+            Acv.Filter = itm => (itm as string).Contains(SearchBox.Text, StringComparison.InvariantCultureIgnoreCase);
+            SearchBox.ItemsSource = Acv;
         }
 
         public void LogRecentAccess(Note note)
@@ -101,7 +106,7 @@ namespace UWP.FrontEnd
         }
 
 
-        private void RecentlyAccessed_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        private async void RecentlyAccessed_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)
             {
@@ -130,10 +135,10 @@ namespace UWP.FrontEnd
                     NavigationView.MenuItems.RemoveAt(NavigationView.MenuItems.Count - 1);
                 }
             }
-            SerialiseRecentlyAdded(recentlyAccessed);
+            await SerialiseRecentlyAdded(recentlyAccessed);
         }
 
-        private async void SerialiseRecentlyAdded(FixedSizeObservableCollection<Note> recentlyAccessed)
+        private async Task SerialiseRecentlyAdded(FixedSizeObservableCollection<Note> recentlyAccessed)
         {
             StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync("AccessList", CreationCollisionOption.OpenIfExists);
             string content = "";
@@ -146,6 +151,7 @@ namespace UWP.FrontEnd
             {
 
             }
+
             await FileIO.WriteTextAsync(file, content, Windows.Storage.Streams.UnicodeEncoding.Utf8);
         }
 
@@ -323,8 +329,8 @@ namespace UWP.FrontEnd
                     });
             } else
             {
-                NavView_Navigate("list", null);
                 CurrentNote = note;
+                NavView_Navigate("tags", null);
                 NoteEditor.SetState(NoteEditorState.SearchNavigation);
                 NavView_Navigate("edit", null);
             }
