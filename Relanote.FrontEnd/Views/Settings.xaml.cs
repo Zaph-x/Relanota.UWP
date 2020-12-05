@@ -8,6 +8,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.Storage.Streams;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -30,6 +31,20 @@ namespace UWP.FrontEnd.Views
             this.InitializeComponent();
         }
 
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+
+            if (string.IsNullOrWhiteSpace(localSettings.Values["theme"] as string))
+            {
+                ThemeComboBox.SelectedIndex = 0;
+            } else
+            {
+                ThemeComboBox.SelectedItem = ThemeComboBox.Items.First(itm => (itm as FrameworkElement).Tag as string == localSettings.Values["theme"] as string);
+            }
+            base.OnNavigatedTo(e);
+        }
+
         private async void ExportDatabase_Click(object sender, RoutedEventArgs e)
         {
             FileSavePicker fileSavePicker = new FileSavePicker();
@@ -45,15 +60,12 @@ namespace UWP.FrontEnd.Views
                     File.Delete($@"{ApplicationData.Current.TemporaryFolder.Path}\export.zip");
                 }
                 ZipFile.CreateFromDirectory(ApplicationData.Current.LocalFolder.Path, $@"{ApplicationData.Current.TemporaryFolder.Path}\export.zip");
-                using (Stream reader = File.OpenRead($@"{ApplicationData.Current.TemporaryFolder.Path}\export.zip"))
-                {
-                    using (Stream writer = await file.OpenStreamForWriteAsync())
-                    {
-                        reader.Seek(0, SeekOrigin.Begin);
-                        reader.CopyTo(writer);
-                    }
-                }
+                IBuffer buffer = await FileIO.ReadBufferAsync(await StorageFile.GetFileFromPathAsync($@"{ApplicationData.Current.TemporaryFolder.Path}\export.zip"));
+
+                await FileIO.WriteBufferAsync(file, buffer);
+
                 File.Delete($@"{ApplicationData.Current.TemporaryFolder.Path}\export.zip");
+                App.ShowToastNotification("Notes Exported", "Your notes were successfully exported to the chosen location.");
             }
         }
 
@@ -76,15 +88,14 @@ namespace UWP.FrontEnd.Views
                 fileOpenPicker.SuggestedStartLocation = PickerLocationId.Desktop;
 
                 StorageFile file = await fileOpenPicker.PickSingleFileAsync();
-                
 
                 if (file != null)
                 {
-                    
+
                     StorageFolder temp = ApplicationData.Current.TemporaryFolder;
                     DirectoryInfo directory = new DirectoryInfo(ApplicationData.Current.LocalFolder.Path);
                     FileInfo[] files = directory.GetFiles();
-                    
+
                     if (File.Exists($@"{temp.Path}\notes.zip"))
                     {
                         File.Delete($@"{temp.Path}\notes.zip");
@@ -93,6 +104,8 @@ namespace UWP.FrontEnd.Views
                     {
                         fileInfo.Delete();
                     }
+
+
                     using (Stream reader = await file.OpenStreamForReadAsync())
                     {
                         using (Stream writer = await (await temp.CreateFileAsync($@"notes.zip")).OpenStreamForWriteAsync())
@@ -104,11 +117,22 @@ namespace UWP.FrontEnd.Views
 
                     ZipFile.ExtractToDirectory($@"{temp.Path}\notes.zip", ApplicationData.Current.LocalFolder.Path);
                     File.Delete($@"{temp.Path}\notes.zip");
+                    App.ShowToastNotification("Notes Imported", "Your notes were successfully imported.");
                 }
             }
 
-            
 
+
+        }
+
+        private void ThemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+            if (localSettings.Values["theme"] as string != ((sender as ComboBox).SelectedItem as FrameworkElement).Tag as string)
+            {
+                localSettings.Values["theme"] = ((sender as ComboBox).SelectedItem as FrameworkElement).Tag as string;
+                MainPage.Get.SetTheme(localSettings.Values["theme"] as string);
+            }
         }
     }
 }
