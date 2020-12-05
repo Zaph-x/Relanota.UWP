@@ -86,7 +86,7 @@ namespace UWP.FrontEnd.Views
             if (result == ContentDialogResult.Primary)
             {
                 NotesCollection.Remove((sender as FrameworkElement).Tag as Note);
-                ((sender as FrameworkElement).Tag as Note).Delete(App.Context, App.ShowMessageBox);
+                ((sender as FrameworkElement).Tag as Note).Delete(App.Context, App.ShowToastNotification);
             }
         }
 
@@ -102,7 +102,7 @@ namespace UWP.FrontEnd.Views
             }
             catch (Exception ex)
             {
-                App.ShowMessageBox(ex.Message, "");
+                App.ShowToastNotification(ex.Message, "");
             }
         }
 
@@ -120,7 +120,7 @@ namespace UWP.FrontEnd.Views
 
             if (result == ContentDialogResult.Primary)
             {
-                ((sender as FrameworkElement).Tag as Tag).Delete(App.Context, App.ShowMessageBox);
+                ((sender as FrameworkElement).Tag as Tag).Delete(App.Context, App.ShowToastNotification);
                 TagsListView.Items.Remove(((sender as FrameworkElement).Tag as Tag));
             }
         }

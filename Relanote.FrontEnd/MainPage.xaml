@@ -10,7 +10,7 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Grid>
         <NavigationView
-            PaneTitle="Relanote"
+            PaneTitle="Relanota"
             IsTabStop="False"
             IsPaneOpen="True"
             IsBackButtonVisible="Collapsed"

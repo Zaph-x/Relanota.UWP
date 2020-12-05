@@ -64,10 +64,12 @@ namespace UWP.FrontEnd
         /// </summary>
         public App()
         {
+            
             this.InitializeComponent();
             this.Suspending += OnSuspending;
             ConnectDB();
         }
+
 
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
@@ -157,7 +159,7 @@ namespace UWP.FrontEnd
                                 }
                                 else
                                 {
-                                    await ShowDialog("We could not parse that note.", $"No note could be parsed from the URI used to open Relanote. You will instead be sent to the note list.", "Okay");
+                                    await ShowDialog("We could not parse that note.", $"No note could be parsed from the URI used to open Relanota. You will instead be sent to the note list.", "Okay");
                                     MainPage.Get.SetNavigationIndex(0);
                                     MainPage.Get.NavView_Navigate("list", null);
                                 }
@@ -165,7 +167,7 @@ namespace UWP.FrontEnd
                                 break;
 
                             default:
-                                await ShowDialog("We did not understand that one.", $"You opened relanote from a link which lead to nowhere. You will instead be sent to the note list.", "Okay");
+                                await ShowDialog("We did not understand that one.", $"You opened Relanota from a link which lead to nowhere. You will instead be sent to the note list.", "Okay");
                                 MainPage.Get.SetNavigationIndex(0);
                                 MainPage.Get.NavView_Navigate("list", null);
                                 break;
@@ -175,7 +177,7 @@ namespace UWP.FrontEnd
                     {
 
                         errorDialog.Title = "We did not understand that.";
-                        errorDialog.Content = $"You opened relanote from a link which could not be interpreted. We managed to recover the state of the application and you will now be sent to the note list.";
+                        errorDialog.Content = $"You opened Relanota from a link which could not be interpreted. We managed to recover the state of the application and you will now be sent to the note list.";
                         errorDialog.PrimaryButtonText = "Okay";
                         await errorDialog.ShowAsync();
                         MainPage.Get.SetNavigationIndex(0);
@@ -208,7 +210,7 @@ namespace UWP.FrontEnd
             deferral.Complete();
         }
 
-        public static void ShowMessageBox(string header, string message)
+        public static void ShowToastNotification(string header, string message)
         {
             ToastContent content = new ToastContentBuilder()
                 .AddText(header, AdaptiveTextStyle.Base)

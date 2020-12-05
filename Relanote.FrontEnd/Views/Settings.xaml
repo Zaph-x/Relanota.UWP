@@ -22,8 +22,8 @@
                     <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
                 <StackPanel Grid.Row="0">
-                    <TextBlock Text="Database Actions" FontWeight="Black" Margin="10"/>
-                    <TextBlock Text="Import/Export Notes" Margin="10"/>
+                    <TextBlock Text="Database Actions" FontWeight="Black" Margin="10 5 0 15"/>
+                    <TextBlock Text="Import/Export Notes" Margin="10 0"/>
                     <ScrollViewer HorizontalScrollMode="Auto" HorizontalScrollBarVisibility="Auto">
                         <Grid ScrollViewer.HorizontalScrollBarVisibility="Auto">
                             <Grid.ColumnDefinitions>
@@ -37,7 +37,22 @@
                     
                     <NavigationViewItemSeparator/>
                 </StackPanel>
-                <StackPanel Grid.Row="1" Visibility="Collapsed">
+                <StackPanel Grid.Row="1">
+                    <TextBlock Text="Visual Settings" FontWeight="Black" Margin="10 5 0 15"/>
+                    <TextBlock Margin="10 0">Preferred theme to be used in Relanota</TextBlock>
+                    <ComboBox x:Name="ThemeComboBox" Margin="10" Width="200" SelectionChanged="ThemeComboBox_SelectionChanged">
+                        <ComboBoxItem Tag="system">
+                            <TextBlock>Same As System</TextBlock>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="Light">
+                            <TextBlock>Light</TextBlock>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="Dark">
+                            <TextBlock>Dark</TextBlock>
+                        </ComboBoxItem>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Grid.Row="2" Visibility="Collapsed">
                     <TextBlock Text="Tag settings" FontWeight="Black" Margin="10"/>
                     <TextBlock Text="Inline Tag Indentifier" Margin="10"/>
                     <StackPanel Orientation="Horizontal" Margin="10">
