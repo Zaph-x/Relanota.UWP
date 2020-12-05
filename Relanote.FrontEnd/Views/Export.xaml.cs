@@ -93,7 +93,7 @@ namespace UWP.FrontEnd.Views
                 FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
                 if (status != FileUpdateStatus.Complete)
                 {
-                    App.ShowMessageBox("The notes file could not be saved", "An error occured, and we cannot save the note.");
+                    App.ShowToastNotification("The notes file could not be saved", "An error occured, and we cannot save the note.");
                     return;
                 }
                 //                BufferedStream stream = await file.OpenStreamForWriteAsync() as BufferedStream;

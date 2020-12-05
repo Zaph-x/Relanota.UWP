@@ -318,7 +318,7 @@ namespace UWP.FrontEnd.Views
             await App.ShowDialog("Delete note permanently?", "If you delete this note, you won't be able to recover it. Do you want to delete it?", "Delete", () =>
             {
                 // The user chose to delete the note
-                MainPage.CurrentNote.Delete(App.Context, App.ShowMessageBox);
+                MainPage.CurrentNote.Delete(App.Context, App.ShowToastNotification);
                 SetSavedState(true);
                 MainPage.Get.NavView_Navigate("list", null);
                 MainPage.Get.SetNavigationIndex(0);
@@ -379,6 +379,7 @@ namespace UWP.FrontEnd.Views
                     string url = e.Url.Replace("(", "%28").Replace(")", "%29");
                     // Get Bitmap from URL
                     BitmapImage image = new BitmapImage(new Uri(url));
+
                     e.Image = image;
 
                     // Generate name for local storage
@@ -611,7 +612,7 @@ namespace UWP.FrontEnd.Views
         {
             // Quick copy content of the note. Does not have to be saved.
             App.SetClipboardContent($"note://import/|{Convert.ToBase64String(Encoding.Default.GetBytes(NoteNameTextBox.Text))}|{Convert.ToBase64String(Encoding.Default.GetBytes(EditorTextBox.Text))}|");
-            App.ShowMessageBox("Note copied!", "A sharable link has been copied to your clipboard.");
+            App.ShowToastNotification("Note copied!", "A sharable link has been copied to your clipboard.");
         }
 
         private void SetTagsState(bool activate)
@@ -625,11 +626,11 @@ namespace UWP.FrontEnd.Views
             if (MainPage.CurrentNote != null)
             {
                 App.SetClipboardContent($"note://open/{Uri.EscapeDataString(MainPage.CurrentNote.Name)}");
-                App.ShowMessageBox("Link copied!", "A link to the current note has been copied.");
+                App.ShowToastNotification("Link copied!", "A link to the current note has been copied.");
             }
             else
             {
-                App.ShowMessageBox("Could not link to note!", "You can only link to notes stored in the note database.");
+                App.ShowToastNotification("Could not link to note!", "You can only link to notes stored in the note database.");
             }
         }
 

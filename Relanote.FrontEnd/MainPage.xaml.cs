@@ -11,6 +11,7 @@ using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Core.Preview;
 using Windows.UI.ViewManagement;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
 
@@ -25,7 +26,7 @@ namespace UWP.FrontEnd
     {
         private static UISettings _uiSettings = new UISettings();
 
-        public static bool IsDarkTheme => _uiSettings.GetColorValue(UIColorType.Background) == Colors.Black;
+        public static bool IsDarkTheme { get; private set; }
 
         private static Note _note { get; set; }
         public static Note CurrentNote {
@@ -40,21 +41,19 @@ namespace UWP.FrontEnd
         private AdvancedCollectionView Acv { get; set; }
         private int RecentSpacerIndex { get; set; }
         private FixedSizeObservableCollection<Note> recentlyAccessed = new FixedSizeObservableCollection<Note>(10);
+        ApplicationViewTitleBar formattableTitleBar;
 
 
         public MainPage()
         {
             Get = this;
+
+            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+            formattableTitleBar = ApplicationView.GetForCurrentView().TitleBar;
             this.InitializeComponent();
             DeserialiseRecentlyAccessed();
-            ApplicationViewTitleBar formattableTitleBar = ApplicationView.GetForCurrentView().TitleBar;
             formattableTitleBar.ButtonBackgroundColor = Colors.Transparent;
-            if (!IsDarkTheme)
-                formattableTitleBar.ButtonForegroundColor = Colors.Black;
-            else
-            {
-                formattableTitleBar.ButtonForegroundColor = Colors.WhiteSmoke;
-            }
+            SetTheme(localSettings.Values["theme"] as string);
             CoreApplicationViewTitleBar coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
             coreTitleBar.ExtendViewIntoTitleBar = true;
 
@@ -80,13 +79,50 @@ namespace UWP.FrontEnd
             App.Current.Exit();
         }
 
+        public void SetTheme(string theme)
+        {
+
+            switch (theme)
+            {
+                case "Light":
+                    this.RequestedTheme = ElementTheme.Light;
+                    formattableTitleBar.ButtonInactiveBackgroundColor = Colors.White;
+                    formattableTitleBar.ButtonForegroundColor = Colors.Black;
+                    IsDarkTheme = false;
+                    break;
+                case "Dark":
+                    this.RequestedTheme = ElementTheme.Dark;
+                    formattableTitleBar.ButtonForegroundColor = Colors.WhiteSmoke;
+                    formattableTitleBar.ButtonInactiveBackgroundColor = Colors.Black;
+                    IsDarkTheme = true;
+                    break;
+                default:
+                    UISettings DefaultTheme = new UISettings();
+                    string uiTheme = DefaultTheme.GetColorValue(UIColorType.Background).ToString();
+                    this.RequestedTheme = ElementTheme.Default;
+                    if (uiTheme == "#FFFFFFFF")
+                    {
+                        formattableTitleBar.ButtonForegroundColor = Colors.Black;
+                        formattableTitleBar.ButtonInactiveBackgroundColor = Colors.White;
+                        IsDarkTheme = false;
+                    }
+                    else
+                    {
+                        formattableTitleBar.ButtonForegroundColor = Colors.WhiteSmoke;
+                        formattableTitleBar.ButtonInactiveBackgroundColor = Colors.Black;
+                        IsDarkTheme = true;
+                    }
+                    break;
+            }
+        }
+
         public void OnNoteSave(string newName)
         {
             if (!(NavigationView.MenuItems[RecentSpacerIndex + 1] as NavigationViewItemBase).Content.ToString().Equals(newName, StringComparison.InvariantCultureIgnoreCase))
             {
                 (NavigationView.MenuItems[RecentSpacerIndex + 1] as NavigationViewItemBase).Content = newName;
             }
-            
+
             Acv = new AdvancedCollectionView(App.Context.Notes.Select(n => n.Name).ToList(), false);
             Acv.SortDescriptions.Add(new SortDescription(SortDirection.Ascending));
             Acv.Filter = itm => (itm as string).Contains(SearchBox.Text, StringComparison.InvariantCultureIgnoreCase);
@@ -147,10 +183,6 @@ namespace UWP.FrontEnd
                 content += $"{note.Key}{Environment.NewLine}";
             }
             content = content.Trim();
-            while (!file.IsAvailable)
-            {
-
-            }
 
             await FileIO.WriteTextAsync(file, content, Windows.Storage.Streams.UnicodeEncoding.Utf8);
         }
@@ -327,7 +359,8 @@ namespace UWP.FrontEnd
                     {
                         SearchBox.Text = "";
                     });
-            } else
+            }
+            else
             {
                 CurrentNote = note;
                 NavView_Navigate("tags", null);

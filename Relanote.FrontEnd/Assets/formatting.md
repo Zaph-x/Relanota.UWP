@@ -1,7 +1,7 @@
 # Formatting Notes
 ___
 
-Relanote supports a subset of the Markdown language.
+Relanota supports a subset of the Markdown language.
 This page gives you an overview of the supported syntax, and how it can format your notes.
 
 ## Italics
