@@ -36,6 +36,8 @@ namespace UWP.FrontEnd
     {
         private Frame rootFrame = null;
         public static Database Context = new Database();
+        private ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
+
 
         public async Task ConnectDB()
         {
@@ -114,6 +116,17 @@ namespace UWP.FrontEnd
 
             Context.Notes.Load();
             Context.Tags.Load();
+
+            if (settings.Values.TryGetValue("load_recet_on_startup", out object openRecent) && (bool)openRecent)
+            {
+                string line = File.ReadLines($@"{ApplicationData.Current.LocalFolder.Path}\AccessList").First(); // gets the first line from file.
+                if (Context.TryGetNote(int.Parse(line), true, out Note note))
+                {
+                    _ = MainPage.Get;
+                    MainPage.CurrentNote = note;
+                    MainPage.Get.NavView_Navigate("edit", null);
+                }
+            }
         }
         protected override async void OnActivated(IActivatedEventArgs args)
         {
@@ -185,6 +198,7 @@ namespace UWP.FrontEnd
                     }
                 }
             }
+
         }
         /// <summary>
         /// Invoked when Navigation to a certain page fails

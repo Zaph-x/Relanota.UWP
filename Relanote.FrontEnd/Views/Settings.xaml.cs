@@ -38,10 +38,15 @@ namespace UWP.FrontEnd.Views
             if (string.IsNullOrWhiteSpace(localSettings.Values["theme"] as string))
             {
                 ThemeComboBox.SelectedIndex = 0;
-            } else
+            }
+            else
             {
                 ThemeComboBox.SelectedItem = ThemeComboBox.Items.First(itm => (itm as FrameworkElement).Tag as string == localSettings.Values["theme"] as string);
             }
+            LeftTagIdentifierBox.Text = string.IsNullOrWhiteSpace(localSettings.Values["left_tag_identifier"] as string) ? "@" : localSettings.Values["left_tag_identifier"] as string;
+            RightTagIdentifierBox.Text = string.IsNullOrWhiteSpace(localSettings.Values["right_tag_identifier"] as string) ? "@" : localSettings.Values["right_tag_identifier"] as string;
+            LoadMostRecentSwitch.IsOn = (bool?)localSettings.Values["load_recet_on_startup"] ?? false;
+
             base.OnNavigatedTo(e);
         }
 
@@ -65,6 +70,7 @@ namespace UWP.FrontEnd.Views
                 await FileIO.WriteBufferAsync(file, buffer);
 
                 File.Delete($@"{ApplicationData.Current.TemporaryFolder.Path}\export.zip");
+                await (App.Current as App).ConnectDB();
                 App.ShowToastNotification("Notes Exported", "Your notes were successfully exported to the chosen location.");
             }
         }
@@ -133,6 +139,57 @@ namespace UWP.FrontEnd.Views
                 localSettings.Values["theme"] = ((sender as ComboBox).SelectedItem as FrameworkElement).Tag as string;
                 MainPage.Get.SetTheme(localSettings.Values["theme"] as string);
             }
+        }
+
+        private void TagIdentifierBox_BeforeTextChanging(TextBox sender, TextBoxBeforeTextChangingEventArgs args)
+        {
+            args.Cancel = args.NewText.Any(c => ((c >= 'a') && (c <= 'z')) || 
+                                            ((c >= 'A') && (c <= 'Z')) || 
+                                            ((c >= '0') && (c <= '9')) ||
+                                            new char[] { 'æ','Æ','ø','Ø','å','Å'}.Contains(c));
+            if (args.Cancel)
+            {
+                switch (sender.Name)
+                {
+                    case "RightTagIdentifierBox":
+                        RTI_tooltip.IsOpen = true;
+                        LTI_tooltip.IsOpen = false;
+                        break;
+                    case "LeftTagIdentifierBox":
+                        LTI_tooltip.IsOpen = true;
+                        RTI_tooltip.IsOpen = false;
+                        break;
+                }
+            }
+            else
+            {
+                RTI_tooltip.IsOpen = false;
+                LTI_tooltip.IsOpen = false;
+            }
+        }
+
+        private void RightTagIdentifierBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+            localSettings.Values["right_tag_identifier"] = string.IsNullOrWhiteSpace((sender as TextBox).Text) ? "@" : (sender as TextBox).Text;
+        }
+
+        private void LeftTagIdentifierBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+            localSettings.Values["left_tag_identifier"] = string.IsNullOrWhiteSpace((sender as TextBox).Text) ? "@" : (sender as TextBox).Text;
+        }
+
+        private void TagIdentifierBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            RTI_tooltip.IsOpen = false;
+            LTI_tooltip.IsOpen = false;
+        }
+
+        private void ToggleSwitch_Toggled(object sender, RoutedEventArgs e)
+        {
+            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+            localSettings.Values["load_recet_on_startup"] = (sender as ToggleSwitch).IsOn;
         }
     }
 }

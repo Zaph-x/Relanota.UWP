@@ -212,11 +212,6 @@ namespace UWP.FrontEnd.Views
 
         }
 
-        private void KeyboardAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-        {
-
-        }
-
         private void AddNew_Click(object sender, RoutedEventArgs e)
         {
             MainPage.Get.NavView_Navigate("edit", null);

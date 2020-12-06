@@ -218,13 +218,13 @@ namespace UWP.FrontEnd
 
         }
 
-        private readonly List<(string Tag, Type Page, object obj)> _pages = new List<(string Tag, Type Page, object obj)>
+        private readonly List<(string Tag, Type Page)> _pages = new List<(string Tag, Type Page)>
         {
-            ("list", typeof(Home), null),
-            ("edit", typeof(NoteEditor), CurrentNote),
-            ("tags", typeof(TagsEditor), CurrentNote),
-            ("export", typeof(Export), null),
-            ("help", typeof(Help), null),
+            ("list", typeof(Home)),
+            ("edit", typeof(NoteEditor)),
+            ("tags", typeof(TagsEditor)),
+            ("export", typeof(Export)),
+            ("help", typeof(Help)),
         };
 
         private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
@@ -278,11 +278,10 @@ namespace UWP.FrontEnd
             // We want to track the navigation state
             NoteEditor.Get.State = NoteEditorState.RecentNavigation;
         }
-
+        Type _page;
         public async void NavView_Navigate(string navItemTag, NavigationTransitionInfo transitionInfo)
         {
-            Type _page = null;
-            Note _note = null;
+            _page = null;
             if (navItemTag == "settings")
             {
                 _page = typeof(Settings);
@@ -291,7 +290,6 @@ namespace UWP.FrontEnd
             {
                 var item = _pages.FirstOrDefault(p => p.Tag.Equals(navItemTag));
                 _page = item.Page;
-                _note = item.obj as Note;
             }
             var preNavPageType = ContentFrame.CurrentSourcePageType;
 
