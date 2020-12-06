@@ -1,0 +1,3 @@
+[submodule "Relanote.Core"]
+	path = Relanote.Core
+	url = https://github.com/Zaph-x/Relanote.Core.git

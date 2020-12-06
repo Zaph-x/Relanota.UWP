@@ -1,0 +1,104 @@
+﻿<Page
+    x:Class="UWP.FrontEnd.Views.Settings"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:UWP.FrontEnd.Views"
+    xmlns:extensions="using:Microsoft.Toolkit.Uwp.UI.Extensions"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <ListViewHeaderItem Grid.Row="0" Content="Settings"/>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Enabled">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0">
+                    <TextBlock Text="Database Actions" FontWeight="Black" Margin="10 5 0 15"/>
+                    <TextBlock Text="Import/Export Notes" Margin="10 0"/>
+                    <ScrollViewer HorizontalScrollMode="Auto" HorizontalScrollBarVisibility="Auto">
+                        <Grid ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="Import Database" Width="200" Margin="10" Click="ImportDatabase_Click"/>
+                            <Button Grid.Column="1" Content="Export Database" Width="200" Margin="10" Click="ExportDatabase_Click"/>
+                        </Grid>
+                    </ScrollViewer>
+                    
+                    <NavigationViewItemSeparator/>
+                </StackPanel>
+                <StackPanel Grid.Row="1">
+                    <TextBlock Text="Visual Settings" FontWeight="Black" Margin="10"/>
+                    <TextBlock Margin="10">Preferred theme to be used in Relanota</TextBlock>
+                    <ComboBox x:Name="ThemeComboBox" Margin="10 0 0 10" Width="200" SelectionChanged="ThemeComboBox_SelectionChanged">
+                        <ComboBoxItem Tag="system">
+                            <TextBlock>Same As System</TextBlock>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="Light">
+                            <TextBlock>Light</TextBlock>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="Dark">
+                            <TextBlock>Dark</TextBlock>
+                        </ComboBoxItem>
+                    </ComboBox>
+                    <NavigationViewItemSeparator/>
+                </StackPanel>
+                <StackPanel Grid.Row="2">
+                    <TextBlock Text="Usability Settings" FontWeight="Black" Margin="10"/>
+                    <StackPanel>
+                        <TextBlock Text="Lost most recent note on startup" Margin="10"/>
+                        <ToggleSwitch Margin="10 0 0 10" x:Name="LoadMostRecentSwitch" Toggled="ToggleSwitch_Toggled"></ToggleSwitch>
+                    </StackPanel>
+                    <StackPanel Visibility="Collapsed">
+                        <TextBlock Text="Inline Tag Indentifier" Margin="10"/>
+                        <StackPanel Orientation="Horizontal" Margin="10 0 0 10">
+                            <TextBox extensions:TextBoxRegex.ValidationMode="Forced"
+                                     x:Name="LeftTagIdentifierBox" 
+                                     Width="65" 
+                                     MaxLength="4" 
+                                     TextAlignment="Center" 
+                                     PlaceholderText="@"
+                                     BeforeTextChanging="TagIdentifierBox_BeforeTextChanging"
+                                     TextChanged="LeftTagIdentifierBox_TextChanged"
+                                     LostFocus="TagIdentifierBox_LostFocus"
+                                     >
+                                <ToolTipService.ToolTip>
+                                    <ToolTip Placement="Top" Content="This textbox only accepts special characters." x:Name="LTI_tooltip"/>
+                                </ToolTipService.ToolTip>
+                            </TextBox>
+                            <TextBlock Text="TagName" VerticalAlignment="Center"/>
+                            <TextBox x:Name="RightTagIdentifierBox" 
+                                     Width="65" 
+                                     MaxLength="4" 
+                                     TextAlignment="Center" 
+                                     PlaceholderText="@"
+                                     BeforeTextChanging="TagIdentifierBox_BeforeTextChanging"
+                                     TextChanged="RightTagIdentifierBox_TextChanged"
+                                     LostFocus="TagIdentifierBox_LostFocus"
+                                     >
+                                <ToolTipService.ToolTip>
+                                    <ToolTip Placement="Top" Content="This textbox only accepts special characters." x:Name="RTI_tooltip"/>
+                                </ToolTipService.ToolTip>
+                            </TextBox>
+                        </StackPanel>
+                    </StackPanel>
+                    <NavigationViewItemSeparator/>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Page>

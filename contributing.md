@@ -2,6 +2,8 @@
 
 Contributing to Relanote is allowed and encouraged. Feel free to create a pull request or an issue, to suggest new features or report a bug.
 
+The branch `master` and is what generally should be used in production. `dev` branch is for active development and features to be implemented.
+
 ## Before submitting a pull request
 
 If you are creating a pull request for a bug you've found, please submit a bug report, before submitting the pull request.
