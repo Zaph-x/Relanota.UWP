@@ -60,7 +60,7 @@
                 <StackPanel Grid.Row="2">
                     <TextBlock Text="Usability Settings" FontWeight="Black" Margin="10"/>
                     <StackPanel>
-                        <TextBlock Text="Lost most recent note on startup" Margin="10"/>
+                        <TextBlock Text="Load most recent note on startup" Margin="10"/>
                         <ToggleSwitch Margin="10 0 0 10" x:Name="LoadMostRecentSwitch" Toggled="ToggleSwitch_Toggled"></ToggleSwitch>
                     </StackPanel>
                     <StackPanel Visibility="Collapsed">

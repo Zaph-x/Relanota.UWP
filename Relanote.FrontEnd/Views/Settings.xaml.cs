@@ -189,7 +189,7 @@ namespace UWP.FrontEnd.Views
         private void ToggleSwitch_Toggled(object sender, RoutedEventArgs e)
         {
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-            localSettings.Values["load_recet_on_startup"] = (sender as ToggleSwitch).IsOn;
+            localSettings.Values["load_recent_on_startup"] = (sender as ToggleSwitch).IsOn;
         }
     }
 }
