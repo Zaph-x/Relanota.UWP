@@ -118,7 +118,7 @@ namespace UWP.FrontEnd
 
         public void OnNoteSave(string newName)
         {
-            if (!(NavigationView.MenuItems[RecentSpacerIndex + 1] as NavigationViewItemBase).Content.ToString().Equals(newName, StringComparison.InvariantCultureIgnoreCase))
+            if (NavigationView.MenuItems.Count - 1 > RecentSpacerIndex && !(NavigationView.MenuItems[RecentSpacerIndex + 1] as NavigationViewItemBase).Content.ToString().Equals(newName, StringComparison.InvariantCultureIgnoreCase))
             {
                 (NavigationView.MenuItems[RecentSpacerIndex + 1] as NavigationViewItemBase).Content = newName;
             }

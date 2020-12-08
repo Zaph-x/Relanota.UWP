@@ -126,6 +126,7 @@ namespace UWP.FrontEnd.Views
             }
             else
             {
+                MainPage.CurrentTag = new Tag();
                 MainPage.CurrentTag.Save(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(), App.Context);
             }
             TagNameEditBox.Text = "";

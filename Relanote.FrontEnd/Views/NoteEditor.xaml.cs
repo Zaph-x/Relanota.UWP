@@ -305,7 +305,8 @@ namespace UWP.FrontEnd.Views
         {
             MainPage.CurrentNote = note;
             TagTokens.ItemsSource = new ObservableCollection<Tag>(MainPage.CurrentNote.NoteTags.Select(nt => nt.Tag));
-            EditorTextBox.Text = $"# {note.Name}\n{note.Content}";
+            RenderBlock.Text = $"# {note.Name}\n{note.Content}";
+            EditorTextBox.Text = $"{note.Content}";
             TagTokens.IsEnabled = true;
         }
 

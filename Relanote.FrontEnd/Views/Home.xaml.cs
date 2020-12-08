@@ -120,8 +120,9 @@ namespace UWP.FrontEnd.Views
 
             if (result == ContentDialogResult.Primary)
             {
-                ((sender as FrameworkElement).Tag as Tag).Delete(App.Context, App.ShowToastNotification);
-                TagsListView.Items.Remove(((sender as FrameworkElement).Tag as Tag));
+                Tag tag = ((sender as FrameworkElement).Tag as Tag);
+                TagsCollection.Remove(tag);
+                tag.Delete(App.Context, App.ShowToastNotification);
             }
         }
 

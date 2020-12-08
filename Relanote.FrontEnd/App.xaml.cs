@@ -117,7 +117,7 @@ namespace UWP.FrontEnd
             Context.Notes.Load();
             Context.Tags.Load();
 
-            if (settings.Values.TryGetValue("load_recet_on_startup", out object openRecent) && (bool)openRecent)
+            if (settings.Values.TryGetValue("load_recent_on_startup", out object openRecent) && (bool)openRecent)
             {
                 string line = File.ReadLines($@"{ApplicationData.Current.LocalFolder.Path}\AccessList").First(); // gets the first line from file.
                 if (Context.TryGetNote(int.Parse(line), true, out Note note))
