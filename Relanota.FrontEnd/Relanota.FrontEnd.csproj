@@ -181,6 +181,9 @@
     <Content Include="Assets\relations.png" />
     <Content Include="Assets\tag_edit.gif" />
     <Content Include="Assets\web_image.png" />
+    <None Include="Assets\Help\external_opening.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Assets\Help\relating.md">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
