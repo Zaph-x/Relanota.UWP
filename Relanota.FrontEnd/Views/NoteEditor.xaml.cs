@@ -226,7 +226,7 @@ namespace UWP.FrontEnd.Views
                 {
                     _timer?.Change(_interval, Timeout.Infinite);
                 }
-                catch (ObjectDisposedException e)
+                catch (ObjectDisposedException)
                 {
                     // Object has been disposed
                 }
@@ -404,7 +404,7 @@ namespace UWP.FrontEnd.Views
                     e.Image = new BitmapImage(new Uri(path));
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 e.Handled = false;
                 return;

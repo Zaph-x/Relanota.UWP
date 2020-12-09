@@ -8,7 +8,7 @@
   IgnorableNamespaces="uap mp">
 
   <Identity
-    Name="12839Zaph.Relanota"
+    Name="Relanota"
     Publisher="CN=A8743CD6-3217-450B-B826-CB1DBDBF1E46"
     Version="1.1.7.0" />
 
