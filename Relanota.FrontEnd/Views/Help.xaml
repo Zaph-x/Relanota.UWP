@@ -17,10 +17,10 @@
         <StackPanel Grid.Row="0" Orientation="Horizontal">
             <TextBlock VerticalAlignment="Center" FontSize="16" Margin="10 0" Text="Topic: "/>
             <ComboBox Width="300" SelectionChanged="ComboBox_SelectionChanged">
-                <ComboBoxItem Content="General" Tag="general"/>
                 <ComboBoxItem Content="Math" Tag="math"/>
                 <ComboBoxItem Content="Text Formatting" Tag="formatting"/>
                 <ComboBoxItem Content="Inserting and Resizing Images" Tag="inserting_images"/>
+                <ComboBoxItem Content="Relating Notes" Tag="relating"/>
             </ComboBox>
         </StackPanel>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto">
