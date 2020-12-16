@@ -30,7 +30,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Your Notes" VerticalAlignment="Center"/>
+                    <TextBlock x:Uid="NotesListHeader" Grid.Column="0" VerticalAlignment="Center"/>
                     <Button Grid.Column="1" AccessKey="N" Background="Transparent" Margin="10 0" Click="AddNew_Click">
                         <Button.Content>
                             <TextBlock FontFamily="Segoe MDL2 Assets" VerticalAlignment="Bottom">&#xE710;</TextBlock>
@@ -64,8 +64,8 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding Name}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                 <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" x:Name="ButtonStack">
-                                    <Button FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to edit note" Click="EditButton_Click"/>
-                                    <Button FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE8FF;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to preview note" Click="PreviewButton_Click">
+                                    <Button x:Uid="NotesListNoteEditButton" FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" Click="EditButton_Click"/>
+                                    <Button x:Uid="NotesListNotePreviewButton" FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE8FF;" Tag="{Binding}" Background="Transparent" Click="PreviewButton_Click">
                                         <Button.Flyout>
                                             <Flyout Placement="BottomEdgeAlignedLeft">
                                                 <Grid>
@@ -76,11 +76,11 @@
                                                         <controls:MarkdownTextBlock  ScrollViewer.VerticalScrollBarVisibility="Auto" Width="400" Text="{Binding Content}" Background="Transparent"/>
                                                     </ScrollViewer>
                                                 </Grid>
-                                                
+
                                             </Flyout>
                                         </Button.Flyout>
                                     </Button>
-                                    <Button FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE74D;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to delete note" Click="DeleteButton_Click"/>
+                                    <Button x:Uid="NotesListNoteDeleteButton" FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE74D;" Tag="{Binding}" Background="Transparent" Click="DeleteButton_Click"/>
                                 </StackPanel>
                             </Grid>
                         </DataTemplate>
@@ -93,7 +93,14 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <ListViewHeaderItem Grid.Row="0" Content="Tags"/>
+            <ListViewHeaderItem Grid.Row="0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Uid="TagsListHeader" Grid.Column="0" VerticalAlignment="Center"/>
+                </Grid>
+            </ListViewHeaderItem>
             <ScrollViewer Grid.Row="1">
                 <ListView x:Name="TagsListView"
                           ItemsSource="{x:Bind TagsCollection}"
@@ -110,8 +117,8 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="{Binding Name}" Grid.Column="0" HorizontalAlignment="Left"/>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to edit tag" Click="EditTagButton_Click"/>
-                                    <Button FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE74D;" Tag="{Binding}" Background="Transparent" ToolTipService.ToolTip="Click to delete tag" Click="DeleteTagButton_Click"/>
+                                    <Button x:Uid="TagsListTagEditButton" FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" Click="EditTagButton_Click"/>
+                                    <Button x:Uid="TagsListTagDeleteButton" FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE74D;" Tag="{Binding}" Background="Transparent" Click="DeleteTagButton_Click"/>
                                 </StackPanel>
                             </Grid>
                         </DataTemplate>
@@ -119,17 +126,5 @@
                 </ListView>
             </ScrollViewer>
         </Grid>
-        <Popup VerticalOffset="10" HorizontalOffset="200" x:Name="StandardPopup">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                    <controls:MarkdownTextBlock x:Name="PreviewBox" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                </ScrollViewer>
-                
-            </Grid>
-        </Popup>
     </Grid>
-    
 </Page>

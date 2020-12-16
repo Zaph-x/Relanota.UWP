@@ -186,7 +186,7 @@ namespace UWP.FrontEnd
                                 break;
                         }
                     }
-                    catch (UriFormatException ex)
+                    catch (UriFormatException)
                     {
 
                         errorDialog.Title = "We did not understand that.";

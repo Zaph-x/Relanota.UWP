@@ -29,7 +29,8 @@ namespace UWP.FrontEnd.Views
             string fileName = (((sender as ComboBox).SelectedItem as FrameworkElement).Tag as string).ToLower();
 
             StorageFolder assetDir = await Package.Current.InstalledLocation.GetFolderAsync(@"Assets/");
-            StorageFile file = await assetDir.GetFileAsync($"{fileName}.md");
+            StorageFolder helpDir = await assetDir.GetFolderAsync(@"Help/");
+            StorageFile file = await helpDir.GetFileAsync($"{fileName}.md");
 
             string text = File.ReadAllText(file.Path);
 

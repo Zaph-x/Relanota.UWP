@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UWP.FrontEnd.Views;
 using Windows.ApplicationModel.Core;
+using Windows.Foundation;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Core.Preview;
@@ -63,6 +64,7 @@ namespace UWP.FrontEnd
             SearchBox.ItemsSource = Acv;
             RecentSpacerIndex = NavigationView.MenuItems.IndexOf(NavigationView.MenuItems.First(itm => (itm as NavigationViewItemBase).Content?.ToString() == "Recently Accessed Notes"));
             SystemNavigationManagerPreview.GetForCurrentView().CloseRequested += MainPage_CloseRequested;
+
         }
 
         private async void MainPage_CloseRequested(object sender, SystemNavigationCloseRequestedPreviewEventArgs e)

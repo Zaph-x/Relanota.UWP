@@ -178,7 +178,7 @@ namespace UWP.FrontEnd.Views
 
 
         }
-        // [note](note://bayesian networks)
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             MainPage.Get.SetNavigationIndex(3);
@@ -196,7 +196,7 @@ namespace UWP.FrontEnd.Views
                 {
                     MainPage.Get.LogRecentAccess(note);
                 }
-                NoteEditorTextBox_TextChanged(this.EditorTextBox, null);
+                FillRenderbox(this.EditorTextBox);
             }
             else
             {
@@ -226,7 +226,7 @@ namespace UWP.FrontEnd.Views
                 {
                     _timer?.Change(_interval, Timeout.Infinite);
                 }
-                catch (ObjectDisposedException e)
+                catch (ObjectDisposedException)
                 {
                     // Object has been disposed
                 }
@@ -250,15 +250,20 @@ namespace UWP.FrontEnd.Views
         {
         }
 
-        private void NoteEditorTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void FillRenderbox(TextBox sender)
         {
-            string text = ((TextBox)sender).Text;
+            string text = sender.Text;
 
             if (string.IsNullOrWhiteSpace(text))
                 WordCount = 0;
             else
                 WordCount = Regex.Split(text.Trim(), @"\s+").Length;
             WordCounter.Text = $"{WordCount} word" + ((WordCount != 1) ? "s" : "");
+        }
+
+        private void NoteEditorTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            FillRenderbox(sender as TextBox);
             if ((State ^ NoteEditorState.Navigation) == NoteEditorState.NotSaved || State == NoteEditorState.Ready)
             {
                 SetSavedState(false);
@@ -404,7 +409,7 @@ namespace UWP.FrontEnd.Views
                     e.Image = new BitmapImage(new Uri(path));
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 e.Handled = false;
                 return;
@@ -661,13 +666,41 @@ namespace UWP.FrontEnd.Views
 
         private void EditorTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
+            int newIndex = -1;
+            string newText = EditorTextBox.Text;
             bool ctrlIsPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
-            switch (c: ctrlIsPressed, k: e.OriginalKey)
+            bool shiftIsPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
+            switch (c: ctrlIsPressed, s: shiftIsPressed, k: e.OriginalKey)
             {
-                case (true, VirtualKey.I):
-                    ImportPictureButton_Click(null, null);
+                case (true, false, VirtualKey.I):
+                    newText = newText.Insert(EditorTextBox.SelectionStart, "*");
+                    newText = newText.Insert(EditorTextBox.SelectionStart + EditorTextBox.SelectionLength + 1, "*");
+                    if (EditorTextBox.SelectionStart + EditorTextBox.SelectionLength == 0)
+                    {
+                        newIndex = 1;
+                    }
+                    else
+                    {
+                        newIndex = EditorTextBox.SelectionStart + EditorTextBox.SelectionLength + 1;
+                    }
+                    EditorTextBox.Text = newText;
+                    EditorTextBox.SelectionStart = newIndex;
                     e.Handled = true;
-                    EditorTextBox.Focus(FocusState.Programmatic);
+                    break;
+                case (true, false, VirtualKey.B):
+                    newText = newText.Insert(EditorTextBox.SelectionStart, "**");
+                    newText = newText.Insert(EditorTextBox.SelectionStart + EditorTextBox.SelectionLength + 2, "**");
+                    if (EditorTextBox.SelectionStart + EditorTextBox.SelectionLength == 0)
+                    {
+                        newIndex = 2;
+                    }
+                    else
+                    {
+                        newIndex = EditorTextBox.SelectionStart + EditorTextBox.SelectionLength + 2;
+                    }
+                    EditorTextBox.Text = newText;
+                    EditorTextBox.SelectionStart = newIndex;
+                    e.Handled = true;
                     break;
             }
         }
@@ -675,21 +708,21 @@ namespace UWP.FrontEnd.Views
 
     public enum NoteEditorState
     {
-        Error =                               0b_0000,
-        Ready =                               0b_0001,
-        Saving =                              0b_0010,
-        Loading =                             0b_0100,
-        SaveCompleted =                       0b_1000,
-        SaveError =                      0b_0001_0000,
-        LoadError =                      0b_0010_0000,
-        NotSaved =                  0b_0000_0011_0000,
-        ProtocolNavigating =        0b_0000_0100_0000,
-        ListNavigation =            0b_0000_1100_0000,
-        RecentNavigation =          0b_0000_1000_0000,
-        WorkerCanceled =            0b_0001_0000_0000,
-        Navigation =                0b_0010_1100_0000,
-        ProtocolImportNavigation =  0b_0010_1111_0000,
-        SearchNavigation =          0b_0001_1100_0000
+        Error = 0b_0000,
+        Ready = 0b_0001,
+        Saving = 0b_0010,
+        Loading = 0b_0100,
+        SaveCompleted = 0b_1000,
+        SaveError = 0b_0001_0000,
+        LoadError = 0b_0010_0000,
+        NotSaved = 0b_0000_0011_0000,
+        ProtocolNavigating = 0b_0000_0100_0000,
+        ListNavigation = 0b_0000_1100_0000,
+        RecentNavigation = 0b_0000_1000_0000,
+        WorkerCanceled = 0b_0001_0000_0000,
+        Navigation = 0b_0010_1100_0000,
+        ProtocolImportNavigation = 0b_0010_1111_0000,
+        SearchNavigation = 0b_0001_1100_0000
 
 
         // Error states

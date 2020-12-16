@@ -46,7 +46,7 @@
                          TextChanged="NoteEditorTextBox_TextChanged" 
                          AcceptsReturn="True"
                          TextWrapping="Wrap"
-                         FontFamily="Consolas"
+                         FontFamily="Lucida Console"
                          IsFocusEngaged="False"
                          KeyDown="EditorTextBox_KeyDown"
                          Paste="EditorTextBox_Paste"/>
@@ -94,7 +94,7 @@
                         </Grid.RowDefinitions>
                         <Button Grid.Row="0" Height="200" Padding="0" Background="Transparent" Click="CollapsePreviewPane_Click">
                             <Button.Content>
-                                <TextBlock FontFamily="Segoe MDL2 Assets" Padding="0" Margin="0">&#xE76C;</TextBlock>
+                                <TextBlock FontFamily="Segoe MDL2 Assets" Foreground="Black" Padding="0" Margin="0">&#xE76C;</TextBlock>
                             </Button.Content>
                         </Button>
                         <TextBlock HorizontalAlignment="Center"  
@@ -106,7 +106,7 @@
 FontFamily="Segoe MDL2 Assets"/>
                         <Button Grid.Row="2" Height="200" Padding="0" Background="Transparent" Click="CollapseEditorPane_Click">
                             <Button.Content>
-                                <TextBlock FontFamily="Segoe MDL2 Assets" Padding="0" Margin="0">&#xE76B;</TextBlock>
+                                <TextBlock FontFamily="Segoe MDL2 Assets" Foreground="Black" Padding="0" Margin="0">&#xE76B;</TextBlock>
                             </Button.Content>
                         </Button>
                     </Grid>
@@ -144,11 +144,8 @@ FontFamily="Segoe MDL2 Assets"/>
                         <KeyboardAccelerator Modifiers="Control" Key="N"/>
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
-                <AppBarButton Icon="Pictures" AccessKey="I" Label="Add Image" Click="ImportPictureButton_Click">
-                    <AppBarButton.KeyboardAccelerators>
-                        <KeyboardAccelerator Modifiers="Control" Key="I"/>
-                    </AppBarButton.KeyboardAccelerators>
-                </AppBarButton>
+                <AppBarButton Icon="Pictures" AccessKey="I" Label="Add Image" Click="ImportPictureButton_Click" ToolTipService.ToolTip="Add Image"/>
+
                 <CommandBar.SecondaryCommands>
                     <AppBarButton Icon="Share" AccessKey="G" Label="Share Note" Click="ShareNoteButton_Click">
                         <AppBarButton.KeyboardAccelerators>
@@ -167,6 +164,9 @@ FontFamily="Segoe MDL2 Assets"/>
                                         PlaceholderText="Enter Tags" 
                                         TokenDelimiter="," 
                                         TextMemberPath="Text" 
+                                        ScrollViewer.VerticalScrollMode="Enabled"
+                                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                        Height="40"
                                         TextChanged="TagTokens_TextChanged"
                                         TokenItemAdding="TagTokens_TokenItemAdding"
                                         TokenItemAdded="TagTokens_TokenItemAdded"
