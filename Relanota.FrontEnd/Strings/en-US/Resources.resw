@@ -1,0 +1,210 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="EditorNavItem.Content" xml:space="preserve">
+    <value>Editor</value>
+    <comment>The text shown on the edit nav-item</comment>
+  </data>
+  <data name="ExportByTags.Text" xml:space="preserve">
+    <value>Export Notes By Tags</value>
+    <comment>Text shown within the save notes view, tags</comment>
+  </data>
+  <data name="ExportNavItem.Content" xml:space="preserve">
+    <value>Save Notes to File</value>
+    <comment>The text shown on the save nav-item</comment>
+  </data>
+  <data name="ExportOnlyThis.Text" xml:space="preserve">
+    <value>Export This Note Only</value>
+    <comment>Text shown within the save notes view, checkbox</comment>
+  </data>
+  <data name="FileFormatText.Text" xml:space="preserve">
+    <value>File Format</value>
+    <comment>Text shown in File Format labels</comment>
+  </data>
+  <data name="HelpNavItem.Content" xml:space="preserve">
+    <value>Help</value>
+    <comment>The text shown on the help nav-item</comment>
+  </data>
+  <data name="MarkdownFileSelector.Content" xml:space="preserve">
+    <value>Markdown (*.md)</value>
+    <comment>Text shown in the File Format Selector</comment>
+  </data>
+  <data name="NavigationView.PaneTitle" xml:space="preserve">
+    <value>Relanota</value>
+    <comment>The title shown on the navigation view</comment>
+  </data>
+  <data name="NoSelectedNote" xml:space="preserve">
+    <value>No Note Selected</value>
+  </data>
+  <data name="NoteName.Content" xml:space="preserve">
+    <value>No Note Selected</value>
+    <comment>The text shown on the selected notes header</comment>
+  </data>
+  <data name="NotesListHeader.Text" xml:space="preserve">
+    <value>Your Notes</value>
+    <comment>The text shown at the top of the notes list in the home view</comment>
+  </data>
+  <data name="NotesListNoteDeleteButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Click to delete note</value>
+    <comment>Text shown on note delete button in notes list</comment>
+  </data>
+  <data name="NotesListNoteEditButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Click to edit note</value>
+    <comment>Text shown on note edit button in notes list</comment>
+  </data>
+  <data name="NotesListNotePreviewButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Click to preview note</value>
+    <comment>Text shown on note preview button in notes list</comment>
+  </data>
+  <data name="NotesNavItem.Content" xml:space="preserve">
+    <value>Notes</value>
+    <comment>The text shown on the notes nav-item</comment>
+  </data>
+  <data name="Recent.Content" xml:space="preserve">
+    <value>Recently Accessed Notes</value>
+    <comment>The text shown on the recently accessed header</comment>
+  </data>
+  <data name="TagsListHeader.Text" xml:space="preserve">
+    <value>Tags</value>
+    <comment>The text shown at the top of the tags list in the home view</comment>
+  </data>
+  <data name="TagsListTagDeleteButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Click to delete tag</value>
+    <comment>Text shown on tag delete button in tags list</comment>
+  </data>
+  <data name="TagsListTagEditButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Click to edit tag</value>
+    <comment>Text shown on tag edit button in tags list</comment>
+  </data>
+  <data name="TagsNavItem.Content" xml:space="preserve">
+    <value>Tags</value>
+    <comment>The text shown on the tags nav-item</comment>
+  </data>
+  <data name="TagTokenBox.PlaceholderText" xml:space="preserve">
+    <value>Enter Tags</value>
+    <comment>Placeholder text shown in tags tokenization boxes</comment>
+  </data>
+  <data name="TagTokenBox.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Leave blank for all notes.</value>
+  </data>
+  <data name="TextFileSelector.Content" xml:space="preserve">
+    <value>Text (*.txt)</value>
+    <comment>Text shown in the File Format Selector</comment>
+  </data>
+</root>

@@ -1,4 +1,4 @@
-﻿# Referencing Your Notes On External Sources
+﻿# Open Notes With `note://`
 
 With Relanota, you are able to reference your notes from outside sources, such as websites or kanban boards.
 This is done with the `note://` protocol.
@@ -8,6 +8,7 @@ Relanota assigns this protocol to itself, meaning you are able to open your note
 
 When editing a note, you are able to press `CTRL + L` to get a link to your note.
 This link will be formatted with the desired action, as well as the name of the note.
+Opening notes like this, only works for notes that are already stored in the database.
 
 #### Example
 

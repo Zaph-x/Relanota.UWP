@@ -9,7 +9,8 @@
     xmlns:ex="using:Microsoft.Toolkit.Uwp.UI.Extensions"
     xmlns:objects="using:Core.Objects.Entities"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" 
+    >
 
     <Grid>
         <StackPanel>
@@ -25,23 +26,23 @@
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="File Format" VerticalAlignment="Center" Margin="0 0 10 0"/>
-                <ComboBox x:Name="FileFormatPicker" SelectedIndex="0" Grid.Row="0" Grid.Column="1" Width="400">
-                    <ComboBoxItem Content="Markdown (*.md)" Tag=".md"/>
-                    <ComboBoxItem Content="Text (*.txt)" Tag=".txt"/>
-                    <!--<ComboBoxItem Content="Sqlite Database (*.db)" Tag=".db"/>-->
+                <TextBlock x:Uid="FileFormatText" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0 0 10 0"/>
+                <ComboBox x:Name="FileFormatPicker" SelectedIndex="0" Grid.Row="0" Grid.Column="1" Width="300">
+                    <ComboBoxItem x:Uid="MarkdownFileSelector" Tag=".md"/>
+                    <ComboBoxItem x:Uid="TextFileSelector" Tag=".txt"/>
                 </ComboBox>
-                <TextBlock x:Name="OnlyThisText" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" Text="Export This Note Only" Margin="0 0 10 0"/>
+                <TextBlock x:Uid="ExportOnlyThis" x:Name="OnlyThisText" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" Margin="0 0 10 0"/>
                 <CheckBox x:Name="OnlyThisCheckbox" VerticalAlignment="Center" Grid.Row="1" Grid.Column="1" Checked="OnlyThisCheckbox_Checked" Unchecked="OnlyThisCheckbox_Unchecked"/>
-                <TextBlock x:Name="ByTagText" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0" Text="Export Notes By Tag" Margin="0 0 10 0"/>
-                <controls:TokenizingTextBox x:Name="TagTokens" 
+                <TextBlock x:Uid="ExportByTags" x:Name="ByTagText" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0" Margin="0 0 10 0"/>
+                <controls:TokenizingTextBox x:Uid="TagTokenBox"
+                                            x:Name="TagTokens" 
                                             Grid.Row="2" 
                                             Grid.Column="1" 
                                             ToolTipService.ToolTip="Leave blank for all notes." 
-                                            PlaceholderText="Enter Tags"
                                             TokenItemAdding="TagTokens_TokenItemAdding"
                                             TextChanged="TagTokens_TextChanged"
                                             QueryIcon="{ex:SymbolIconSource Symbol=Tag}">
+
                     <controls:TokenizingTextBox.SuggestedItemTemplate>
                         <DataTemplate x:DataType="objects:Tag">
                             <StackPanel>

@@ -21,7 +21,7 @@
                 <ComboBoxItem Content="Text Formatting" Tag="formatting"/>
                 <ComboBoxItem Content="Inserting and Resizing Images" Tag="inserting_images"/>
                 <ComboBoxItem Content="Relating Notes" Tag="relating"/>
-                <ComboBoxItem Content="Opening Notes From External Sources" Tag="external_opening"/>
+                <ComboBoxItem Content="The note:// Protocol" Tag="external_opening"/>
             </ComboBox>
         </StackPanel>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto">
