@@ -1,6 +1,7 @@
 ﻿using Core.Objects;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -30,6 +31,7 @@ using System.Text;
 using System.Threading;
 using Core.Objects.Entities;
 using System.ComponentModel;
+using Core.Objects.Wrappers;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -46,9 +48,11 @@ namespace UWP.FrontEnd.Views
         private static NoteEditor _instance { get; set; }
         public static NoteEditor Get => _instance ?? new NoteEditor();
         private static NoteEditorState _state { get; set; }
-        public NoteEditorState State {
+        public NoteEditorState State
+        {
             get => _state;
-            set {
+            set
+            {
                 switch (value)
                 {
                     case NoteEditorState.Ready:
@@ -98,6 +102,8 @@ namespace UWP.FrontEnd.Views
         Timer _timer;
         int _interval = 1000;
         BackgroundWorker changesWorker = new BackgroundWorker();
+        private FixedSizeObservableCollection<(string text, int index)> History { get; set; } = new FixedSizeObservableCollection<(string text, int index)>(100);
+        private FixedSizeObservableCollection<(string text, int index)> UndoneHistory { get; set; } = new FixedSizeObservableCollection<(string text, int index)>(100);
 
         public NoteEditor()
         {
@@ -181,6 +187,8 @@ namespace UWP.FrontEnd.Views
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            History = new FixedSizeObservableCollection<(string text, int index)>(100);
+            UndoneHistory = new FixedSizeObservableCollection<(string text, int index)>(100);
             MainPage.Get.SetNavigationIndex(3);
             if (MainPage.CurrentNote != null)
             {
@@ -202,6 +210,7 @@ namespace UWP.FrontEnd.Views
             {
                 SetTagsState(false);
             }
+            History.Insert((EditorTextBox.Text, EditorTextBox.SelectionStart));
             _timer = new Timer(Tick, null, _interval, Timeout.Infinite);
             SetState(NoteEditorState.Ready);
         }
@@ -218,6 +227,18 @@ namespace UWP.FrontEnd.Views
 
                    RenderBlock.Text = $"# {NoteNameTextBox.Text}\n" + Regex.Replace(text, @"(?<!\n)\r", Environment.NewLine);
                });
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                {
+                    string currentText = EditorTextBox.Text ?? "";
+
+                    if (History.First.text == currentText)
+                    {
+                        return;
+                    }
+
+                    History.Insert((currentText, EditorTextBox.SelectionStart));
+                    UndoneHistory.Clear();
+                });
 
             }
             finally
@@ -670,6 +691,7 @@ namespace UWP.FrontEnd.Views
             string newText = EditorTextBox.Text;
             bool ctrlIsPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
             bool shiftIsPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
+
             switch (c: ctrlIsPressed, s: shiftIsPressed, k: e.OriginalKey)
             {
                 case (true, false, VirtualKey.I):
@@ -703,6 +725,97 @@ namespace UWP.FrontEnd.Views
                     e.Handled = true;
                     break;
             }
+        }
+
+        private (int, int) CalculatePoint(string text, int currentIndex)
+        {
+            List<string> lines = text.Split('\r').Select(str => str = $"{str}\r").ToList();
+            int lineCount = 0;
+            int indexCount = 0;
+            if (lines.Count == 1) return (currentIndex, 0);
+            while (lineCount < lines.Count && currentIndex >= 0)
+            {
+                indexCount = lines[lineCount].Length;
+                currentIndex -= indexCount;
+
+                lineCount++;
+            }
+
+            return (indexCount, lineCount - 1);
+        }
+
+        private void EditorTextBox_OnPreviewKeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            bool ctrlIsPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
+            bool shiftIsPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
+
+            switch (c: ctrlIsPressed, s: shiftIsPressed, k: e.OriginalKey)
+            {
+                case (false, false, VirtualKey.Enter):
+                    if (EditorTextBox.Text.Split('\r').Any())
+                    {
+                        int selectionStart = EditorTextBox.SelectionStart;
+                        (int x, int y) point = CalculatePoint(EditorTextBox.Text, selectionStart);
+                        string[] lines = EditorTextBox.Text.Split('\r');
+                        Match match = Regex.Match(lines[point.y], @"^\s*[-*>+]\s");
+
+                        if (match.Success && point.x >= match.Index + match.Length)
+                        {
+                            e.Handled = true;
+
+                            if (lines[point.y].Length == match.Length) {
+                                InsertTextInTextBox(EditorTextBox, $"\r",
+                                    selectionStart + match.Index + match.Length + 1);
+                                return;
+                            }
+                            InsertTextInTextBox(EditorTextBox, $"\r{(match.Value)}", selectionStart + match.Index + match.Length + 1);
+                            return;
+                        }
+                        match = Regex.Match(EditorTextBox.Text.Split('\r')[point.y], @"^\s*([1-9][0-9]*)\.\s");
+                        if (match.Success && point.x >= match.Index + match.Length)
+                        {
+                            e.Handled = true;
+                            int newValue = int.Parse(match.Groups[1].Value) + 1;
+                            if (lines[point.y].Length == match.Length)
+                            {
+                                InsertTextInTextBox(EditorTextBox, "\r", selectionStart + match.Index + match.Length
+                                                                         + 1 + (newValue.ToString().Length > (newValue - 1).ToString().Length ? 1 : 0));
+                                return;
+                            }
+                            InsertTextInTextBox(EditorTextBox, $"\r{match.Value.Replace(match.Groups[1].Value, newValue.ToString())}", selectionStart + match.Index + match.Length
+                                + 1 + (newValue.ToString().Length > (newValue - 1).ToString().Length ? 1 : 0));
+                            return;
+                        }
+                    }
+
+                    break;
+                case (true, false, VirtualKey.Z):
+                    if (History.First.text != EditorTextBox.Text) History.Insert((EditorTextBox.Text, EditorTextBox.SelectionStart));
+                    if (History.Count > 1)
+                    {
+                        UndoneHistory.Insert(History.First);
+                        History.RemoveFirst();
+                        EditorTextBox.Text = History.First.text;
+                        EditorTextBox.SelectionStart = History.First.index;
+                    }
+                    e.Handled = true;
+                    break;
+                case (true, false, VirtualKey.Y):
+                    if (UndoneHistory.Any())
+                    {
+                        History.Insert(UndoneHistory.First);
+                        UndoneHistory.RemoveFirst();
+                        EditorTextBox.Text = History.First.text;
+                        EditorTextBox.SelectionStart = History.First.index;
+                    }
+                    e.Handled = true;
+                    break;
+            }
+        }
+
+        private void InsertTextInTextBox(TextBox textBox, string text, int newIndex) {
+            textBox.Text = textBox.Text.Insert(textBox.SelectionStart, text);
+            textBox.SelectionStart = newIndex;
         }
     }
 

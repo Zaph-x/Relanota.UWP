@@ -18,7 +18,7 @@
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WindowsXamlEnableOverview>true</WindowsXamlEnableOverview>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-    <PackageCertificateThumbprint>C0D08ADDFB88BDD6994FC33B153A8335D80CCFA3</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>C7A34C33D3E089E1EC7FE089744EC93F665467B8</PackageCertificateThumbprint>
     <PackageCertificateKeyFile>
     </PackageCertificateKeyFile>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>

@@ -41,16 +41,39 @@
                     <RowDefinition/>
                     <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
-                <TextBox x:Name="EditorTextBox" 
-                         Grid.Row="0" 
-                         TextChanged="NoteEditorTextBox_TextChanged" 
-                         AcceptsReturn="True"
-                         TextWrapping="Wrap"
-                         FontFamily="Lucida Console"
-                         IsFocusEngaged="False"
-                         KeyDown="EditorTextBox_KeyDown"
-                         Paste="EditorTextBox_Paste"/>
+                <Grid Grid.Row="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <CommandBar Grid.Row="0" ClosedDisplayMode="Compact">
+                        <CommandBar.PrimaryCommands>
+                            <AppBarButton x:Uid="BoldButton" Icon="Bold">
 
+                            </AppBarButton>
+                            <AppBarButton x:Uid="ItalicsButton" Icon="Italic">
+
+                            </AppBarButton>
+                            <AppBarButton x:Uid="BulletListButton" Icon="List">
+
+                            </AppBarButton>
+                            <AppBarButton x:Uid="EmojiButton" Icon="Emoji2"></AppBarButton>
+                        </CommandBar.PrimaryCommands>
+                        
+                    </CommandBar>
+                    <TextBox x:Name="EditorTextBox" 
+                             Grid.Row="1"
+                             TextChanged="NoteEditorTextBox_TextChanged" 
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             FontFamily="Lucida Console"
+                             IsFocusEngaged="False"
+                             KeyDown="EditorTextBox_KeyDown"
+                             PreviewKeyDown="EditorTextBox_OnPreviewKeyDown"
+                             Paste="EditorTextBox_Paste"
+                             VerticalAlignment="Stretch"/>
+                </Grid>
+                
             </Grid>
             <Grid Grid.Column="2" HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
@@ -128,24 +151,27 @@ FontFamily="Segoe MDL2 Assets"/>
                         <TextBlock x:Name="UnsavedChangesText" Margin="3"/>
                     </StackPanel>
                 </CommandBar.Content>
-                <AppBarSeparator/>
-                <AppBarButton Icon="Save" AccessKey="S" Label="Save Note" Click="SaveButton_Click">
-                    <AppBarButton.KeyboardAccelerators>
-                        <KeyboardAccelerator Modifiers="Control" Key="S"/>
-                    </AppBarButton.KeyboardAccelerators>
-                </AppBarButton>
-                <AppBarButton Icon="Delete" AccessKey="Del" Label="Delete Note" Click="DeleteButton_Click">
-                    <AppBarButton.KeyboardAccelerators>
-                        <KeyboardAccelerator Modifiers="Control" Key="Delete"/>
-                    </AppBarButton.KeyboardAccelerators>
-                </AppBarButton>
-                <AppBarButton Icon="Add" AccessKey="N" Label="New Note" Click="NewNoteButton_Click">
-                    <AppBarButton.KeyboardAccelerators>
-                        <KeyboardAccelerator Modifiers="Control" Key="N"/>
-                    </AppBarButton.KeyboardAccelerators>
-                </AppBarButton>
-                <AppBarButton Icon="Pictures" AccessKey="I" Label="Add Image" Click="ImportPictureButton_Click" ToolTipService.ToolTip="Add Image"/>
+                <CommandBar.PrimaryCommands>
+                    <AppBarSeparator/>
+                    <AppBarButton Icon="Save" AccessKey="S" Label="Save Note" Click="SaveButton_Click">
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="S"/>
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+                    <AppBarButton Icon="Delete" AccessKey="Del" Label="Delete Note" Click="DeleteButton_Click">
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="Delete"/>
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+                    <AppBarButton Icon="Add" AccessKey="N" Label="New Note" Click="NewNoteButton_Click">
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="N"/>
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+                    <AppBarButton Icon="Pictures" AccessKey="I" Label="Add Image" Click="ImportPictureButton_Click" ToolTipService.ToolTip="Add Image"/>
 
+                </CommandBar.PrimaryCommands>
+                
                 <CommandBar.SecondaryCommands>
                     <AppBarButton Icon="Share" AccessKey="G" Label="Share Note" Click="ShareNoteButton_Click">
                         <AppBarButton.KeyboardAccelerators>
