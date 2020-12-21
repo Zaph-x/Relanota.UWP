@@ -305,7 +305,7 @@ namespace UWP.FrontEnd.Views
                 State = NoteEditorState.SaveError;
                 return;
             }
-            if (MainPage.CurrentNote == null)
+            if (MainPage.CurrentNote == null || MainPage.CurrentNote.Key == 0)
             {
                 if (App.Context.TryGetNote(NoteNameTextBox.Text, true, out Note note))
                 {
@@ -622,6 +622,7 @@ namespace UWP.FrontEnd.Views
                         }
                     }
                     // Only set note name and save
+                    MainPage.CurrentNote = null;
                     NoteNameTextBox.Text = noteName;
                     EditorTextBox.Text = "";
                     SetState(NoteEditorState.Saving);

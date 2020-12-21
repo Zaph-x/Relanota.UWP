@@ -8,11 +8,11 @@
   IgnorableNamespaces="uap mp">
 
   <Identity
-    Name="12839Zaph.Relanota"
-    Publisher="CN=A8743CD6-3217-450B-B826-CB1DBDBF1E46"
+    Name="Relanota"
+    Publisher="CN=Zaph-x"
     Version="1.1.8.0" />
 
-  <mp:PhoneIdentity PhoneProductId="d8c9ab45-e518-4111-8519-a8a5bb8b2381" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="b68fba3f-b552-4916-8cf3-7fa2805f7469" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>Relanota</DisplayName>
