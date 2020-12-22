@@ -18,13 +18,14 @@ using Windows.UI.Xaml.Navigation;
 using Microsoft.Toolkit.Uwp.Helpers;
 using UWP.FrontEnd.Views;
 using Windows.Storage;
-using Core.SqlHelper;
 using Microsoft.EntityFrameworkCore;
 using Core.Objects;
 using Microsoft.Toolkit.Uwp.Notifications;
 using Windows.UI.Notifications;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
+using Core;
+using Core.SqlHelper;
 using Core.Objects.Entities;
 
 namespace UWP.FrontEnd
@@ -35,41 +36,19 @@ namespace UWP.FrontEnd
     sealed partial class App : Application
     {
         private Frame rootFrame = null;
-        public static Database Context = new Database();
         private ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
 
 
-        public async Task ConnectDB()
-        {
-            try
-            {
-                if (!File.Exists($@"{ApplicationData.Current.LocalFolder.Path}\notes.db"))
-                    await ApplicationData.Current.LocalFolder.CreateFileAsync("notes.db");
-            }
-            catch
-            {
-                // File already exists
-            }
-            finally
-            {
-                Database.path = ApplicationData.Current.LocalFolder.Path;
-                Context.Database.EnsureCreated();
-                Context.Notes.Load();
-                Context.NoteTags.Load();
-                Context.Tags.Load();
-            }
-
-        }
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
         /// </summary>
         public App()
         {
-            
             this.InitializeComponent();
+            Constants.DATABASE_PATH = ApplicationData.Current.LocalFolder.Path;
+            Constants.DATABASE_NAME = "notes.db";
             this.Suspending += OnSuspending;
-            ConnectDB();
         }
 
 
@@ -80,6 +59,9 @@ namespace UWP.FrontEnd
         /// <param name="e">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
+
+            
+
             rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
@@ -113,19 +95,28 @@ namespace UWP.FrontEnd
                 // Ensure the current window is active
                 Window.Current.Activate();
             }
+            using (Database context = new Database())
+            {
+                context.Database.EnsureCreated();
+                context.Database.Migrate();
+                context.Notes.Load();
+                context.NoteTags.Load();
+                context.Tags.Load();
 
-            Context.Notes.Load();
-            Context.Tags.Load();
-
+            }
             if (settings.Values.TryGetValue("load_recent_on_startup", out object openRecent) && (bool)openRecent)
             {
                 string line = File.ReadLines($@"{ApplicationData.Current.LocalFolder.Path}\AccessList").First(); // gets the first line from file.
-                if (Context.TryGetNote(int.Parse(line), true, out Note note))
+                using (Database context = new Database())
                 {
-                    _ = MainPage.Get;
-                    MainPage.CurrentNote = note;
-                    MainPage.Get.NavView_Navigate("edit", null);
+                    if (context.TryGetNote(int.Parse(line), out Note note))
+                    {
+                        _ = MainPage.Get;
+                        MainPage.CurrentNote = note;
+                        MainPage.Get.NavView_Navigate("edit", null);
+                    }
                 }
+                
             }
         }
         protected override async void OnActivated(IActivatedEventArgs args)
@@ -164,7 +155,7 @@ namespace UWP.FrontEnd
                                 NoteEditor.Get.State = NoteEditorState.ProtocolImportNavigation;
                                 string serializedString = Uri.UnescapeDataString(eventArgs.Uri.LocalPath.Substring(1));
 
-                                if (Note.TryDeserialize(serializedString, Context, out Note note))
+                                if (Note.TryDeserialize(serializedString, out Note note))
                                 {
                                     MainPage.CurrentNote = note;
                                     MainPage.Get.SetNavigationIndex(3);
@@ -327,7 +318,8 @@ namespace UWP.FrontEnd
             else if (result == ContentDialogResult.Secondary)
             {
                 secondaryCommand?.Invoke();
-            } else
+            }
+            else
             {
                 fallback?.Invoke();
             }

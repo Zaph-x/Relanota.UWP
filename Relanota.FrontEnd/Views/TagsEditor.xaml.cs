@@ -16,6 +16,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using Core.SqlHelper;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -55,27 +56,38 @@ namespace UWP.FrontEnd.Views
         private void FetchTags()
         {
             List<Tag> tags = new List<Tag>();
-            if (MainPage.CurrentNote == null)
+            using (Database context = new Database())
             {
-                tags = App.Context.Tags.ToList();
+
+
+                if (MainPage.CurrentNote == null)
+                {
+                    tags = context.Tags.ToList();
+                }
+                else
+                {
+                    tags = context.NoteTags.Include(nt => nt.Tag)
+                        .Where(nt => nt.NoteKey == MainPage.CurrentNote.Key).Select(nt => nt.Tag).ToList();
+                }
             }
-            else
-            {
-                tags = App.Context.NoteTags.Include(nt => nt.Tag).Where(nt => nt.NoteKey == MainPage.CurrentNote.Key).Select(nt => nt.Tag).ToList();
-            }
+
             TagsListView.ItemsSource = new ObservableCollection<Tag>(tags);
         }
 
         private void GetRelatedNotesFromTag(Tag tag)
         {
             List<Note> Notes = new List<Note>();
-            Notes = App.Context.Notes
+            using (Database context = new Database())
+            {
+                Notes = context.Notes
                     .Include(note => note.NoteTags)
                     .ThenInclude(nt => nt.Tag)
                     .Where(note => note.NoteTags
                         .Select(nt => nt.Tag)
                         .Any(t => t.Name.ToLower() == tag.Name.ToLower()))
                     .ToList();
+            }
+
             RelatedNotesListView.ItemsSource = new ObservableCollection<Note>(Notes);
         }
 
@@ -85,13 +97,18 @@ namespace UWP.FrontEnd.Views
             {
                 Tag tag = TagsListView.SelectedItem as Tag;
                 List<Note> Notes = new List<Note>();
-                Notes = App.Context.Notes
-                    .Include(note => note.NoteTags)
-                    .ThenInclude(nt => nt.Tag)
-                    .Where(note => note.NoteTags
-                        .Select(nt => nt.Tag)
-                        .Any(t => t.Name.ToLower() == tag.Name.ToLower()))
-                    .ToList();
+                using (Database context = new Database())
+                {
+
+                    Notes = context.Notes
+                        .Include(note => note.NoteTags)
+                        .ThenInclude(nt => nt.Tag)
+                        .Where(note => note.NoteTags
+                            .Select(nt => nt.Tag)
+                            .Any(t => t.Name.ToLower() == tag.Name.ToLower()))
+                        .ToList();
+                }
+
                 RelatedNotesListView.ItemsSource = new ObservableCollection<Note>(Notes);
             }
             else
@@ -120,15 +137,21 @@ namespace UWP.FrontEnd.Views
 
         private void TagSaveButton_Click(object sender, RoutedEventArgs e)
         {
-            if (MainPage.CurrentTag != null)
+            using (Database context = new Database())
             {
-                MainPage.CurrentTag.Update(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(), App.Context);
+                if (MainPage.CurrentTag != null)
+                {
+                    MainPage.CurrentTag.Update(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(),
+                        context);
+                }
+                else
+                {
+                    MainPage.CurrentTag = new Tag();
+                    MainPage.CurrentTag.Save(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(),
+                        context);
+                }
             }
-            else
-            {
-                MainPage.CurrentTag = new Tag();
-                MainPage.CurrentTag.Save(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(), App.Context);
-            }
+
             TagNameEditBox.Text = "";
             TagDescriptionEditBox.Text = "";
             MainPage.CurrentTag = null;
@@ -139,10 +162,13 @@ namespace UWP.FrontEnd.Views
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
             Note note = (sender as FrameworkElement).Tag as Note;
-            note = App.Context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
-            MainPage.CurrentNote = note;
-            NoteEditor.SetState(NoteEditorState.Navigation);
-            this.Frame.Navigate(typeof(NoteEditor), note);
+            using (Database context = new Database())
+            {
+                note = context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
+                MainPage.CurrentNote = note;
+                NoteEditor.SetState(NoteEditorState.Navigation);
+                this.Frame.Navigate(typeof(NoteEditor), note);
+            }
         }
     }
 }

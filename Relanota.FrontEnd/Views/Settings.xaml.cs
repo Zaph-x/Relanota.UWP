@@ -70,7 +70,7 @@ namespace UWP.FrontEnd.Views
                 await FileIO.WriteBufferAsync(file, buffer);
 
                 File.Delete($@"{ApplicationData.Current.TemporaryFolder.Path}\export.zip");
-                await (App.Current as App).ConnectDB();
+        
                 App.ShowToastNotification("Notes Exported", "Your notes were successfully exported to the chosen location.");
             }
         }

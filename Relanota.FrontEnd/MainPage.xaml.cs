@@ -15,6 +15,7 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
+using Core.SqlHelper;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -57,11 +58,14 @@ namespace UWP.FrontEnd
             SetTheme(localSettings.Values["theme"] as string);
             CoreApplicationViewTitleBar coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
             coreTitleBar.ExtendViewIntoTitleBar = true;
+            using (Database context = new Database())
+            {
+                Acv = new AdvancedCollectionView(context.Notes.Select(n => n.Name).ToList(), false);
+                Acv.SortDescriptions.Add(new SortDescription(SortDirection.Ascending));
+                Acv.Filter = itm => (itm as string).Contains(SearchBox.Text, StringComparison.InvariantCultureIgnoreCase);
+                SearchBox.ItemsSource = Acv;
+            }
 
-            Acv = new AdvancedCollectionView(App.Context.Notes.Select(n => n.Name).ToList(), false);
-            Acv.SortDescriptions.Add(new SortDescription(SortDirection.Ascending));
-            Acv.Filter = itm => (itm as string).Contains(SearchBox.Text, StringComparison.InvariantCultureIgnoreCase);
-            SearchBox.ItemsSource = Acv;
             RecentSpacerIndex = NavigationView.MenuItems.IndexOf(NavigationView.MenuItems.First(itm => (itm as NavigationViewItemBase).Content?.ToString() == "Recently Accessed Notes"));
             SystemNavigationManagerPreview.GetForCurrentView().CloseRequested += MainPage_CloseRequested;
 
@@ -124,11 +128,14 @@ namespace UWP.FrontEnd
             {
                 (NavigationView.MenuItems[RecentSpacerIndex + 1] as NavigationViewItemBase).Content = newName;
             }
+            using (Database context = new Database())
+            {
+                Acv = new AdvancedCollectionView(context.Notes.Select(n => n.Name).ToList(), false);
+                Acv.SortDescriptions.Add(new SortDescription(SortDirection.Ascending));
+                Acv.Filter = itm => (itm as string).Contains(SearchBox.Text, StringComparison.InvariantCultureIgnoreCase);
+                SearchBox.ItemsSource = Acv;
+            }
 
-            Acv = new AdvancedCollectionView(App.Context.Notes.Select(n => n.Name).ToList(), false);
-            Acv.SortDescriptions.Add(new SortDescription(SortDirection.Ascending));
-            Acv.Filter = itm => (itm as string).Contains(SearchBox.Text, StringComparison.InvariantCultureIgnoreCase);
-            SearchBox.ItemsSource = Acv;
         }
 
         public void LogRecentAccess(Note note)
@@ -198,17 +205,21 @@ namespace UWP.FrontEnd
             {
                 if (int.TryParse(line, out int key))
                 {
-                    if (App.Context.TryGetNote(key, true, out Note note))
+                    using (Database context = new Database())
                     {
-                        tempCollection.Add(note);
-                        NavigationViewItem navigationViewItem = new NavigationViewItem
+                        if (context.TryGetNote(key, out Note note))
                         {
-                            Tag = note,
-                            Content = note.Name,
-                            Icon = new SymbolIcon(Symbol.Page2),
-                        };
-                        NavigationView.MenuItems.Add(navigationViewItem);
+                            tempCollection.Add(note);
+                            NavigationViewItem navigationViewItem = new NavigationViewItem
+                            {
+                                Tag = note,
+                                Content = note.Name,
+                                Icon = new SymbolIcon(Symbol.Page2),
+                            };
+                            NavigationView.MenuItems.Add(navigationViewItem);
+                        }
                     }
+
                 }
             }
             tempCollection.CollectionChanged += RecentlyAccessed_CollectionChanged;
@@ -251,24 +262,27 @@ namespace UWP.FrontEnd
             // Navigate to the list view to create a transition (Reset view)
             if (tagNote.Name != (CurrentNote?.Name ?? "")) NavView_Navigate("list", args.RecommendedNavigationTransitionInfo);
             SetNavigationIndex(3);
-
-            // We only want to switch if the note is in the context
-            if (tagNote.IsInContext(App.Context) && tagNote.TryGetFullNote(App.Context, out Note note))
+            using (Database context = new Database())
             {
-                CurrentNote = note;
-                // Update and navigate
-                UpdateRecentlyAccessedList(note);
-                NavView_Navigate("edit", args.RecommendedNavigationTransitionInfo);
-                return;
-            }
-            else
-            {
-                // If the note no longer exists in the context, we want to let the user know, and remove it from the list.
-                await App.ShowDialog("We could not find that note.", $"The note '{tagNote.Name}' could note be found in the database.", "Okay");
-                recentlyAccessed.Remove(tagNote);
-                NavigationView.MenuItems.Remove(args.InvokedItemContainer);
+                // We only want to switch if the note is in the context
+                if (tagNote.IsInContext(context) && tagNote.TryGetFullNote(context, out Note note))
+                {
+                    CurrentNote = note;
+                    // Update and navigate
+                    UpdateRecentlyAccessedList(note);
+                    NavView_Navigate("edit", args.RecommendedNavigationTransitionInfo);
+                    return;
+                }
+                else
+                {
+                    // If the note no longer exists in the context, we want to let the user know, and remove it from the list.
+                    await App.ShowDialog("We could not find that note.", $"The note '{tagNote.Name}' could note be found in the database.", "Okay");
+                    recentlyAccessed.Remove(tagNote);
+                    NavigationView.MenuItems.Remove(args.InvokedItemContainer);
 
+                }
             }
+
         }
 
         private void UpdateRecentlyAccessedList(Note note)
@@ -295,7 +309,7 @@ namespace UWP.FrontEnd
             }
             var preNavPageType = ContentFrame.CurrentSourcePageType;
 
-            if (!(_page is null) && !Equals(preNavPageType, _page))
+            if (!(_page is null) && preNavPageType != _page)
             {
                 if (!NoteEditor.IsSaved && !NoteEditor.Get.AreTextboxesEmpty())
                 {
@@ -311,7 +325,7 @@ namespace UWP.FrontEnd
                     CurrentNote = null;
                     SearchBox.Text = "";
                 }
-                ContentFrame.Navigate(_page, _note, transitionInfo);
+                ContentFrame.Navigate(_page, transitionInfo);
             }
         }
 
@@ -340,33 +354,37 @@ namespace UWP.FrontEnd
 
         private async void SearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
-            Note note = App.Context.Notes.AsEnumerable().FirstOrDefault(n => n.Name.Equals(sender.Text, StringComparison.InvariantCultureIgnoreCase));
-            if (note == null)
+            using (Database context = new Database())
             {
-                await App.ShowDialog("We could not find that note.", $"The note '{sender.Text}' could note be found in the database. Do you wish to create it?",
-                    "Yes", () =>
-                    {
-                        note = new Note()
+                Note note = context.Notes.AsEnumerable().FirstOrDefault(n => n.Name.Equals(sender.Text, StringComparison.InvariantCultureIgnoreCase));
+                if (note == null)
+                {
+                    await App.ShowDialog("We could not find that note.", $"The note '{sender.Text}' could note be found in the database. Do you wish to create it?",
+                        "Yes", () =>
                         {
-                            Name = sender.Text
-                        };
-                        note.Save("", sender.Text, App.Context);
-                        CurrentNote = note;
-                        NoteEditor.SetState(NoteEditorState.SearchNavigation);
-                        NavView_Navigate("edit", null);
-                    },
-                    "No", () =>
-                    {
-                        SearchBox.Text = "";
-                    });
+                            note = new Note()
+                            {
+                                Name = sender.Text
+                            };
+                            note.Save("", sender.Text, context);
+                            CurrentNote = note;
+                            NoteEditor.SetState(NoteEditorState.SearchNavigation);
+                            NavView_Navigate("edit", null);
+                        },
+                        "No", () =>
+                        {
+                            SearchBox.Text = "";
+                        });
+                }
+                else
+                {
+                    CurrentNote = note;
+                    NavView_Navigate("tags", null);
+                    NoteEditor.SetState(NoteEditorState.SearchNavigation);
+                    NavView_Navigate("edit", null);
+                }
             }
-            else
-            {
-                CurrentNote = note;
-                NavView_Navigate("tags", null);
-                NoteEditor.SetState(NoteEditorState.SearchNavigation);
-                NavView_Navigate("edit", null);
-            }
+
 
         }
     }

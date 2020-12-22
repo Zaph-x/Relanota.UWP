@@ -32,6 +32,7 @@ using System.Threading;
 using Core.Objects.Entities;
 using System.ComponentModel;
 using Core.Objects.Wrappers;
+using Core.SqlHelper;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -48,11 +49,9 @@ namespace UWP.FrontEnd.Views
         private static NoteEditor _instance { get; set; }
         public static NoteEditor Get => _instance ?? new NoteEditor();
         private static NoteEditorState _state { get; set; }
-        public NoteEditorState State
-        {
+        public NoteEditorState State {
             get => _state;
-            set
-            {
+            set {
                 switch (value)
                 {
                     case NoteEditorState.Ready:
@@ -109,14 +108,20 @@ namespace UWP.FrontEnd.Views
         {
             _instance = this;
             this.InitializeComponent();
+            
             if (MainPage.CurrentNote == null) { TagTokens.IsEnabled = false; }
-            Acv = new AdvancedCollectionView(App.Context.Tags.ToList(), false);
-            Acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Entities.Tag.Name), SortDirection.Ascending));
-            Acv.Filter = itm => !TagTokens.Items.Contains(itm) && (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
+
             TagTokens.SuggestedItemsSource = Acv;
             changesWorker.DoWork += ChangesWorker_DoWork;
             changesWorker.RunWorkerCompleted += ChangesWorker_RunWorkerCompleted;
             changesWorker.WorkerSupportsCancellation = true;
+            using (Database context = new Database())
+            {
+                Acv = new AdvancedCollectionView(context.Tags.ToList(), false);
+                Acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Entities.Tag.Name), SortDirection.Ascending));
+                Acv.Filter = itm => !TagTokens.Items.Contains(itm) && (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
+
+            }
         }
 
         public bool AreTextboxesEmpty() => string.IsNullOrWhiteSpace(NoteNameTextBox.Text) && string.IsNullOrWhiteSpace(EditorTextBox.Text);
@@ -200,10 +205,14 @@ namespace UWP.FrontEnd.Views
                 MainPage.Get.SetDividerNoteName(MainPage.CurrentNote.Name ?? "New Note");
                 TagTokens.ItemsSource = new ObservableCollection<Tag>(MainPage.CurrentNote.NoteTags.Select(nt => nt.Tag));
                 TagTokens.IsEnabled = true;
-                if (MainPage.CurrentNote.TryGetFullNote(App.Context, out Note note) && State != NoteEditorState.RecentNavigation)
+                using (Database context = new Database())
                 {
-                    MainPage.Get.LogRecentAccess(note);
+                    if (MainPage.CurrentNote.TryGetFullNote(context, out Note note) && State != NoteEditorState.RecentNavigation)
+                    {
+                        MainPage.Get.LogRecentAccess(note);
+                    }
                 }
+
                 FillRenderbox(this.EditorTextBox);
             }
             else
@@ -305,25 +314,31 @@ namespace UWP.FrontEnd.Views
                 State = NoteEditorState.SaveError;
                 return;
             }
-            if (MainPage.CurrentNote == null || MainPage.CurrentNote.Key == 0)
+
+            using (Database context = new Database())
             {
-                if (App.Context.TryGetNote(NoteNameTextBox.Text, true, out Note note))
+                if (MainPage.CurrentNote == null || MainPage.CurrentNote.Key == 0)
                 {
-                    note.Update($"{note.Content}\n\n{EditorTextBox.Text}", NoteNameTextBox.Text, App.Context);
-                    SetCurrentEditorNote(note);
+
+                    if (context.TryGetNote(NoteNameTextBox.Text, out Note note))
+                    {
+                        note.Update($"{note.Content}\n\n{EditorTextBox.Text}", NoteNameTextBox.Text, context);
+                        SetCurrentEditorNote(note);
+                    }
+                    else
+                    {
+                        MainPage.CurrentNote = new Note();
+                        MainPage.CurrentNote.Save(EditorTextBox.Text, NoteNameTextBox.Text, context);
+                        TagTokens.IsEnabled = true;
+                    }
+
                 }
                 else
                 {
-                    MainPage.CurrentNote = new Note();
-                    MainPage.CurrentNote.Save(EditorTextBox.Text, NoteNameTextBox.Text, App.Context);
-                    TagTokens.IsEnabled = true;
+                    MainPage.CurrentNote.Update(EditorTextBox.Text, NoteNameTextBox.Text, context);
                 }
+            }
 
-            }
-            else
-            {
-                MainPage.CurrentNote.Update(EditorTextBox.Text, NoteNameTextBox.Text, App.Context);
-            }
             SetState(NoteEditorState.SaveCompleted);
         }
 
@@ -344,11 +359,16 @@ namespace UWP.FrontEnd.Views
         {
             await App.ShowDialog("Delete note permanently?", "If you delete this note, you won't be able to recover it. Do you want to delete it?", "Delete", () =>
             {
-                // The user chose to delete the note
-                MainPage.CurrentNote.Delete(App.Context, App.ShowToastNotification);
-                SetSavedState(true);
-                MainPage.Get.NavView_Navigate("list", null);
-                MainPage.Get.SetNavigationIndex(0);
+                using (Database context = new Database())
+                {
+
+
+                    // The user chose to delete the note
+                    MainPage.CurrentNote.Delete(context, App.ShowToastNotification);
+                    SetSavedState(true);
+                    MainPage.Get.NavView_Navigate("list", null);
+                    MainPage.Get.SetNavigationIndex(0);
+                }
             },
             "Cancel", null);
         }
@@ -461,20 +481,26 @@ namespace UWP.FrontEnd.Views
 
         private void TagTokens_TokenItemAdding(TokenizingTextBox sender, TokenItemAddingEventArgs args)
         {
-            // If the tag exists, use it. Otherwise create a new tag.
-            if (App.Context.Tags.Local.Any(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase)))
+            using (Database context = new Database())
             {
-                Tag tag = App.Context.Tags.Local.First(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase));
-                args.Item = tag;
-                MainPage.CurrentNote.AddTag(tag, App.Context);
+                // If the tag exists, use it. Otherwise create a new tag.
+                if (context.Tags.Local.Any(tag =>
+                    tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    Tag tag = context.Tags.Local.First(tag =>
+                        tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase));
+                    args.Item = tag;
+                    MainPage.CurrentNote.AddTag(tag, context);
+                }
+                else
+                {
+                    Tag tag = new Tag();
+                    tag.Name = args.TokenText;
+                    args.Item = tag;
+                    MainPage.CurrentNote.AddTag(tag, context);
+                }
             }
-            else
-            {
-                Tag tag = new Tag();
-                tag.Name = args.TokenText;
-                args.Item = tag;
-                MainPage.CurrentNote.AddTag(tag, App.Context);
-            }
+
             SetSavedState(false);
 
             args.Cancel = false;
@@ -482,7 +508,8 @@ namespace UWP.FrontEnd.Views
 
         private void TagTokens_TokenItemRemoving(TokenizingTextBox sender, TokenItemRemovingEventArgs args)
         {
-            MainPage.CurrentNote.RemoveTag(args.Item as Tag, App.Context);
+            using (Database context = new Database())
+                MainPage.CurrentNote.RemoveTag(args.Item as Tag, context);
             SetSavedState(false);
 
         }
@@ -492,7 +519,8 @@ namespace UWP.FrontEnd.Views
             // Only act on tag objects
             if (data is Tag tag)
             {
-                MainPage.CurrentNote.AddTag(tag, App.Context);
+                using (Database context = new Database())
+                    MainPage.CurrentNote.AddTag(tag, context);
             }
             SetSavedState(false);
         }
@@ -593,47 +621,48 @@ namespace UWP.FrontEnd.Views
             // We have note checked if the note is saved. We can continue
             string noteName = Uri.UnescapeDataString(uri.Substring(12));
 
-            if (App.Context.TryGetNote(noteName, true, out Note note))
-            {
-                // The note was found. We must now fill the view.
-                MainPage.CurrentNote = note;
-                OnNavigatedTo(null);
-            }
-            else
-            {
-                ContentDialog errorDialog = new ContentDialog
+            using (Database context = new Database())
+                if (context.TryGetNote(noteName, out Note note))
                 {
-                    Title = "We could not find that note.",
-                    Content = $"The note '{noteName}' could note be found in the database. Do you wish to create it?",
-                    PrimaryButtonText = "Yes",
-                    CloseButtonText = "No"
-                };
-                ContentDialogResult result = await errorDialog.ShowAsync();
-
-                if (result == ContentDialogResult.Primary)
-                {
-                    // Always check if the note is saved
-                    if (!IsSaved)
-                    {
-                        await ShowUnsavedChangesDialog();
-                        if (State == NoteEditorState.SaveError)
-                        {
-                            return;
-                        }
-                    }
-                    // Only set note name and save
-                    MainPage.CurrentNote = null;
-                    NoteNameTextBox.Text = noteName;
-                    EditorTextBox.Text = "";
-                    SetState(NoteEditorState.Saving);
+                    // The note was found. We must now fill the view.
+                    MainPage.CurrentNote = note;
+                    OnNavigatedTo(null);
                 }
                 else
                 {
-                    // The user specified they don't want to create the note. Therefore we should go to the note list
-                    MainPage.Get.NavView_Navigate("list", null);
-                }
+                    ContentDialog errorDialog = new ContentDialog
+                    {
+                        Title = "We could not find that note.",
+                        Content = $"The note '{noteName}' could note be found in the database. Do you wish to create it?",
+                        PrimaryButtonText = "Yes",
+                        CloseButtonText = "No"
+                    };
+                    ContentDialogResult result = await errorDialog.ShowAsync();
 
-            }
+                    if (result == ContentDialogResult.Primary)
+                    {
+                        // Always check if the note is saved
+                        if (!IsSaved)
+                        {
+                            await ShowUnsavedChangesDialog();
+                            if (State == NoteEditorState.SaveError)
+                            {
+                                return;
+                            }
+                        }
+                        // Only set note name and save
+                        MainPage.CurrentNote = null;
+                        NoteNameTextBox.Text = noteName;
+                        EditorTextBox.Text = "";
+                        SetState(NoteEditorState.Saving);
+                    }
+                    else
+                    {
+                        // The user specified they don't want to create the note. Therefore we should go to the note list
+                        MainPage.Get.NavView_Navigate("list", null);
+                    }
+
+                }
         }
 
         private void ShareNoteButton_Click(object sender, RoutedEventArgs e)
@@ -764,7 +793,8 @@ namespace UWP.FrontEnd.Views
                         {
                             e.Handled = true;
 
-                            if (lines[point.y].Length == match.Length) {
+                            if (lines[point.y].Length == match.Length)
+                            {
                                 InsertTextInTextBox(EditorTextBox, $"\r",
                                     selectionStart + match.Index + match.Length + 1);
                                 return;
@@ -814,7 +844,8 @@ namespace UWP.FrontEnd.Views
             }
         }
 
-        private void InsertTextInTextBox(TextBox textBox, string text, int newIndex) {
+        private void InsertTextInTextBox(TextBox textBox, string text, int newIndex)
+        {
             textBox.Text = textBox.Text.Insert(textBox.SelectionStart, text);
             textBox.SelectionStart = newIndex;
         }

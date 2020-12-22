@@ -24,6 +24,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using Core.SqlHelper;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -39,11 +40,16 @@ namespace UWP.FrontEnd.Views
         public Export()
         {
             this.InitializeComponent();
-            Acv = new AdvancedCollectionView(App.Context.Tags.ToList(), false);
-            Acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Entities.Tag.Name), SortDirection.Ascending));
-            Acv.Filter = itm => !TagTokens.Items.Contains(itm) && (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
-            TagTokens.ItemsSource = new ObservableCollection<Tag>();
-            TagTokens.SuggestedItemsSource = Acv;
+            using (Database context = new Database()) {
+                Acv = new AdvancedCollectionView(context.Tags.ToList(), false);
+                Acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Entities.Tag.Name),
+                    SortDirection.Ascending));
+                Acv.Filter = itm =>
+                    !TagTokens.Items.Contains(itm) &&
+                    (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
+                TagTokens.ItemsSource = new ObservableCollection<Tag>();
+                TagTokens.SuggestedItemsSource = Acv;
+            }
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -58,19 +64,20 @@ namespace UWP.FrontEnd.Views
         private async void ExportButton_Click(object sender, RoutedEventArgs e)
         {
             List<Note> notes = null;
-            if (OnlyThisCheckbox.IsChecked ?? false)
-            {
-                notes = new List<Note>() { MainPage.CurrentNote };
+            using (Database context = new Database()) {
+                if (OnlyThisCheckbox.IsChecked ?? false) {
+                    notes = new List<Note>() {MainPage.CurrentNote};
+                }
+                else if (TagTokens.Items.Count == 1) {
+                    notes = context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).ToList();
+                }
+                else {
+                    notes = context.Notes.Include(n => n.NoteTags).ThenInclude(nt => nt.Tag).ToList();
+                    notes = notes.Where(note => note.NoteTags.Select(nt => nt.Tag).Intersect(TagTokens.Items).Any())
+                        .ToList();
+                }
             }
-            else if (TagTokens.Items.Count == 1)
-            {
-                notes = App.Context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).ToList();
-            }
-            else
-            {
-                notes = App.Context.Notes.Include(n => n.NoteTags).ThenInclude(nt => nt.Tag).ToList();
-                notes = notes.Where(note => note.NoteTags.Select(nt => nt.Tag).Intersect(TagTokens.Items).Any()).ToList();
-            }
+
             FileSavePicker fileSavePicker = new FileSavePicker();
             string type = (FileFormatPicker.SelectedItem as FrameworkElement).Tag as string;
             List<string> fileTypes = new List<string>() { type };
@@ -105,14 +112,18 @@ namespace UWP.FrontEnd.Views
         private void TagTokens_TokenItemAdding(TokenizingTextBox sender, TokenItemAddingEventArgs args)
         {
             // If the tag exists, use it. Otherwise cancel the event.
-            if (App.Context.Tags.Local.Any(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                Tag tag = App.Context.Tags.Local.First(tag => tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase));
-                args.Item = tag;
+            using (Database context = new Database()) {
+                if (context.Tags.Local.Any(tag =>
+                    tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase))) {
+                    Tag tag = context.Tags.Local.First(tag =>
+                        tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase));
+                    args.Item = tag;
 
-                args.Cancel = false;
-                return;
+                    args.Cancel = false;
+                    return;
+                }
             }
+
             args.Cancel = true;
         }
 
