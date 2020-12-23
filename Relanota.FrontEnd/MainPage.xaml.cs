@@ -345,7 +345,7 @@ namespace UWP.FrontEnd
 
             var item = _pages.FirstOrDefault(p => p.Tag.Equals(navItemTag));
             page = item.Page;
-            SetNavigationIndex(item.Index);
+            if (item.Index != -1) SetNavigationIndex(item.Index);
             var preNavPageType = ContentFrame.CurrentSourcePageType;
 
             if (!(page is null) && preNavPageType != page)
