@@ -146,9 +146,11 @@ namespace UWP.FrontEnd
                         {
                             case "open":
                                 NoteEditor.Get.State = NoteEditorState.ProtocolNavigating;
+                                await NoteEditor.Get.NavigateToNoteFromUri(eventArgs.Uri.OriginalString.Substring(0, eventArgs.Uri.OriginalString.Length));
+
+                                MainPage.Get.NavView_Navigate("reset", null);
                                 MainPage.Get.NavView_Navigate("edit", null);
 
-                                await NoteEditor.Get.NavigateToNoteFromUri(eventArgs.Uri.OriginalString.Substring(0, eventArgs.Uri.OriginalString.Length));
                                 break;
 
                             case "import":

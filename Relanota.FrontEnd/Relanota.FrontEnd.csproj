@@ -134,6 +134,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <EnableTypeInfoReflection>false</EnableTypeInfoReflection>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs">
@@ -159,6 +160,9 @@
     </Compile>
     <Compile Include="Views\NoteEditor.xaml.cs">
       <DependentUpon>NoteEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Reset.xaml.cs">
+      <DependentUpon>Reset.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
@@ -226,6 +230,10 @@
     <Page Include="Views\NoteEditor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Reset.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\Settings.xaml">
       <SubType>Designer</SubType>

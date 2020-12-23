@@ -41,8 +41,8 @@ namespace UWP.FrontEnd.Views
             base.OnNavigatedTo(e);
             using (Database context = new Database())
             {
-                NotesCollection = new ObservableCollection<Note>(context.Notes.Local.OrderBy(note => note.Name));
-                TagsCollection = new ObservableCollection<Tag>(context.Tags.Local.OrderBy(tag => tag.Name));
+                NotesCollection = new ObservableCollection<Note>(context.Notes.OrderBy(note => note.Name));
+                TagsCollection = new ObservableCollection<Tag>(context.Tags.OrderBy(tag => tag.Name));
             }
             MainPage.Get.SetDividerNoteName("No Note Selected");
         }

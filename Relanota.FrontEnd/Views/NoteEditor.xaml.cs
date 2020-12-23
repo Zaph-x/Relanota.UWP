@@ -48,6 +48,8 @@ namespace UWP.FrontEnd.Views
         public static bool IsSaved { get; set; } = true;
         private static NoteEditor _instance { get; set; }
         public static NoteEditor Get => _instance ?? new NoteEditor();
+        public string NoteContent => EditorTextBox?.Text.Trim() ?? "";
+        public string NoteName => NoteNameTextBox?.Text.Trim() ?? "";
         private static NoteEditorState _state { get; set; }
         public NoteEditorState State {
             get => _state;
@@ -107,21 +109,8 @@ namespace UWP.FrontEnd.Views
         public NoteEditor()
         {
             _instance = this;
+
             this.InitializeComponent();
-            
-            if (MainPage.CurrentNote == null) { TagTokens.IsEnabled = false; }
-
-            TagTokens.SuggestedItemsSource = Acv;
-            changesWorker.DoWork += ChangesWorker_DoWork;
-            changesWorker.RunWorkerCompleted += ChangesWorker_RunWorkerCompleted;
-            changesWorker.WorkerSupportsCancellation = true;
-            using (Database context = new Database())
-            {
-                Acv = new AdvancedCollectionView(context.Tags.ToList(), false);
-                Acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Entities.Tag.Name), SortDirection.Ascending));
-                Acv.Filter = itm => !TagTokens.Items.Contains(itm) && (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
-
-            }
         }
 
         public bool AreTextboxesEmpty() => string.IsNullOrWhiteSpace(NoteNameTextBox.Text) && string.IsNullOrWhiteSpace(EditorTextBox.Text);
@@ -192,6 +181,22 @@ namespace UWP.FrontEnd.Views
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            IsSaved = true;
+            changesWorker.DoWork += ChangesWorker_DoWork;
+            changesWorker.RunWorkerCompleted += ChangesWorker_RunWorkerCompleted;
+            changesWorker.WorkerSupportsCancellation = true;
+
+            if (MainPage.CurrentNote == null) { TagTokens.IsEnabled = false; }
+
+
+            using (Database context = new Database())
+            {
+                Acv = new AdvancedCollectionView(context.Tags.ToList(), false);
+                Acv.SortDescriptions.Add(new SortDescription(nameof(Core.Objects.Entities.Tag.Name), SortDirection.Ascending));
+                Acv.Filter = itm => !TagTokens.Items.Contains(itm) && (itm as Tag).Name.Contains(TagTokens.Text, StringComparison.InvariantCultureIgnoreCase);
+
+            }
+            TagTokens.SuggestedItemsSource = Acv;
             History = new FixedSizeObservableCollection<(string text, int index)>(100);
             UndoneHistory = new FixedSizeObservableCollection<(string text, int index)>(100);
             MainPage.Get.SetNavigationIndex(3);
@@ -263,11 +268,14 @@ namespace UWP.FrontEnd.Views
             }
         }
 
-        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+        protected override async void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
+            if (!IsSaved) {
+                MainPage.CurrentNote.Name = NoteNameTextBox.Text.Trim();
+                MainPage.CurrentNote.Content = EditorTextBox.Text.Trim();
+            }
             if (MainPage.CurrentNote == null && string.IsNullOrWhiteSpace(NoteNameTextBox.Text) && string.IsNullOrWhiteSpace(EditorTextBox.Text))
                 SetSavedState(true);
-            base.OnNavigatingFrom(e);
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -539,7 +547,7 @@ namespace UWP.FrontEnd.Views
             }
         }
 
-        public static async Task ShowUnsavedChangesDialog()
+        public async Task ShowUnsavedChangesDialog()
         {
             ContentDialog unsavedDialog = new ContentDialog
             {
@@ -559,12 +567,11 @@ namespace UWP.FrontEnd.Views
             else if (result == ContentDialogResult.Secondary)
             {
                 // Simulate saved note to escape save loop
-                Get.SetSavedState(true);
+                SetSavedState(true);
             }
             else
             {
                 // No action taken. Return to view
-                return;
             }
         }
 
@@ -651,10 +658,12 @@ namespace UWP.FrontEnd.Views
                             }
                         }
                         // Only set note name and save
-                        MainPage.CurrentNote = null;
-                        NoteNameTextBox.Text = noteName;
-                        EditorTextBox.Text = "";
+                        MainPage.CurrentNote = new Note() { Name = noteName, Content = "" };
+                        MainPage.Get.NavView_Navigate("reset", null);
+                        MainPage.Get.NavView_Navigate("edit", null);
                         SetState(NoteEditorState.Saving);
+                        MainPage.Get.LogRecentAccess(MainPage.CurrentNote);
+                        OnNavigatedTo(null);
                     }
                     else
                     {
@@ -851,6 +860,7 @@ namespace UWP.FrontEnd.Views
         }
     }
 
+    [Flags]
     public enum NoteEditorState
     {
         Error = 0b_0000,
