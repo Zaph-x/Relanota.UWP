@@ -81,7 +81,15 @@ namespace UWP.FrontEnd
                 // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
             }
+            using (Database context = new Database())
+            {
+                context.Database.EnsureCreated();
+                context.Database.Migrate();
+                context.Notes.Load();
+                context.NoteTags.Load();
+                context.Tags.Load();
 
+            }
 
             if (e.PrelaunchActivated == false)
             {
@@ -95,15 +103,7 @@ namespace UWP.FrontEnd
                 // Ensure the current window is active
                 Window.Current.Activate();
             }
-            using (Database context = new Database())
-            {
-                context.Database.EnsureCreated();
-                context.Database.Migrate();
-                context.Notes.Load();
-                context.NoteTags.Load();
-                context.Tags.Load();
-
-            }
+            
             if (settings.Values.TryGetValue("load_recent_on_startup", out object openRecent) && (bool)openRecent)
             {
                 string line = File.ReadLines($@"{ApplicationData.Current.LocalFolder.Path}\AccessList").First(); // gets the first line from file.
