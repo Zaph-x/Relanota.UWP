@@ -18,16 +18,71 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <Grid Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="auto"/>
-                <ColumnDefinition Width="auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0" 
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBox Grid.Row="0" 
                  Margin="8" 
                  PlaceholderText="Note Name" 
                  x:Name="NoteNameTextBox"
                  TextChanged="TextBox_TextChanged"/>
+            <CommandBar Grid.Row="1" ClosedDisplayMode="Compact">
+                <CommandBar.Content>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock x:Name="WordCounter" Margin="3" Text="0 words"/>
+                        <TextBlock x:Name="UnsavedChangesText" Margin="3"/>
+
+                    </StackPanel>
+                </CommandBar.Content>
+
+                <CommandBar.PrimaryCommands>
+                    <AppBarSeparator/>
+
+                    <AppBarButton x:Uid="BoldButton" Icon="Bold">
+
+                    </AppBarButton>
+                    <AppBarButton x:Uid="ItalicsButton" Icon="Italic">
+
+                    </AppBarButton>
+                    <AppBarButton x:Uid="BulletListButton" Icon="List">
+
+                    </AppBarButton>
+                    <AppBarSeparator/>
+                    <AppBarButton Icon="Save" AccessKey="S" Label="Save Note" Click="SaveButton_Click">
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="S"/>
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+                    <AppBarButton Icon="Delete" AccessKey="Del" Label="Delete Note" Click="DeleteButton_Click">
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="Delete"/>
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+                    <AppBarButton Icon="Add" AccessKey="N" Label="New Note" Click="NewNoteButton_Click">
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="N"/>
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+                    <AppBarButton Icon="Pictures" AccessKey="I" Label="Add Image" Click="ImportPictureButton_Click" ToolTipService.ToolTip="Add Image"/>
+
+                </CommandBar.PrimaryCommands>
+
+                <CommandBar.SecondaryCommands>
+                    <AppBarButton x:Uid="EmojiButton" Icon="Emoji2" ToolTipService.ToolTip="Insert Emoji (CTRL + .)" Click="EmojiButton_Click"/>
+                    <AppBarButton Icon="Share" AccessKey="G" Label="Share Note" Click="ShareNoteButton_Click">
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="G"/>
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+                    <AppBarButton Icon="Link" AccessKey="L" Label="Copy Link to Note" Click="CopyLinkButton_Click">
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="L"/>
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+                </CommandBar.SecondaryCommands>
+
+            </CommandBar>
         </Grid>
         <Grid Grid.Row="1" Visibility="Visible">
             <Grid.ColumnDefinitions>
@@ -46,21 +101,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <CommandBar Grid.Row="0" ClosedDisplayMode="Compact">
-                        <CommandBar.PrimaryCommands>
-                            <AppBarButton x:Uid="BoldButton" Icon="Bold">
-
-                            </AppBarButton>
-                            <AppBarButton x:Uid="ItalicsButton" Icon="Italic">
-
-                            </AppBarButton>
-                            <AppBarButton x:Uid="BulletListButton" Icon="List">
-
-                            </AppBarButton>
-                            <AppBarButton x:Uid="EmojiButton" Icon="Emoji2"></AppBarButton>
-                        </CommandBar.PrimaryCommands>
-                        
-                    </CommandBar>
+                    
                     <TextBox x:Name="EditorTextBox" 
                              Grid.Row="1"
                              TextChanged="NoteEditorTextBox_TextChanged" 
@@ -142,50 +183,8 @@ FontFamily="Segoe MDL2 Assets"/>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
-                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <CommandBar Grid.Column="0" HorizontalAlignment="Stretch">
-                <CommandBar.Content>
-                    <StackPanel Orientation="Horizontal" Margin="5">
-                        <TextBlock x:Name="WordCounter" Margin="3" Text="0 words"/>
-                        <TextBlock x:Name="UnsavedChangesText" Margin="3"/>
-                    </StackPanel>
-                </CommandBar.Content>
-                <CommandBar.PrimaryCommands>
-                    <AppBarSeparator/>
-                    <AppBarButton Icon="Save" AccessKey="S" Label="Save Note" Click="SaveButton_Click">
-                        <AppBarButton.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="S"/>
-                        </AppBarButton.KeyboardAccelerators>
-                    </AppBarButton>
-                    <AppBarButton Icon="Delete" AccessKey="Del" Label="Delete Note" Click="DeleteButton_Click">
-                        <AppBarButton.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="Delete"/>
-                        </AppBarButton.KeyboardAccelerators>
-                    </AppBarButton>
-                    <AppBarButton Icon="Add" AccessKey="N" Label="New Note" Click="NewNoteButton_Click">
-                        <AppBarButton.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="N"/>
-                        </AppBarButton.KeyboardAccelerators>
-                    </AppBarButton>
-                    <AppBarButton Icon="Pictures" AccessKey="I" Label="Add Image" Click="ImportPictureButton_Click" ToolTipService.ToolTip="Add Image"/>
-
-                </CommandBar.PrimaryCommands>
-                
-                <CommandBar.SecondaryCommands>
-                    <AppBarButton Icon="Share" AccessKey="G" Label="Share Note" Click="ShareNoteButton_Click">
-                        <AppBarButton.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="G"/>
-                        </AppBarButton.KeyboardAccelerators>
-                    </AppBarButton>
-                    <AppBarButton Icon="Link" AccessKey="L" Label="Copy Link to Note" Click="CopyLinkButton_Click">
-                        <AppBarButton.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="L"/>
-                        </AppBarButton.KeyboardAccelerators>
-                    </AppBarButton>
-                </CommandBar.SecondaryCommands>
-            </CommandBar>
-            <controls:TokenizingTextBox Grid.Column="1" x:Name="TagTokens" 
+            <controls:TokenizingTextBox Grid.Column="0" x:Name="TagTokens" 
                                         HorizontalAlignment="Stretch" 
                                         PlaceholderText="Enter Tags" 
                                         TokenDelimiter="," 

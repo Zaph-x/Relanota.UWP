@@ -396,8 +396,7 @@ namespace UWP.FrontEnd
         {
             using (Database context = new Database())
             {
-                Note note = context.Notes.AsEnumerable().FirstOrDefault(n => n.Name.Equals(sender.Text, StringComparison.InvariantCultureIgnoreCase));
-                if (note == null)
+                if (!context.TryGetNote(sender.Text, out Note note))
                 {
                     await App.ShowDialog("We could not find that note.", $"The note '{sender.Text}' could note be found in the database. Do you wish to create it?",
                         "Yes", () =>
@@ -416,10 +415,9 @@ namespace UWP.FrontEnd
                             SearchBox.Text = "";
                         });
                 }
-                else
-                {
+                else {
                     CurrentNote = note;
-                    NavView_Navigate("tags", null);
+                    NavView_Navigate("reset", null);
                     NoteEditor.SetState(NoteEditorState.SearchNavigation);
                     NavView_Navigate("edit", null);
                 }

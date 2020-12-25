@@ -31,6 +31,7 @@ using System.Text;
 using System.Threading;
 using Core.Objects.Entities;
 using System.ComponentModel;
+using Windows.UI.ViewManagement.Core;
 using Core.Objects.Wrappers;
 using Core.SqlHelper;
 
@@ -858,6 +859,11 @@ namespace UWP.FrontEnd.Views
         {
             textBox.Text = textBox.Text.Insert(textBox.SelectionStart, text);
             textBox.SelectionStart = newIndex;
+        }
+
+        private void EmojiButton_Click(object sender, RoutedEventArgs e) {
+            CoreInputView.GetForCurrentView().TryShow(CoreInputViewKind.Emoji);
+            EditorTextBox.Focus(FocusState.Programmatic);
         }
     }
 
