@@ -38,7 +38,31 @@
 
                 <CommandBar.PrimaryCommands>
                     <AppBarSeparator/>
-
+                    <AppBarElementContainer>
+                        <ComboBox Margin="4" Width="150" SelectedIndex="6" x:Name="ParagraphSelector" SelectionChanged="Header_Changed">
+                            <ComboBoxItem>
+                                <TextBlock Text="Header 1"/>
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="Header 2"/>
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="Header 3"/>
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="Header 4"/>
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="Header 5"/>
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="Header 6"/>
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="Paragraph"/>
+                            </ComboBoxItem>
+                        </ComboBox>
+                    </AppBarElementContainer>
                     <AppBarButton x:Uid="BoldButton" Icon="Bold">
 
                     </AppBarButton>
@@ -48,7 +72,15 @@
                     <AppBarButton x:Uid="BulletListButton" Icon="List">
 
                     </AppBarButton>
+                    
+                    
+                    
                     <AppBarSeparator/>
+
+
+
+
+
                     <AppBarButton Icon="Save" AccessKey="S" Label="Save Note" Click="SaveButton_Click">
                         <AppBarButton.KeyboardAccelerators>
                             <KeyboardAccelerator Modifiers="Control" Key="S"/>
@@ -112,7 +144,8 @@
                              KeyDown="EditorTextBox_KeyDown"
                              PreviewKeyDown="EditorTextBox_OnPreviewKeyDown"
                              Paste="EditorTextBox_Paste"
-                             VerticalAlignment="Stretch"/>
+                             VerticalAlignment="Stretch"
+                             SelectionChanged="EditorTextBox_SelectionChanged"/>
                 </Grid>
                 
             </Grid>
@@ -145,8 +178,6 @@
                                    Grid.Column="1" 
                                    Width="7" 
                                    Background="#CCCCCC"
-                                   VerticalAlignment="Stretch" 
-                                   ResizeDirection="Columns"
                                    DoubleTapped="GridSplitter_DoubleTapped"
                                    >
                 <controls:GridSplitter.Element>

@@ -51,6 +51,7 @@ namespace UWP.FrontEnd.Views
         public static NoteEditor Get => _instance ?? new NoteEditor();
         public string NoteContent => EditorTextBox?.Text.Trim() ?? "";
         public string NoteName => NoteNameTextBox?.Text.Trim() ?? "";
+        private string[] Lines => EditorTextBox?.Text.Split('\r');
         private static NoteEditorState _state { get; set; }
         public NoteEditorState State {
             get => _state;
@@ -271,7 +272,8 @@ namespace UWP.FrontEnd.Views
 
         protected override async void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
-            if (!IsSaved) {
+            if (!IsSaved)
+            {
                 MainPage.CurrentNote.Name = NoteNameTextBox.Text.Trim();
                 MainPage.CurrentNote.Content = EditorTextBox.Text.Trim();
             }
@@ -516,10 +518,11 @@ namespace UWP.FrontEnd.Views
 
         private void TagTokens_TokenItemRemoving(TokenizingTextBox sender, TokenItemRemovingEventArgs args)
         {
-            using (Database context = new Database()) {
+            using (Database context = new Database())
+            {
                 Tag tag = args.Item as Tag;
                 MainPage.CurrentNote.RemoveTag(tag, context);
-                
+
             }
             SetSavedState(false);
         }
@@ -797,14 +800,13 @@ namespace UWP.FrontEnd.Views
                     {
                         int selectionStart = EditorTextBox.SelectionStart;
                         (int x, int y) point = CalculatePoint(EditorTextBox.Text, selectionStart);
-                        string[] lines = EditorTextBox.Text.Split('\r');
-                        Match match = Regex.Match(lines[point.y], @"^\s*[-*>+]\s");
+                        Match match = Regex.Match(Lines[point.y], @"^\s*[-*>+]\s");
 
                         if (match.Success && point.x >= match.Index + match.Length)
                         {
                             e.Handled = true;
 
-                            if (lines[point.y].Length == match.Length)
+                            if (Lines[point.y].Length == match.Length)
                             {
                                 InsertTextInTextBox(EditorTextBox, $"\r",
                                     selectionStart + match.Index + match.Length + 1);
@@ -818,7 +820,7 @@ namespace UWP.FrontEnd.Views
                         {
                             e.Handled = true;
                             int newValue = int.Parse(match.Groups[1].Value) + 1;
-                            if (lines[point.y].Length == match.Length)
+                            if (Lines[point.y].Length == match.Length)
                             {
                                 InsertTextInTextBox(EditorTextBox, "\r", selectionStart + match.Index + match.Length
                                                                          + 1 + (newValue.ToString().Length > (newValue - 1).ToString().Length ? 1 : 0));
@@ -861,9 +863,54 @@ namespace UWP.FrontEnd.Views
             textBox.SelectionStart = newIndex;
         }
 
-        private void EmojiButton_Click(object sender, RoutedEventArgs e) {
+        private void EmojiButton_Click(object sender, RoutedEventArgs e)
+        {
             CoreInputView.GetForCurrentView().TryShow(CoreInputViewKind.Emoji);
             EditorTextBox.Focus(FocusState.Programmatic);
+        }
+
+        private void EditorTextBox_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            ParagraphSelector.SelectionChanged -= Header_Changed;
+            int selectionStart = EditorTextBox.SelectionStart;
+            (int x, int y) point = CalculatePoint(EditorTextBox.Text, selectionStart);
+
+            if (Lines[point.y].Trim().StartsWith('#'))
+            {
+                Match match = Regex.Match(Lines[point.y].Trim(), @"^#{1,6}");
+                ParagraphSelector.SelectedIndex = match.Groups[0].Length - 1;
+            }
+            else
+            {
+                ParagraphSelector.SelectedIndex = 6;
+            }
+            ParagraphSelector.SelectionChanged += Header_Changed;
+
+        }
+
+        private void Header_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            if (!IsLoaded) return;
+            string[] lines = Lines;
+            int selectionStart = EditorTextBox.SelectionStart;
+            (int x, int y) point = CalculatePoint(EditorTextBox.Text, selectionStart);
+            if (ParagraphSelector.SelectedIndex == 6)
+            {
+                Match match = Regex.Match(lines[point.y], @"^#{1,6} ");
+                lines[point.y] = Regex.Replace(lines[point.y], @"^#{1,6} ", "");
+                selectionStart -= match.Length;
+            }
+            else
+            {
+                lines[point.y] = lines[point.y].Insert(0, $"{"#".Repeat(ParagraphSelector.SelectedIndex + 1)} ");
+                selectionStart += $"{"#".Repeat(ParagraphSelector.SelectedIndex + 1)} ".Length;
+            }
+
+            EditorTextBox.Text = string.Join('\r', lines);
+            EditorTextBox.SelectionStart = selectionStart;
+
+            EditorTextBox.Focus(FocusState.Programmatic);
+
         }
     }
 
