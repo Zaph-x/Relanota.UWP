@@ -344,6 +344,7 @@ namespace UWP.FrontEnd.Views
                 else
                 {
                     MainPage.CurrentNote.Update(EditorTextBox.Text, NoteNameTextBox.Text, context);
+                    context.SaveChanges();
                 }
             }
 
@@ -492,20 +493,18 @@ namespace UWP.FrontEnd.Views
             using (Database context = new Database())
             {
                 // If the tag exists, use it. Otherwise create a new tag.
-                if (context.Tags.Local.Any(tag =>
+                if (context.Tags.AsEnumerable().Any(tag =>
                     tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase)))
                 {
-                    Tag tag = context.Tags.Local.First(tag =>
+                    Tag tag = context.Tags.AsEnumerable().First(tag =>
                         tag.Name.Equals(args.TokenText, StringComparison.InvariantCultureIgnoreCase));
                     args.Item = tag;
-                    MainPage.CurrentNote.AddTag(tag, context);
                 }
                 else
                 {
                     Tag tag = new Tag();
                     tag.Name = args.TokenText;
                     args.Item = tag;
-                    MainPage.CurrentNote.AddTag(tag, context);
                 }
             }
 
@@ -516,10 +515,12 @@ namespace UWP.FrontEnd.Views
 
         private void TagTokens_TokenItemRemoving(TokenizingTextBox sender, TokenItemRemovingEventArgs args)
         {
-            using (Database context = new Database())
-                MainPage.CurrentNote.RemoveTag(args.Item as Tag, context);
+            using (Database context = new Database()) {
+                Tag tag = args.Item as Tag;
+                MainPage.CurrentNote.RemoveTag(tag, context);
+                
+            }
             SetSavedState(false);
-
         }
 
         private void TagTokens_TokenItemAdded(TokenizingTextBox sender, object data)
