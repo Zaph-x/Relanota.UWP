@@ -49,8 +49,8 @@ namespace UWP.FrontEnd.Views
         public static bool IsSaved { get; set; } = true;
         private static NoteEditor _instance { get; set; }
         public static NoteEditor Get => _instance ?? new NoteEditor();
-        public string NoteContent => EditorTextBox?.Text.Trim() ?? "";
-        public string NoteName => NoteNameTextBox?.Text.Trim() ?? "";
+        public string NoteContent => EditorTextBox.Text.Trim();
+        public string NoteName => NoteNameTextBox.Text.Trim();
         private string[] Lines => EditorTextBox?.Text.Split('\r');
         private readonly string PreferredFont = ApplicationData.Current.LocalSettings.Values["font"] as string ?? "Lucida Console";
         private static NoteEditorState _state { get; set; }
@@ -683,7 +683,7 @@ namespace UWP.FrontEnd.Views
         private void ShareNoteButton_Click(object sender, RoutedEventArgs e)
         {
             // Quick copy content of the note. Does not have to be saved.
-            App.SetClipboardContent($"note://import/|{Convert.ToBase64String(Encoding.Default.GetBytes(NoteNameTextBox.Text))}|{Convert.ToBase64String(Encoding.Default.GetBytes(EditorTextBox.Text))}|");
+            App.SetClipboardContent($"note://import/|{NoteName.Compress()}|{NoteContent.Compress()}|");
             App.ShowToastNotification("Note copied!", "A sharable link has been copied to your clipboard.");
         }
 
@@ -898,8 +898,8 @@ namespace UWP.FrontEnd.Views
                 lines[point.y] = Regex.Replace(lines[point.y], @"^#{1,6} ", "");
                 selectionStart -= match.Length;
             }
-            else
-            {
+            else {
+                
                 Match match = Regex.Match(lines[point.y], @"^#{1,6} ");
                 lines[point.y] = Regex.Replace(lines[point.y], @"^#{1,6} ", "");
                 lines[point.y] = lines[point.y].Insert(0, $"{"#".Repeat(ParagraphSelector.SelectedIndex + 1)} ");
