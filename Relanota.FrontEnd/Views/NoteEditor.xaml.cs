@@ -444,10 +444,10 @@ namespace UWP.FrontEnd.Views
 
                     // Generate name for local storage
                     string cachefilename = url.CreateMD5();
-                    try
-                    {
+                    try {
                         // Download if the file does not exist
-                        if (!File.Exists($@"{ApplicationData.Current.LocalCacheFolder.Path}\{cachefilename}.jpg"))
+                        if (!File.Exists($@"{ApplicationData.Current.LocalCacheFolder.Path}\{cachefilename}.jpg") 
+                            && ApplicationData.Current.LocalSettings.Values.TryGetValue("MathOnDisk", out object store) && (bool)store)
                             await SaveImageToFileAsync(cachefilename, ApplicationData.Current.LocalCacheFolder.Path, new Uri(url));
                     }
                     catch

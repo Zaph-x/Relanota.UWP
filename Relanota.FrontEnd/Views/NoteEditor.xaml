@@ -7,10 +7,15 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ex="using:Microsoft.Toolkit.Uwp.UI.Extensions"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" 
-    xmlns:objects="using:Core.Objects.Entities"
+    xmlns:objects="using:Core.Objects.Entities" 
+    xmlns:system="using:System" 
+    xmlns:frontend="using:UWP.FrontEnd"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     >
+    <Page.Resources>
+        <frontend:AppSettings x:Key="AppSettings" />
+    </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
@@ -140,7 +145,7 @@
                              TextChanged="NoteEditorTextBox_TextChanged" 
                              AcceptsReturn="True"
                              TextWrapping="Wrap"
-                             FontFamily="{x:Bind PreferredFont}"
+                             FontFamily="{Binding Source={StaticResource AppSettings}, Path=PreferredFont, Mode=OneTime}"
                              IsFocusEngaged="False"
                              KeyDown="EditorTextBox_KeyDown"
                              PreviewKeyDown="EditorTextBox_OnPreviewKeyDown"

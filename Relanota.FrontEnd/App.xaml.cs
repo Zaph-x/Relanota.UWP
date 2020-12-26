@@ -51,6 +51,11 @@ namespace UWP.FrontEnd
             this.Suspending += OnSuspending;
         }
 
+        public static IPropertySet Settings {
+            get {
+                return ApplicationData.Current.LocalSettings.Values;
+            }
+        }
 
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points

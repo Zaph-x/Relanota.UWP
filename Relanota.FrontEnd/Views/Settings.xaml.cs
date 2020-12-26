@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -32,7 +33,6 @@ namespace UWP.FrontEnd.Views
                 return CanvasTextFormat.GetSystemFontFamilies().OrderBy(f => f).ToList();
             }
         }
-
         public Settings()
         {
             this.InitializeComponent();
@@ -42,7 +42,7 @@ namespace UWP.FrontEnd.Views
         {
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
 
-            if (string.IsNullOrWhiteSpace(localSettings.Values["theme"] as string))
+            if (String.IsNullOrWhiteSpace(localSettings.Values["theme"] as string))
             {
                 ThemeComboBox.SelectedIndex = 0;
             }
@@ -50,8 +50,8 @@ namespace UWP.FrontEnd.Views
             {
                 ThemeComboBox.SelectedItem = ThemeComboBox.Items.First(itm => (itm as FrameworkElement).Tag as string == localSettings.Values["theme"] as string);
             }
-            LeftTagIdentifierBox.Text = string.IsNullOrWhiteSpace(localSettings.Values["left_tag_identifier"] as string) ? "@" : localSettings.Values["left_tag_identifier"] as string;
-            RightTagIdentifierBox.Text = string.IsNullOrWhiteSpace(localSettings.Values["right_tag_identifier"] as string) ? "@" : localSettings.Values["right_tag_identifier"] as string;
+            LeftTagIdentifierBox.Text = String.IsNullOrWhiteSpace(localSettings.Values["left_tag_identifier"] as string) ? "@" : localSettings.Values["left_tag_identifier"] as string;
+            RightTagIdentifierBox.Text = String.IsNullOrWhiteSpace(localSettings.Values["right_tag_identifier"] as string) ? "@" : localSettings.Values["right_tag_identifier"] as string;
             LoadMostRecentSwitch.IsOn = (bool?)localSettings.Values["load_recet_on_startup"] ?? false;
             FontsSelector.SelectedIndex = Fonts.IndexOf(ApplicationData.Current.LocalSettings.Values["font"] as string ?? "Lucida Console");
 
@@ -134,9 +134,6 @@ namespace UWP.FrontEnd.Views
                     App.ShowToastNotification("Notes Imported", "Your notes were successfully imported.");
                 }
             }
-
-
-
         }
 
         private void ThemeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -192,17 +189,6 @@ namespace UWP.FrontEnd.Views
         {
             RTI_tooltip.IsOpen = false;
             LTI_tooltip.IsOpen = false;
-        }
-
-        private void ToggleSwitch_Toggled(object sender, RoutedEventArgs e)
-        {
-            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-            localSettings.Values["load_recent_on_startup"] = (sender as ToggleSwitch).IsOn;
-        }
-
-        private void FontsSelector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            ApplicationData.Current.LocalSettings.Values["font"] = (sender as ComboBox).SelectedItem as string;
         }
     }
 }

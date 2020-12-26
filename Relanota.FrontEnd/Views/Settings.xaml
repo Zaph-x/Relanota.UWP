@@ -5,35 +5,39 @@
     xmlns:local="using:UWP.FrontEnd.Views"
     xmlns:extensions="using:Microsoft.Toolkit.Uwp.UI.Extensions"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:core="using:UWP.FrontEnd"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <core:AppSettings x:Key="AppSettings" />
+    </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <ListViewHeaderItem Grid.Row="0" Content="Settings"/>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Enabled">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <StackPanel Grid.Row="0">
-                    <TextBlock Text="Database Actions" FontWeight="Black" Margin="10 5 0 15"/>
+                    <TextBlock Text="Database Settings" FontWeight="Black" Margin="10 5 0 15"/>
                     <TextBlock Text="Import/Export Notes" Margin="10 0"/>
                     <ScrollViewer HorizontalScrollMode="Auto" HorizontalScrollBarVisibility="Auto">
                         <Grid ScrollViewer.HorizontalScrollBarVisibility="Auto">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto"/>
-                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <Button Grid.Column="0" Content="Import Database" Width="200" Margin="10" Click="ImportDatabase_Click"/>
                             <Button Grid.Column="1" Content="Export Database" Width="200" Margin="10" Click="ExportDatabase_Click"/>
@@ -60,22 +64,27 @@
                     <ComboBox Margin="10 0 0 10"
                               ItemsSource="{x:Bind Fonts}" x:Name="FontsSelector"
                               Width="200"
-                              SelectionChanged="FontsSelector_OnSelectionChanged">
+                              SelectedItem="{Binding Source={StaticResource AppSettings}, Path=PreferredFont, Mode=TwoWay}"
+                    >
                         
                     </ComboBox>
                     <NavigationViewItemSeparator/>
                 </StackPanel>
                 <StackPanel Grid.Row="2">
-                    <TextBlock Text="Usability Settings" FontWeight="Black" Margin="10"/>
+                    <TextBlock Text="General Settings" FontWeight="Black" Margin="10"/>
                     <StackPanel>
                         <TextBlock Text="Load most recent note on startup" Margin="10"/>
-                        <ToggleSwitch Margin="10 0 0 10" x:Name="LoadMostRecentSwitch" Toggled="ToggleSwitch_Toggled"></ToggleSwitch>
+                        <ToggleSwitch Margin="10 0 0 10" x:Name="LoadMostRecentSwitch" IsOn="{Binding Source={StaticResource AppSettings}, Path=LoadRecentOnStartup, Mode=TwoWay}"></ToggleSwitch>
                     </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Store mathematical expressions on disk, for faster retrieval" Margin="10"/>
+                        <ToggleSwitch Margin="10 0 0 10" IsOn="{Binding Source={StaticResource AppSettings}, Path=StoreMath, Mode=TwoWay}"/>
+                    </StackPanel>
+
                     <StackPanel Visibility="Collapsed">
                         <TextBlock Text="Inline Tag Indentifier" Margin="10"/>
                         <StackPanel Orientation="Horizontal" Margin="10 0 0 10">
-                            <TextBox extensions:TextBoxRegex.ValidationMode="Forced"
-                                     x:Name="LeftTagIdentifierBox" 
+                            <TextBox x:Name="LeftTagIdentifierBox" 
                                      Width="65" 
                                      MaxLength="4" 
                                      TextAlignment="Center" 
