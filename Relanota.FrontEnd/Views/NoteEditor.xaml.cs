@@ -730,43 +730,36 @@ namespace UWP.FrontEnd.Views
             Get.State = state;
         }
 
+        private (string Text, int Start, int End) ApplyFormatting(string text, string formatter, int index, int length)
+        {
+            text = text.Insert(index, formatter);
+            text = text.Insert(index + length + formatter.Length, formatter);
+            index += formatter.Length;
+            return (text, index, length);
+        }
+
         private void EditorTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
-            int newIndex = -1;
-            string newText = EditorTextBox.Text;
+            (string Text, int Start, int End) formattedText;
             bool ctrlIsPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
             bool shiftIsPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
 
             switch (c: ctrlIsPressed, s: shiftIsPressed, k: e.OriginalKey)
             {
                 case (true, false, VirtualKey.I):
-                    newText = newText.Insert(EditorTextBox.SelectionStart, "*");
-                    newText = newText.Insert(EditorTextBox.SelectionStart + EditorTextBox.SelectionLength + 1, "*");
-                    if (EditorTextBox.SelectionStart + EditorTextBox.SelectionLength == 0)
-                    {
-                        newIndex = 1;
-                    }
-                    else
-                    {
-                        newIndex = EditorTextBox.SelectionStart + EditorTextBox.SelectionLength + 1;
-                    }
-                    EditorTextBox.Text = newText;
-                    EditorTextBox.SelectionStart = newIndex;
+                    formattedText = ApplyFormatting(EditorTextBox.Text, "*", EditorTextBox.SelectionStart, EditorTextBox.SelectionLength);
+
+                    EditorTextBox.Text = formattedText.Text;
+                    EditorTextBox.SelectionStart = formattedText.Start;
+                    EditorTextBox.SelectionLength = formattedText.End;
                     e.Handled = true;
                     break;
                 case (true, false, VirtualKey.B):
-                    newText = newText.Insert(EditorTextBox.SelectionStart, "**");
-                    newText = newText.Insert(EditorTextBox.SelectionStart + EditorTextBox.SelectionLength + 2, "**");
-                    if (EditorTextBox.SelectionStart + EditorTextBox.SelectionLength == 0)
-                    {
-                        newIndex = 2;
-                    }
-                    else
-                    {
-                        newIndex = EditorTextBox.SelectionStart + EditorTextBox.SelectionLength + 2;
-                    }
-                    EditorTextBox.Text = newText;
-                    EditorTextBox.SelectionStart = newIndex;
+                    formattedText = ApplyFormatting(EditorTextBox.Text, "**", EditorTextBox.SelectionStart, EditorTextBox.SelectionLength);
+
+                    EditorTextBox.Text = formattedText.Text;
+                    EditorTextBox.SelectionStart = formattedText.Start;
+                    EditorTextBox.SelectionLength = formattedText.End;
                     e.Handled = true;
                     break;
             }
@@ -907,8 +900,10 @@ namespace UWP.FrontEnd.Views
             }
             else
             {
+                Match match = Regex.Match(lines[point.y], @"^#{1,6} ");
+                lines[point.y] = Regex.Replace(lines[point.y], @"^#{1,6} ", "");
                 lines[point.y] = lines[point.y].Insert(0, $"{"#".Repeat(ParagraphSelector.SelectedIndex + 1)} ");
-                selectionStart += $"{"#".Repeat(ParagraphSelector.SelectedIndex + 1)} ".Length;
+                selectionStart += $"{"#".Repeat(ParagraphSelector.SelectedIndex + 1)} ".Length - match.Length;
             }
 
             EditorTextBox.Text = string.Join('\r', lines);
@@ -916,6 +911,33 @@ namespace UWP.FrontEnd.Views
 
             EditorTextBox.Focus(FocusState.Programmatic);
 
+        }
+
+        private void ListButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            string[] lines = Lines;
+            int selectionStart = EditorTextBox.SelectionStart;
+            (int x, int y) point = CalculatePoint(EditorTextBox.Text, selectionStart);
+            if (!lines[point.y].Trim().StartsWith("*"))
+            {
+                lines[point.y] = lines[point.y].Insert(0, "* ");
+            }
+            else
+            {
+                lines[point.y] = Regex.Replace(lines[point.y], @"^\s*[-*>+]\s", "");
+            }
+
+            EditorTextBox.Text = string.Join('\r', lines);
+            EditorTextBox.SelectionStart = selectionStart + 2;
+        }
+
+        private void FormatButton_OnClick(object sender, RoutedEventArgs e) {
+            string formatter = (sender as AppBarButton)?.Tag as string;
+            (string text, int start, int end) = ApplyFormatting(EditorTextBox.Text, formatter, EditorTextBox.SelectionStart, EditorTextBox.SelectionLength);
+
+            EditorTextBox.Text = text;
+            EditorTextBox.SelectionStart = start;
+            EditorTextBox.SelectionLength = end;
         }
     }
 

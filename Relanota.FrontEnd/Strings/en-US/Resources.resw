@@ -121,6 +121,10 @@
     <value>Bold</value>
     <comment>Text shown on the bold button</comment>
   </data>
+  <data name="BoldButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Format Bold (Ctrl + B)</value>
+    <comment>The tooltip of the bold button</comment>
+  </data>
   <data name="BulletListButton.Label" xml:space="preserve">
     <value>Unordered List</value>
     <comment>Text shown on the unordered list button</comment>
@@ -156,6 +160,10 @@
   <data name="ItalicsButton.Label" xml:space="preserve">
     <value>Italics</value>
     <comment>Text shown on the italics button</comment>
+  </data>
+  <data name="ItalicsButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>Format Italics (Ctrl + I)</value>
+    <comment>The tooltip of the italics button</comment>
   </data>
   <data name="MarkdownFileSelector.Content" xml:space="preserve">
     <value>Markdown (*.md)</value>

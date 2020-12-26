@@ -64,13 +64,13 @@
                             </ComboBoxItem>
                         </ComboBox>
                     </AppBarElementContainer>
-                    <AppBarButton x:Uid="BoldButton" Icon="Bold">
+                    <AppBarButton x:Uid="BoldButton" Icon="Bold" Tag="**" Click="FormatButton_OnClick">
 
                     </AppBarButton>
-                    <AppBarButton x:Uid="ItalicsButton" Icon="Italic">
+                    <AppBarButton x:Uid="ItalicsButton" Icon="Italic" Tag="*" Click="FormatButton_OnClick">
 
                     </AppBarButton>
-                    <AppBarButton x:Uid="BulletListButton" Icon="List">
+                    <AppBarButton x:Uid="BulletListButton" Icon="List" Click="ListButton_OnClick">
 
                     </AppBarButton>
                     
