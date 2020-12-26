@@ -57,7 +57,10 @@
                         </ComboBoxItem>
                     </ComboBox>
                     <TextBlock Margin="10">Preferred font to use in the note editor</TextBlock>
-                    <ComboBox Margin="10 0 0 10">
+                    <ComboBox Margin="10 0 0 10"
+                              ItemsSource="{x:Bind Fonts}" x:Name="FontsSelector"
+                              Width="200"
+                              SelectionChanged="FontsSelector_OnSelectionChanged">
                         
                     </ComboBox>
                     <NavigationViewItemSeparator/>

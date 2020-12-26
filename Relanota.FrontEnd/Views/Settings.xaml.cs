@@ -16,6 +16,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using Microsoft.Graphics.Canvas.Text;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -26,6 +27,12 @@ namespace UWP.FrontEnd.Views
     /// </summary>
     public sealed partial class Settings : Page
     {
+        public List<string> Fonts {
+            get {
+                return CanvasTextFormat.GetSystemFontFamilies().OrderBy(f => f).ToList();
+            }
+        }
+
         public Settings()
         {
             this.InitializeComponent();
@@ -46,6 +53,7 @@ namespace UWP.FrontEnd.Views
             LeftTagIdentifierBox.Text = string.IsNullOrWhiteSpace(localSettings.Values["left_tag_identifier"] as string) ? "@" : localSettings.Values["left_tag_identifier"] as string;
             RightTagIdentifierBox.Text = string.IsNullOrWhiteSpace(localSettings.Values["right_tag_identifier"] as string) ? "@" : localSettings.Values["right_tag_identifier"] as string;
             LoadMostRecentSwitch.IsOn = (bool?)localSettings.Values["load_recet_on_startup"] ?? false;
+            FontsSelector.SelectedIndex = Fonts.IndexOf(ApplicationData.Current.LocalSettings.Values["font"] as string ?? "Lucida Console");
 
             base.OnNavigatedTo(e);
         }
@@ -70,7 +78,7 @@ namespace UWP.FrontEnd.Views
                 await FileIO.WriteBufferAsync(file, buffer);
 
                 File.Delete($@"{ApplicationData.Current.TemporaryFolder.Path}\export.zip");
-        
+
                 App.ShowToastNotification("Notes Exported", "Your notes were successfully exported to the chosen location.");
             }
         }
@@ -143,10 +151,10 @@ namespace UWP.FrontEnd.Views
 
         private void TagIdentifierBox_BeforeTextChanging(TextBox sender, TextBoxBeforeTextChangingEventArgs args)
         {
-            args.Cancel = args.NewText.Any(c => ((c >= 'a') && (c <= 'z')) || 
-                                            ((c >= 'A') && (c <= 'Z')) || 
+            args.Cancel = args.NewText.Any(c => ((c >= 'a') && (c <= 'z')) ||
+                                            ((c >= 'A') && (c <= 'Z')) ||
                                             ((c >= '0') && (c <= '9')) ||
-                                            new char[] { 'æ','Æ','ø','Ø','å','Å'}.Contains(c));
+                                            new char[] { 'æ', 'Æ', 'ø', 'Ø', 'å', 'Å' }.Contains(c));
             if (args.Cancel)
             {
                 switch (sender.Name)
@@ -190,6 +198,11 @@ namespace UWP.FrontEnd.Views
         {
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
             localSettings.Values["load_recent_on_startup"] = (sender as ToggleSwitch).IsOn;
+        }
+
+        private void FontsSelector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ApplicationData.Current.LocalSettings.Values["font"] = (sender as ComboBox).SelectedItem as string;
         }
     }
 }

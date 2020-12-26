@@ -140,7 +140,7 @@
                              TextChanged="NoteEditorTextBox_TextChanged" 
                              AcceptsReturn="True"
                              TextWrapping="Wrap"
-                             FontFamily="Lucida Console"
+                             FontFamily="{x:Bind PreferredFont}"
                              IsFocusEngaged="False"
                              KeyDown="EditorTextBox_KeyDown"
                              PreviewKeyDown="EditorTextBox_OnPreviewKeyDown"

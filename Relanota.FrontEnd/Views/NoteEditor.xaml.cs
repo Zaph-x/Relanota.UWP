@@ -52,6 +52,7 @@ namespace UWP.FrontEnd.Views
         public string NoteContent => EditorTextBox?.Text.Trim() ?? "";
         public string NoteName => NoteNameTextBox?.Text.Trim() ?? "";
         private string[] Lines => EditorTextBox?.Text.Split('\r');
+        private readonly string PreferredFont = ApplicationData.Current.LocalSettings.Values["font"] as string ?? "Lucida Console";
         private static NoteEditorState _state { get; set; }
         public NoteEditorState State {
             get => _state;
@@ -808,11 +809,11 @@ namespace UWP.FrontEnd.Views
                         {
                             e.Handled = true;
 
-                            if (Lines[point.y].Length == match.Length)
+                            if (Lines[point.y].Trim().Length == "*".Length)
                             {
                                 lines[point.y] = "";
                                 EditorTextBox.Text = string.Join('\r', lines);
-                                EditorTextBox.SelectionStart = selectionStart - 2;
+                                EditorTextBox.SelectionStart = selectionStart - match.Length;
                                 return;
                             }
                             InsertTextInTextBox(EditorTextBox, $"\r{(match.Value)}", selectionStart + match.Index + match.Length + 1);
@@ -823,7 +824,7 @@ namespace UWP.FrontEnd.Views
                         {
                             e.Handled = true;
                             int newValue = int.Parse(match.Groups[1].Value) + 1;
-                            if (Lines[point.y].Length == match.Length)
+                            if (Lines[point.y].Trim().Length == match.Value.Trim().Length)
                             {
                                 lines[point.y] = "";
                                 EditorTextBox.Text = string.Join('\r', lines);
