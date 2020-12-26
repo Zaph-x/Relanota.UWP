@@ -36,7 +36,6 @@ namespace UWP.FrontEnd
     sealed partial class App : Application
     {
         private Frame rootFrame = null;
-        private ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
 
 
         /// <summary>
@@ -51,11 +50,6 @@ namespace UWP.FrontEnd
             this.Suspending += OnSuspending;
         }
 
-        public static IPropertySet Settings {
-            get {
-                return ApplicationData.Current.LocalSettings.Values;
-            }
-        }
 
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
@@ -109,7 +103,7 @@ namespace UWP.FrontEnd
                 Window.Current.Activate();
             }
             
-            if (settings.Values.TryGetValue("load_recent_on_startup", out object openRecent) && (bool)openRecent)
+            if (AppSettings.Get("load_recent_on_startup", false))
             {
                 string line = File.ReadLines($@"{ApplicationData.Current.LocalFolder.Path}\AccessList").First(); // gets the first line from file.
                 using (Database context = new Database())

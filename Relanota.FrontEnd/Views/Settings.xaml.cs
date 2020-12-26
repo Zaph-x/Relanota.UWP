@@ -40,20 +40,19 @@ namespace UWP.FrontEnd.Views
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
 
-            if (String.IsNullOrWhiteSpace(localSettings.Values["theme"] as string))
+            if (String.IsNullOrWhiteSpace(AppSettings.Get("theme", "system")))
             {
                 ThemeComboBox.SelectedIndex = 0;
             }
             else
             {
-                ThemeComboBox.SelectedItem = ThemeComboBox.Items.First(itm => (itm as FrameworkElement).Tag as string == localSettings.Values["theme"] as string);
+                ThemeComboBox.SelectedItem = ThemeComboBox.Items.First(itm => (itm as FrameworkElement).Tag as string == AppSettings.Get("theme", "system"));
             }
-            LeftTagIdentifierBox.Text = String.IsNullOrWhiteSpace(localSettings.Values["left_tag_identifier"] as string) ? "@" : localSettings.Values["left_tag_identifier"] as string;
-            RightTagIdentifierBox.Text = String.IsNullOrWhiteSpace(localSettings.Values["right_tag_identifier"] as string) ? "@" : localSettings.Values["right_tag_identifier"] as string;
-            LoadMostRecentSwitch.IsOn = (bool?)localSettings.Values["load_recet_on_startup"] ?? false;
-            FontsSelector.SelectedIndex = Fonts.IndexOf(ApplicationData.Current.LocalSettings.Values["font"] as string ?? "Lucida Console");
+            LeftTagIdentifierBox.Text = AppSettings.Get("left_tag_identifier", "@");
+            RightTagIdentifierBox.Text = AppSettings.Get("right_tag_identifier", "@");
+            LoadMostRecentSwitch.IsOn = AppSettings.Get("load_recent_on_startup", false);
+            FontsSelector.SelectedIndex = Fonts.IndexOf(AppSettings.Get("font","Lucida Console"));
 
             base.OnNavigatedTo(e);
         }

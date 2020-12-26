@@ -52,7 +52,6 @@ namespace UWP.FrontEnd.Views
         public string NoteContent => EditorTextBox.Text.Trim();
         public string NoteName => NoteNameTextBox.Text.Trim();
         private string[] Lines => EditorTextBox?.Text.Split('\r');
-        private readonly string PreferredFont = ApplicationData.Current.LocalSettings.Values["font"] as string ?? "Lucida Console";
         private static NoteEditorState _state { get; set; }
         public NoteEditorState State {
             get => _state;
@@ -446,8 +445,7 @@ namespace UWP.FrontEnd.Views
                     string cachefilename = url.CreateMD5();
                     try {
                         // Download if the file does not exist
-                        if (!File.Exists($@"{ApplicationData.Current.LocalCacheFolder.Path}\{cachefilename}.jpg") 
-                            && ApplicationData.Current.LocalSettings.Values.TryGetValue("MathOnDisk", out object store) && (bool)store)
+                        if (!File.Exists($@"{ApplicationData.Current.LocalCacheFolder.Path}\{cachefilename}.jpg") && AppSettings.Get("MathOnDisk", true))
                             await SaveImageToFileAsync(cachefilename, ApplicationData.Current.LocalCacheFolder.Path, new Uri(url));
                     }
                     catch

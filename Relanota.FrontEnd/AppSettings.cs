@@ -42,16 +42,16 @@ namespace UWP.FrontEnd
             LocalSettings = ApplicationData.Current.LocalSettings;
         }
 
-        private void Set<T>(string key, T value)
+        public static void Set<T>(string key, T value)
         {
-            LocalSettings.Values[key] = value;
+            ApplicationData.Current.LocalSettings.Values[key] = value;
         }
 
-        private T Get<T>(string key, T defaultValue)
+        public static T Get<T>(string key, T defaultValue)
         {
-            if (LocalSettings.Values.ContainsKey(key))
+            if (ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
             {
-                return (T)LocalSettings.Values[key];
+                return (T)ApplicationData.Current.LocalSettings.Values[key];
             }
 
             if (null != defaultValue)
@@ -61,7 +61,6 @@ namespace UWP.FrontEnd
 
             return default(T);
         }
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void NotifyPropertyChanged([CallerMemberName] string propName = "")
