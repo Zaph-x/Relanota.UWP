@@ -26,7 +26,8 @@
                  Margin="8" 
                  PlaceholderText="Note Name" 
                  x:Name="NoteNameTextBox"
-                 TextChanged="TextBox_TextChanged"/>
+                 TextChanged="TextBox_TextChanged"
+                 TabIndex="0"/>
             <CommandBar Grid.Row="1" ClosedDisplayMode="Compact">
                 <CommandBar.Content>
                     <StackPanel Orientation="Horizontal" Margin="5">
@@ -145,7 +146,8 @@
                              PreviewKeyDown="EditorTextBox_OnPreviewKeyDown"
                              Paste="EditorTextBox_Paste"
                              VerticalAlignment="Stretch"
-                             SelectionChanged="EditorTextBox_SelectionChanged"/>
+                             SelectionChanged="EditorTextBox_SelectionChanged"
+                             TabIndex="1"/>
                 </Grid>
                 
             </Grid>

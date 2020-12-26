@@ -793,6 +793,8 @@ namespace UWP.FrontEnd.Views
             bool ctrlIsPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
             bool shiftIsPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
 
+            string[] lines = Lines;
+
             switch (c: ctrlIsPressed, s: shiftIsPressed, k: e.OriginalKey)
             {
                 case (false, false, VirtualKey.Enter):
@@ -808,8 +810,9 @@ namespace UWP.FrontEnd.Views
 
                             if (Lines[point.y].Length == match.Length)
                             {
-                                InsertTextInTextBox(EditorTextBox, $"\r",
-                                    selectionStart + match.Index + match.Length + 1);
+                                lines[point.y] = "";
+                                EditorTextBox.Text = string.Join('\r', lines);
+                                EditorTextBox.SelectionStart = selectionStart - 2;
                                 return;
                             }
                             InsertTextInTextBox(EditorTextBox, $"\r{(match.Value)}", selectionStart + match.Index + match.Length + 1);
@@ -822,8 +825,9 @@ namespace UWP.FrontEnd.Views
                             int newValue = int.Parse(match.Groups[1].Value) + 1;
                             if (Lines[point.y].Length == match.Length)
                             {
-                                InsertTextInTextBox(EditorTextBox, "\r", selectionStart + match.Index + match.Length
-                                                                         + 1 + (newValue.ToString().Length > (newValue - 1).ToString().Length ? 1 : 0));
+                                lines[point.y] = "";
+                                EditorTextBox.Text = string.Join('\r', lines);
+                                EditorTextBox.SelectionStart = selectionStart - match.Length;
                                 return;
                             }
                             InsertTextInTextBox(EditorTextBox, $"\r{match.Value.Replace(match.Groups[1].Value, newValue.ToString())}", selectionStart + match.Index + match.Length
