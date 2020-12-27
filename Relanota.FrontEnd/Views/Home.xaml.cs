@@ -41,8 +41,8 @@ namespace UWP.FrontEnd.Views
             base.OnNavigatedTo(e);
             using (Database context = new Database())
             {
-                NotesCollection = new ObservableCollection<Note>(context.Notes.OrderBy(note => note.Name));
-                TagsCollection = new ObservableCollection<Tag>(context.Tags.OrderBy(tag => tag.Name));
+                NotesCollection = new ObservableCollection<Note>(context.Notes.OrderBy(note => note.Name).AsNoTracking());
+                TagsCollection = new ObservableCollection<Tag>(context.Tags.OrderBy(tag => tag.Name).AsNoTracking());
             }
             MainPage.Get.SetDividerNoteName("No Note Selected");
         }
@@ -53,7 +53,6 @@ namespace UWP.FrontEnd.Views
             using (Database context = new Database())
             {
                 note = context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
-
             }
             NoteEditor.Get.State = NoteEditorState.ListNavigation;
             MainPage.CurrentNote = note;
@@ -174,23 +173,6 @@ namespace UWP.FrontEnd.Views
             }
         }
 
-
-        private void Page_Loaded(object sender, RoutedEventArgs e)
-        {
-            foreach (var item in NotesListView.Items)
-            {
-                (NotesListView.ContainerFromItem(item) as ListViewItem).PointerEntered += EntityList_PointerEntered;
-                (NotesListView.ContainerFromItem(item) as ListViewItem).PointerExited += EntityList_PointerExited;
-
-            }
-
-            foreach (var item in TagsListView.Items)
-            {
-                ListViewItem listItem = TagsListView.ContainerFromItem(item) as ListViewItem;
-                (TagsListView.ContainerFromItem(item) as ListViewItem).PointerEntered += EntityList_PointerEntered;
-                (TagsListView.ContainerFromItem(item) as ListViewItem).PointerExited += EntityList_PointerExited;
-            }
-        }
 
         private void NoteListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {

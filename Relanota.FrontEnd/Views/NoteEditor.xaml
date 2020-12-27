@@ -174,7 +174,7 @@
                                                 ImageResolving="MarkdownText_OnImageResolving"
                                                 CodeBlockResolving="RenderBlock_CodeBlockResolving"
                                                 LinkClicked="MarkdownText_LinkClicked"
-                                                SchemeList="note"/>
+                                                SchemeList="note,file"/>
                 </ScrollViewer>
                 <Grid Grid.Row="1">
 

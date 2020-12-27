@@ -47,15 +47,25 @@
                               SelectionChanged="TagsListView_SelectionChanged">
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="objects:Tag">
-                            <Grid>
-                                <StackPanel HorizontalAlignment="Left">
-                                    <TextBlock FontWeight="SemiBold" Text="{Binding Name}"/>
-                                    <TextBlock Foreground="#444" Text="{Binding Description}"/>
-                                </StackPanel>
-                                <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <Button FontFamily="Segoe MDL2 Assets" Content="&#xE70F;" VerticalAlignment="Stretch" Background="Transparent" Tag="{Binding}" Click="TagEditButton_Click"/>
-                                </StackPanel>
-                            </Grid>
+                            <ListViewItem PointerEntered="EntityList_PointerEntered" PointerExited="EntityList_PointerExited">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid Grid.Column="0" HorizontalAlignment="Left">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" FontWeight="SemiBold" Text="{Binding Name}" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Row="1" Foreground="#444" Text="{Binding Description}" TextTrimming="CharacterEllipsis"/>
+                                    </Grid>
+                                    <StackPanel Grid.Column="1"  HorizontalAlignment="Right" VerticalAlignment="Center">
+                                        <Button FontFamily="Segoe MDL2 Assets" Content="&#xE70F;" VerticalAlignment="Stretch" Foreground="Transparent" Background="Transparent" Tag="{Binding}" Click="TagEditButton_Click"/>
+                                    </StackPanel>
+                                </Grid>
+                            </ListViewItem>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
@@ -66,23 +76,26 @@
             <ListView ItemContainerStyle="{StaticResource ListViewItemContainerStyle}" x:Name="RelatedNotesListView" DoubleTapped="RelatedNotesGrid_DoubleTapped">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="objects:Note">
-                        <Grid >
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{Binding Name}" HorizontalAlignment="Left"/>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button FontFamily="Segoe MDL2 Assets" Content="&#xE8FF;" Tag="{Binding}" Background="Transparent" >
-                                    <Button.Flyout>
-                                        <Flyout >
-                                            <controls:MarkdownTextBlock Width="400" MaxHeight="600" Text="{Binding Content}" Background="Transparent"/>
-                                        </Flyout>
-                                    </Button.Flyout>
-                                </Button>
-                                <Button FontFamily="Segoe MDL2 Assets" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" Click="EditButton_Click"/>
-                            </StackPanel>
-                        </Grid>
+                        <ListViewItem>
+                            <Grid >
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding Name}" HorizontalAlignment="Left"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button FontFamily="Segoe MDL2 Assets" Content="&#xE8FF;" Tag="{Binding}" Foreground="Transparent" Background="Transparent" >
+                                        <Button.Flyout>
+                                            <Flyout >
+                                                <controls:MarkdownTextBlock Width="400" MaxHeight="600" Text="{Binding Content}" Background="Transparent"/>
+                                            </Flyout>
+                                        </Button.Flyout>
+                                    </Button>
+                                    <Button FontFamily="Segoe MDL2 Assets" Content="&#xE70F;" Tag="{Binding}" Foreground="Transparent" Background="Transparent" Click="EditButton_Click"/>
+                                </StackPanel>
+                            </Grid>
+                        </ListViewItem>
+                        
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>

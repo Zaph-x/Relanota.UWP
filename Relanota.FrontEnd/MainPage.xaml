@@ -27,7 +27,7 @@
                 <NavigationViewItem x:Uid="TagsNavItem" Icon="Tag" Tag="tags"/>
                 <NavigationViewItem x:Uid="ExportNavItem" Icon="Download" Tag="export"/>
                 <NavigationViewItem x:Uid="HelpNavItem" Icon="Help" Tag="help"/>
-                <NavigationViewItemHeader x:Uid="Recent" x:Name="Recent"/>
+                <NavigationViewItemHeader x:Uid="Recent"/>
             </NavigationView.MenuItems>
             
             <NavigationView.AutoSuggestBox>

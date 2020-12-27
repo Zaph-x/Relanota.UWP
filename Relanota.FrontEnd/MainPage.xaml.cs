@@ -233,8 +233,12 @@ namespace UWP.FrontEnd
                             NavigationViewItem navigationViewItem = new NavigationViewItem
                             {
                                 Tag = note,
-                                Content = note.Name,
+                                Content = new TextBlock {
+                                    Text = note.Name,
+                                    TextTrimming = TextTrimming.CharacterEllipsis
+                                },
                                 Icon = new SymbolIcon(Symbol.Page2),
+
                             };
                             NavigationView.MenuItems.Add(navigationViewItem);
                         }

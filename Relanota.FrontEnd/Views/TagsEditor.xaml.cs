@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -76,10 +77,10 @@ namespace UWP.FrontEnd.Views
 
         private void GetRelatedNotesFromTag(Tag tag)
         {
-            List<Note> Notes = new List<Note>();
+            List<Note> notes;
             using (Database context = new Database())
             {
-                Notes = context.Notes
+                notes = context.Notes
                     .Include(note => note.NoteTags)
                     .ThenInclude(nt => nt.Tag)
                     .Where(note => note.NoteTags
@@ -88,7 +89,8 @@ namespace UWP.FrontEnd.Views
                     .ToList();
             }
 
-            RelatedNotesListView.ItemsSource = new ObservableCollection<Note>(Notes);
+            RelatedNotesListView.ItemsSource = new ObservableCollection<Note>(notes);
+
         }
 
         private void TagsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -96,24 +98,45 @@ namespace UWP.FrontEnd.Views
             if (TagsListView.SelectedIndex >= 0)
             {
                 Tag tag = TagsListView.SelectedItem as Tag;
-                List<Note> Notes = new List<Note>();
-                using (Database context = new Database())
-                {
-
-                    Notes = context.Notes
-                        .Include(note => note.NoteTags)
-                        .ThenInclude(nt => nt.Tag)
-                        .Where(note => note.NoteTags
-                            .Select(nt => nt.Tag)
-                            .Any(t => t.Name.ToLower() == tag.Name.ToLower()))
-                        .ToList();
-                }
-
-                RelatedNotesListView.ItemsSource = new ObservableCollection<Note>(Notes);
+                GetRelatedNotesFromTag(tag);
             }
             else
             {
                 RelatedNotesListView.ItemsSource = new ObservableCollection<Note>();
+            }
+            foreach (var addedItem in e.AddedItems)
+            {
+                ((sender as ListView).ContainerFromItem(addedItem) as ListViewItem).PointerExited -= EntityList_PointerExited;
+
+
+                if (MainPage.IsDarkTheme)
+                {
+                    foreach (Button button in (((sender as ListView).ContainerFromItem(addedItem) as ListViewItem).ContentTemplateRoot as Grid)
+                        .Children.OfType<StackPanel>().Single().Children.OfType<Button>())
+                    {
+
+                        button.Foreground = new SolidColorBrush(Colors.Gainsboro);
+                    }
+                }
+                else
+                {
+                    foreach (Button button in (((sender as ListView).ContainerFromItem(addedItem) as ListViewItem).ContentTemplateRoot as Grid)
+                        .Children.OfType<StackPanel>().Single().Children.OfType<Button>())
+                    {
+                        button.Foreground = new SolidColorBrush(Colors.Black);
+                    }
+                }
+
+            }
+
+            foreach (var removedItem in e.RemovedItems)
+            {
+                ((sender as ListView).ContainerFromItem(removedItem) as ListViewItem).PointerExited += EntityList_PointerExited;
+                foreach (Button button in (((sender as ListView).ContainerFromItem(removedItem) as ListViewItem).ContentTemplateRoot as Grid)
+                    .Children.OfType<StackPanel>().Single().Children.OfType<Button>())
+                {
+                    button.Foreground = new SolidColorBrush(Colors.Transparent);
+                }
             }
         }
 
@@ -168,6 +191,74 @@ namespace UWP.FrontEnd.Views
                 MainPage.CurrentNote = note;
                 NoteEditor.SetState(NoteEditorState.Navigation);
                 this.Frame.Navigate(typeof(NoteEditor), note);
+            }
+        }
+        private void EntityList_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            if (MainPage.IsDarkTheme)
+            {
+                foreach (Button button in ((sender as ListViewItem).ContentTemplateRoot as Grid)
+                    .Children.OfType<StackPanel>().Single().Children.OfType<Button>())
+                {
+
+                    button.Foreground = new SolidColorBrush(Colors.Gainsboro);
+                }
+            }
+            else
+            {
+                foreach (Button button in ((sender as ListViewItem).ContentTemplateRoot as Grid)
+                    .Children.OfType<StackPanel>().Single().Children.OfType<Button>())
+                {
+                    button.Foreground = new SolidColorBrush(Colors.Black);
+                }
+            }
+        }
+
+        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            foreach (var addedItem in e.AddedItems)
+            {
+                ((sender as ListView).ContainerFromItem(addedItem) as ListViewItem).PointerExited -= EntityList_PointerExited;
+
+
+                if (MainPage.IsDarkTheme)
+                {
+                    foreach (Button button in (((sender as ListView).ContainerFromItem(addedItem) as ListViewItem).ContentTemplateRoot as Grid)
+                        .Children.OfType<StackPanel>().Single().Children.OfType<Button>())
+                    {
+
+                        button.Foreground = new SolidColorBrush(Colors.Gainsboro);
+                    }
+                }
+                else
+                {
+                    foreach (Button button in (((sender as ListView).ContainerFromItem(addedItem) as ListViewItem).ContentTemplateRoot as Grid)
+                        .Children.OfType<StackPanel>().Single().Children.OfType<Button>())
+                    {
+                        button.Foreground = new SolidColorBrush(Colors.Black);
+                    }
+                }
+
+            }
+
+            foreach (var removedItem in e.RemovedItems)
+            {
+                ((sender as ListView).ContainerFromItem(removedItem) as ListViewItem).PointerExited += EntityList_PointerExited;
+                foreach (Button button in (((sender as ListView).ContainerFromItem(removedItem) as ListViewItem).ContentTemplateRoot as Grid)
+                    .Children.OfType<StackPanel>().Single().Children.OfType<Button>())
+                {
+                    button.Foreground = new SolidColorBrush(Colors.Transparent);
+                }
+            }
+
+        }
+
+        private void EntityList_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            foreach (Button button in ((sender as ListViewItem).ContentTemplateRoot as Grid)
+                .Children.OfType<StackPanel>().Single().Children.OfType<Button>())
+            {
+                button.Foreground = new SolidColorBrush(Colors.Transparent);
             }
         }
     }

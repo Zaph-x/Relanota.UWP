@@ -6,13 +6,12 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:Windows10version1809="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 7)" 
+    xmlns:windows10Version1809="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 7)" 
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity" 
     xmlns:core="using:Microsoft.Xaml.Interactions.Core"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-    Loaded="Page_Loaded"
-    >
+>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -52,37 +51,40 @@
                           DoubleTapped="NotesListView_DoubleTapped"
                           SelectionChanged="NoteListView_SelectionChanged"
                           >
+
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition/>
-                                    <ColumnDefinition/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding Name}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                                <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" x:Name="ButtonStack">
-                                    <Button x:Uid="NotesListNoteEditButton" FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" Click="EditButton_Click"/>
-                                    <Button x:Uid="NotesListNotePreviewButton" FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE8FF;" Tag="{Binding}" Background="Transparent" Click="PreviewButton_Click">
-                                        <Button.Flyout>
-                                            <Flyout Placement="BottomEdgeAlignedLeft">
-                                                <Grid>
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="*" MaxHeight="600"/>
-                                                    </Grid.RowDefinitions>
-                                                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto">
-                                                        <controls:MarkdownTextBlock  ScrollViewer.VerticalScrollBarVisibility="Auto" Width="400" Text="{Binding Content}" Background="Transparent"/>
-                                                    </ScrollViewer>
-                                                </Grid>
+                            <ListViewItem PointerEntered="EntityList_PointerEntered" PointerExited="EntityList_PointerExited">
+                                <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Grid.Row="0" HorizontalAlignment="Stretch" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0 0 20 0"/>
+                                    <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button x:Uid="NotesListNoteEditButton" FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" Click="EditButton_Click"/>
+                                        <Button x:Uid="NotesListNotePreviewButton" FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE8FF;" Tag="{Binding}" Background="Transparent" Click="PreviewButton_Click">
+                                            <Button.Flyout>
+                                                <Flyout Placement="BottomEdgeAlignedLeft">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="*" MaxHeight="600"/>
+                                                        </Grid.RowDefinitions>
+                                                        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto">
+                                                            <controls:MarkdownTextBlock  ScrollViewer.VerticalScrollBarVisibility="Auto" Width="400" Text="{Binding Content}" Background="Transparent"/>
+                                                        </ScrollViewer>
+                                                    </Grid>
 
-                                            </Flyout>
-                                        </Button.Flyout>
-                                    </Button>
-                                    <Button x:Uid="NotesListNoteDeleteButton" FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE74D;" Tag="{Binding}" Background="Transparent" Click="DeleteButton_Click"/>
-                                </StackPanel>
-                            </Grid>
+                                                </Flyout>
+                                            </Button.Flyout>
+                                        </Button>
+                                        <Button x:Uid="NotesListNoteDeleteButton" FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE74D;" Tag="{Binding}" Background="Transparent" Click="DeleteButton_Click"/>
+                                    </StackPanel>
+                                </Grid>
+                            </ListViewItem>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
