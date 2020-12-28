@@ -27,6 +27,7 @@ using Windows.Storage.Streams;
 using Core;
 using Core.SqlHelper;
 using Core.Objects.Entities;
+using Microsoft.Data.Sqlite;
 
 namespace UWP.FrontEnd
 {
@@ -36,7 +37,7 @@ namespace UWP.FrontEnd
     sealed partial class App : Application
     {
         private Frame rootFrame = null;
-
+        public static bool HasLegacyDB = false;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -47,9 +48,135 @@ namespace UWP.FrontEnd
             this.InitializeComponent();
             Constants.DATABASE_PATH = ApplicationData.Current.LocalFolder.Path;
             Constants.DATABASE_NAME = "notes.db";
+            if (File.Exists($"{Constants.DATABASE_PATH}/{Constants.DATABASE_NAME}"))
+            {
+                using (SqliteConnection connection =
+                    new SqliteConnection($"Data Source={Constants.DATABASE_PATH}/{Constants.DATABASE_NAME}"))
+                {
+                    connection.Open();
+                    using (SqliteCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = @"SELECT 
+    name
+FROM 
+    sqlite_master 
+WHERE 
+    type ='table' AND 
+    name NOT LIKE 'sqlite_%';";
+                        using (SqliteDataReader reader = command.ExecuteReader())
+                        {
+                            string tables = "";
+                            while (reader.Read())
+                            {
+                                tables += $"{reader.GetString(0)};";
+                            }
+
+                            HasLegacyDB = !tables.Contains("__EFMigrationsHistory");
+                        }
+                    }
+                }
+                if (HasLegacyDB)
+                {
+                    MoveDatabase();
+                }
+            }
+
             this.Suspending += OnSuspending;
         }
 
+        private void MoveDatabase()
+        {
+            if (File.Exists($"{Constants.DATABASE_PATH}/{Constants.DATABASE_NAME}_LEGACY")) File.Delete($"{Constants.DATABASE_PATH}/{Constants.DATABASE_NAME}_LEGACY");
+            File.Move($"{Constants.DATABASE_PATH}/{Constants.DATABASE_NAME}", $"{Constants.DATABASE_PATH}/{Constants.DATABASE_NAME}_LEGACY");
+            List<Note> notes = new List<Note>();
+            List<Tag> tags = new List<Tag>();
+            List<NoteTag> noteTags = new List<NoteTag>();
+            using (SqliteConnection connection =
+                new SqliteConnection($"Data Source={Constants.DATABASE_PATH}/{Constants.DATABASE_NAME}_LEGACY"))
+            {
+                connection.Open();
+                using (SqliteCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = @"
+SELECT
+    *
+FROM
+    Notes;";
+                    using (SqliteDataReader reader = command.ExecuteReader())
+                    {
+                        var ordinal = new
+                        {
+                            Key = reader.GetOrdinal("Key"),
+                            Name = reader.GetOrdinal("Name"),
+                            Content = reader.GetOrdinal("Content"),
+                        };
+                        while (reader.Read())
+                        {
+                            notes.Add(new Note { Key = reader.GetInt32(ordinal.Key) ,Name = reader.GetString(ordinal.Name), Content = reader.GetString(ordinal.Content) });
+                        }
+                    }
+                }
+                using (SqliteCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = @"
+SELECT
+    *
+FROM
+    NoteTags;";
+                    using (SqliteDataReader reader = command.ExecuteReader())
+                    {
+                        var ordinal = new
+                        {
+                            NoteKey = reader.GetOrdinal("NoteKey"),
+                            TagKey = reader.GetOrdinal("TagKey"),
+                        };
+                        while (reader.Read())
+                        {
+                            noteTags.Add(new NoteTag { NoteKey = reader.GetInt32(ordinal.NoteKey), TagKey = reader.GetInt32(ordinal.TagKey) });
+                        }
+                    }
+                }
+                using (SqliteCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = @"
+SELECT
+    *
+FROM
+    Tags;";
+                    using (SqliteDataReader reader = command.ExecuteReader())
+                    {
+                        var ordinal = new
+                        {
+                            Key = reader.GetOrdinal("Key"),
+                            Name = reader.GetOrdinal("Name"),
+                        };
+                        while (reader.Read())
+                        {
+                            tags.Add(new Tag { Key = reader.GetInt32(ordinal.Key), Name = reader.GetString(ordinal.Name) });
+                        }
+                    }
+                }
+                using (Database context = new Database())
+                {
+                    context.Database.EnsureCreated();
+                    context.Database.Migrate();
+                    context.Notes.Load();
+                    context.NoteTags.Load();
+                    context.Tags.Load();
+
+                    foreach (NoteTag noteTag in noteTags.Where(nt => notes.Any(n => n.Key == nt.NoteKey) && tags.Any(t => t.Key == nt.TagKey))) {
+                        noteTag.Note = notes.FirstOrDefault(n => n.Key == noteTag.NoteKey);
+                        noteTag.Tag = tags.FirstOrDefault(t => t.Key == noteTag.TagKey);
+                        noteTag.Note.NoteTags.Add(noteTag);
+                        noteTag.Tag.NoteTags.Add(noteTag);
+                        context.NoteTags.Add(noteTag);
+                    }
+                    context.Notes.AddRange(notes);
+                    context.Tags.AddRange(tags);
+                    context.SaveChanges();
+                }
+            }
+        }
 
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
@@ -99,7 +226,7 @@ namespace UWP.FrontEnd
                 // Ensure the current window is active
                 Window.Current.Activate();
             }
-            
+
             if (AppSettings.Get("load_recent_on_startup", false))
             {
                 string line = File.ReadLines($@"{ApplicationData.Current.LocalFolder.Path}\AccessList").First(); // gets the first line from file.
@@ -112,7 +239,7 @@ namespace UWP.FrontEnd
                         MainPage.Get.NavView_Navigate("edit", null);
                     }
                 }
-                
+
             }
         }
         protected override async void OnActivated(IActivatedEventArgs args)
@@ -135,7 +262,6 @@ namespace UWP.FrontEnd
 
                 if (args is ProtocolActivatedEventArgs eventArgs)
                 {
-                    ContentDialog errorDialog = new ContentDialog();
                     try
                     {
                         switch (eventArgs.Uri.Host.ToLower())
@@ -161,7 +287,7 @@ namespace UWP.FrontEnd
                                 }
                                 else
                                 {
-                                    await ShowDialog("We could not parse that note.", $"No note could be parsed from the URI used to open Relanota. You will instead be sent to the note list.", "Okay");
+                                    ShowDialog("We could not parse that note.", $"No note could be parsed from the URI used to open Relanota. You will instead be sent to the note list.", "Okay");
                                     MainPage.Get.SetNavigationIndex(0);
                                     MainPage.Get.NavView_Navigate("list", null);
                                 }
@@ -169,7 +295,7 @@ namespace UWP.FrontEnd
                                 break;
 
                             default:
-                                await ShowDialog("We did not understand that one.", $"You opened Relanota from a link which lead to nowhere. You will instead be sent to the note list.", "Okay");
+                                ShowDialog("We did not understand that one.", $"You opened Relanota from a link which lead to nowhere. You will instead be sent to the note list.", "Okay");
                                 MainPage.Get.SetNavigationIndex(0);
                                 MainPage.Get.NavView_Navigate("list", null);
                                 break;
@@ -178,10 +304,9 @@ namespace UWP.FrontEnd
                     catch (UriFormatException)
                     {
 
-                        errorDialog.Title = "We did not understand that.";
-                        errorDialog.Content = $"You opened Relanota from a link which could not be interpreted. We managed to recover the state of the application and you will now be sent to the note list.";
-                        errorDialog.PrimaryButtonText = "Okay";
-                        await errorDialog.ShowAsync();
+                        ShowDialog("We did not understand that.",
+                            $"You opened Relanota from a link which could not be interpreted. We managed to recover the state of the application and you will now be sent to the note list.",
+                            "Okay");
                         MainPage.Get.SetNavigationIndex(0);
                         MainPage.Get.NavView_Navigate("list", null);
                     }
@@ -224,7 +349,7 @@ namespace UWP.FrontEnd
             ToastNotificationManager.CreateToastNotifier().Show(notification);
         }
 
-        public static async Task ShowDialog(string title, string content, string primaryButtonText)
+        public static async void ShowDialog(string title, string content, string primaryButtonText)
         {
             ContentDialog errorDialog = new ContentDialog
             {

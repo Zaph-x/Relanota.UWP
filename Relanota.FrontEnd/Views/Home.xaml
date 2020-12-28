@@ -5,14 +5,12 @@
     xmlns:local="using:UWP.FrontEnd.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:windows10Version1809="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 7)" 
-    xmlns:interactivity="using:Microsoft.Xaml.Interactivity" 
-    xmlns:core="using:Microsoft.Xaml.Interactions.Core"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" 
+    xmlns:system="using:System" 
+    xmlns:sqlHelper="using:Core.SqlHelper"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
 >
-
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -112,17 +110,19 @@
                           >
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition/>
-                                    <ColumnDefinition/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="{Binding Name}" Grid.Column="0" HorizontalAlignment="Left"/>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button x:Uid="TagsListTagEditButton" FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" Click="EditTagButton_Click"/>
-                                    <Button x:Uid="TagsListTagDeleteButton" FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE74D;" Tag="{Binding}" Background="Transparent" Click="DeleteTagButton_Click"/>
-                                </StackPanel>
-                            </Grid>
+                            <ListViewItem PointerEntered="EntityList_PointerEntered" PointerExited="EntityList_PointerExited">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Name}" Grid.Column="0" HorizontalAlignment="Left"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button x:Uid="TagsListTagEditButton" FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE70F;" Tag="{Binding}" Background="Transparent" Click="EditTagButton_Click"/>
+                                        <Button x:Uid="TagsListTagDeleteButton" FontFamily="Segoe MDL2 Assets" Foreground="Transparent" Content="&#xE74D;" Tag="{Binding}" Background="Transparent" Click="DeleteTagButton_Click"/>
+                                    </StackPanel>
+                                </Grid>
+                            </ListViewItem>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>

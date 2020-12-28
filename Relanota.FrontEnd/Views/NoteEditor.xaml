@@ -78,6 +78,32 @@
                     <AppBarButton x:Uid="BulletListButton" Icon="List" Click="ListButton_OnClick">
 
                     </AppBarButton>
+                    <AppBarButton x:Uid="TableButton" Icon="ViewAll" Visibility="Collapsed">
+                        <AppBarButton.Flyout>
+                            <Flyout Placement="Bottom">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" x:Uid="TableWidthSelectorLabel"/>
+                                    <ComboBox Grid.Row="1" Grid.Column="0" ItemsSource="{x:Bind TableWidth}">
+                                        <DataTemplate x:DataType="system:Int32">
+                                            <ComboBoxItem Content="{Binding}"/>
+                                        </DataTemplate>
+                                    </ComboBox>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Margin="10 5">x</TextBlock>
+                                    <ComboBox Grid.Row="1" Grid.Column="2" ItemsSource="{x:Bind TableHeight}"></ComboBox>
+                                </Grid>
+                            </Flyout>
+                        </AppBarButton.Flyout>
+                    </AppBarButton>
                     
                     
                     

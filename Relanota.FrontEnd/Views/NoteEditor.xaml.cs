@@ -52,6 +52,8 @@ namespace UWP.FrontEnd.Views
         public string NoteContent => EditorTextBox.Text.Trim();
         public string NoteName => NoteNameTextBox.Text.Trim();
         private string[] Lines => EditorTextBox?.Text.Split('\r');
+        private IEnumerable<int> TableWidth = Enumerable.Range(1, 10);
+        private IEnumerable<int> TableHeight = Enumerable.Range(1, 20);
         private static NoteEditorState _state { get; set; }
         public NoteEditorState State {
             get => _state;
@@ -314,7 +316,7 @@ namespace UWP.FrontEnd.Views
         private async void ShowUnsavablePrompt()
         {
             IsSaved = false;
-            await App.ShowDialog("We could not save that.", "The note does not seem to have a name. Please provide a name to save the note.", "Okay");
+            App.ShowDialog("We could not save that.", "The note does not seem to have a name. Please provide a name to save the note.", "Okay");
             MainPage.Get.SetNavigationIndex(3);
         }
 

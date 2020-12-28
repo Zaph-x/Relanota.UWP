@@ -71,6 +71,13 @@ namespace UWP.FrontEnd
             RecentSpacerIndex = NavigationView.MenuItems.IndexOf(NavigationView.MenuItems.First(itm => (itm as NavigationViewItemBase).Content?.ToString() == "Recently Accessed Notes"));
             SystemNavigationManagerPreview.GetForCurrentView().CloseRequested += MainPage_CloseRequested;
 
+            if (App.HasLegacyDB) {
+                App.ShowDialog("Legacy database detected",
+                    "A legacy database was found when Relanota was starting up. We have moved the content to a new Database.",
+                    "Okay");
+                App.HasLegacyDB = false;
+            }
+
         }
 
         private async void MainPage_CloseRequested(object sender, SystemNavigationCloseRequestedPreviewEventArgs e)
@@ -318,7 +325,7 @@ namespace UWP.FrontEnd
                 else
                 {
                     // If the note no longer exists in the context, we want to let the user know, and remove it from the list.
-                    await App.ShowDialog("We could not find that note.", $"The note '{tagNote.Name}' could note be found in the database.", "Okay");
+                    App.ShowDialog("We could not find that note.", $"The note '{tagNote.Name}' could note be found in the database.", "Okay");
                     recentlyAccessed.Remove(tagNote.Key.ToString());
                     NavigationView.MenuItems.Remove(args.InvokedItemContainer);
                     NavView_Navigate("list", null);

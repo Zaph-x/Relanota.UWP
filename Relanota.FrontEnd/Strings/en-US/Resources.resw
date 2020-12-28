@@ -204,6 +204,14 @@
     <value>Recently Accessed Notes</value>
     <comment>The text shown on the recently accessed header</comment>
   </data>
+  <data name="TableButton.Label" xml:space="preserve">
+    <value>Insert Table</value>
+    <comment>Text shown on the table button in the editor</comment>
+  </data>
+  <data name="TableWidthSelectorLabel.Text" xml:space="preserve">
+    <value>Width</value>
+    <comment>The Width selector label in the note editor</comment>
+  </data>
   <data name="TagsListHeader.Text" xml:space="preserve">
     <value>Tags</value>
     <comment>The text shown at the top of the tags list in the home view</comment>

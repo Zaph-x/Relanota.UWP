@@ -41,11 +41,12 @@ namespace UWP.FrontEnd.Views
             base.OnNavigatedTo(e);
             using (Database context = new Database())
             {
-                NotesCollection = new ObservableCollection<Note>(context.Notes.OrderBy(note => note.Name).AsNoTracking());
-                TagsCollection = new ObservableCollection<Tag>(context.Tags.OrderBy(tag => tag.Name).AsNoTracking());
+                NotesCollection = new ObservableCollection<Note>(context.Notes.ToList().OrderBy(note => note.Name));
+                TagsCollection = new ObservableCollection<Tag>(context.Tags.ToList().OrderBy(tag => tag.Name));
             }
             MainPage.Get.SetDividerNoteName("No Note Selected");
         }
+
 
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
@@ -61,7 +62,8 @@ namespace UWP.FrontEnd.Views
 
         private void NotesListView_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            using (Database context = new Database()) {
+            using (Database context = new Database())
+            {
                 if (NotesListView.SelectedIndex >= 0)
                 {
                     NotesListView.SelectedItem = context.Notes.Include(n => n.NoteTags)
@@ -72,7 +74,7 @@ namespace UWP.FrontEnd.Views
                     this.Frame.Navigate(typeof(NoteEditor), (NotesListView.SelectedItem as Note));
                 }
             }
-            
+
         }
 
         private void PreviewButton_Click(object sender, RoutedEventArgs e)
@@ -94,7 +96,8 @@ namespace UWP.FrontEnd.Views
 
             if (result == ContentDialogResult.Primary)
             {
-                using (Database context = new Database()) {
+                using (Database context = new Database())
+                {
                     NotesCollection.Remove((sender as FrameworkElement).Tag as Note);
                     ((sender as FrameworkElement).Tag as Note).Delete(context, App.ShowToastNotification);
                 }
@@ -105,14 +108,15 @@ namespace UWP.FrontEnd.Views
         {
             try
             {
-                using (Database context = new Database()) {
+                using (Database context = new Database())
+                {
                     (sender as FrameworkElement).Tag = context.Tags.Include(t => t.NoteTags)
                         .ThenInclude(nt => nt.Note)
                         .First(t => t.Key == ((sender as FrameworkElement).Tag as Tag).Key);
                     MainPage.CurrentTag = ((sender as FrameworkElement).Tag as Tag);
                     this.Frame.Navigate(typeof(TagsEditor), ((sender as FrameworkElement).Tag as Tag));
                 }
-                
+
             }
             catch (Exception ex)
             {
@@ -134,12 +138,13 @@ namespace UWP.FrontEnd.Views
 
             if (result == ContentDialogResult.Primary)
             {
-                using (Database context = new Database()) {
+                using (Database context = new Database())
+                {
                     Tag tag = ((sender as FrameworkElement).Tag as Tag);
                     TagsCollection.Remove(tag);
                     tag.Delete(context, App.ShowToastNotification);
                 }
-                
+
             }
         }
 
@@ -222,14 +227,15 @@ namespace UWP.FrontEnd.Views
         {
             if (TagsListView.SelectedIndex >= 0)
             {
-                using (Database context = new Database()) {
+                using (Database context = new Database())
+                {
                     TagsListView.SelectedItem = context.Tags.Include(n => n.NoteTags)
                         .ThenInclude(n => n.Note)
                         .First(n => n.Key == (TagsListView.SelectedItem as Tag).Key);
                     MainPage.CurrentTag = (TagsListView.SelectedItem as Tag);
                     this.Frame.Navigate(typeof(TagsEditor), (TagsListView.SelectedItem as Tag));
                 }
-                
+
             }
         }
     }
