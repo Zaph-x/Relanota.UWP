@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using Windows.ApplicationModel;
+using Windows.ApplicationModel.Resources;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.System;
@@ -26,13 +27,8 @@ namespace UWP.FrontEnd.Views
 
         private async void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            string fileName = (((sender as ComboBox).SelectedItem as FrameworkElement).Tag as string).ToLower();
+            string text = ResourceLoader.GetForCurrentView().GetString((((sender as ComboBox).SelectedItem as FrameworkElement).Tag as string).ToLower());
 
-            StorageFolder assetDir = await Package.Current.InstalledLocation.GetFolderAsync(@"Assets/");
-            StorageFolder helpDir = await assetDir.GetFolderAsync(@"Help/");
-            StorageFile file = await helpDir.GetFileAsync($"{fileName}.md");
-
-            string text = File.ReadAllText(file.Path);
 
             text = text.Replace("{{local_dir}}", ApplicationData.Current.LocalFolder.Path);
             text = text.Replace("{{cache_dir}}", ApplicationData.Current.LocalCacheFolder.Path);

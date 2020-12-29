@@ -23,6 +23,7 @@ using Core.Objects;
 using Microsoft.Toolkit.Uwp.Notifications;
 using Windows.UI.Notifications;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.ApplicationModel.Resources;
 using Windows.Storage.Streams;
 using Core;
 using Core.SqlHelper;

@@ -149,13 +149,137 @@
     <value>Export This Note Only</value>
     <comment>Text shown within the save notes view, checkbox</comment>
   </data>
+  <data name="external_opening" xml:space="preserve">
+    <value># Open Notes With `note://`
+
+With Relanota, you are able to reference your notes from outside sources, such as websites or kanban boards.
+This is done with the `note://` protocol.
+Relanota assigns this protocol to itself, meaning you are able to open your notes from outside sources.
+
+## How does it work
+
+When editing a note, you are able to press `CTRL + L` to get a link to your note.
+This link will be formatted with the desired action, as well as the name of the note.
+Opening notes like this, only works for notes that are already stored in the database.
+
+#### Example
+
+You are editing a note called `Probability in neural networks`.
+You decide you want to reference this note on an external site or application.
+You press `CTRL + L`.
+The link gets copied to your clipboard and you are now able to paste it into the application or site of your choice.
+The link will be `note://open/probability%20in%20neural%20networks`, and will open Relanota into the note specified.</value>
+    <comment>Help note for external opening of notes</comment>
+  </data>
   <data name="FileFormatText.Text" xml:space="preserve">
     <value>File Format</value>
     <comment>Text shown in File Format labels</comment>
   </data>
+  <data name="formatting" xml:space="preserve">
+    <value># Formatting Notes
+___
+
+Relanota supports a subset of the Markdown language.
+This page gives you an overview of the supported syntax, and how it can format your notes.
+
+## Italics
+
+To write text in italics, soround the text with a single asterisk (\*).
+This will put the text in italics mode, and text written between the asterisks will be formatted in italics in the text view.
+
+```
+This text is *italics*.
+```
+
+This text is *italics*.
+
+## Bold
+
+To write text in bold, soround the text with two asterisks (\*\*).
+This will put the text in bold mode, and the text written, will be formatted in bold.
+
+```
+This text is **bold**.
+```
+
+This text is **bold**.
+
+## Bold and Italics
+
+Text can also be formatted as both Bold and Italics at the same time.
+This is acheived by sorounding the text with three asterisks (\*\*\*).
+
+```
+This text is ***bold and italics***.
+```
+
+This text is ***bold and italics***.
+
+## Tables
+
+Given that the editor supports some Markdown features, it is also possible to create tables in your notes.
+This is done using standard Markdown table syntax.
+
+The following, produces a 3x3 table
+
+```
+| Column 1 | Column 2 | Column 3 |
+| -------- | -------- | -------- |
+| Something| Something| Something|
+| Something| Something| Something|
+| Something| Something| Something|
+```
+
+| Column 1 | Column 2 | Column 3 |
+| -------- | -------- | -------- |
+| Something| Something| Something|
+| Something| Something| Something|
+| Something| Something| Something|</value>
+    <comment>The Help note for formatting</comment>
+  </data>
   <data name="HelpNavItem.Content" xml:space="preserve">
     <value>Help</value>
     <comment>The text shown on the help nav-item</comment>
+  </data>
+  <data name="inserting_images" xml:space="preserve">
+    <value># Inserting Images and Resizing them
+___
+
+Relanota allows you to insert pictures in your notes, to better illustrate a concept.
+There are two ways to insert these images into your notes: From the internet, a file on your computer, or the clipboard.
+
+## Inserting Images from The Internet
+
+You have found this really cool illustration on the internet, and want to include it in your notes.
+That's great! Relanota supports inserting images from the internet, using standard Markdown syntax.
+As such, `![Some ruby code](https://images.pexels.com/photos/546819/pexels-photo-546819.jpeg)` will insert an image of some Ruby code.
+This is illustrated in the image below.
+
+![web images](ms-appx:///Assets/web_image.png =700)
+
+## Inserting Images from A File
+
+You have a sweet image saved on your computer, of that one equation you were told to remember ages ago. Nice!
+You can insert such images into Relanota, really easy.
+Start by clicking the images button (Shortcut: `CTRL + I`) in the bottom of the note editor, or in cases where the window is too small, in the expandable menu.
+
+![images button](ms-appx:///Assets/button_image.png =900)
+
+By adding an image to your note this way, the image will be stored locally in Relanota, in the directory located at `{{local_dir}}`.
+This is to persist the image, even if you delete it from it's original location.
+
+## Inserting Images from Clipboard
+
+You've just taken captured a screenshot from a screencast or poweroint, or copied an image from the internet, and want to insert it into your notes.
+Move the caret (The text pointer) to the position where you wish to insert the image, and simply press `CTRL + V`.
+This will insert the image where you want it to be, using markdown, as shown below.
+
+![pasting images](ms-appx:///Assets/image_paste.png =900)
+
+If you wish to move the image later, move the line where the image is has been pasted.
+
+Furthermore, it is possible to resize images, by appending `=SIZE` to the file name or url to images as shown above.</value>
+    <comment>Help note for inserting images</comment>
   </data>
   <data name="ItalicsButton.Label" xml:space="preserve">
     <value>Italics</value>
@@ -168,6 +292,35 @@
   <data name="MarkdownFileSelector.Content" xml:space="preserve">
     <value>Markdown (*.md)</value>
     <comment>Text shown in the File Format Selector</comment>
+  </data>
+  <data name="math" xml:space="preserve">
+    <value># Math Mode
+____
+
+Relanota supports LaTeX flavoured math mode. In order to enter mathmode, start by entering a single dollar symbol `` $ `` and write your mathematical expression.
+When you want to exit math mode, enter a single dollar symbol again.
+
+**Note:** This action requires an internet connection the first time an expression is entered.
+
+## LaTeX Math Equation Editor
+
+If you are unfamiliar with LaTeX math syntax, we recommend looking at the [Codecogs LaTeX Equation Editor](https://latex.codecogs.com/eqneditor/editor.php), which is an online interactive equation editor.
+Here you can get a list of all supported commands, as well as generate equations, which can be pasted directly into Relanota.
+
+## Example
+
+`$P(B) = \sum_A P(A,B)$`
+
+Becomes
+
+![math](ms-appx:///Assets/B8C7486DF1E3C29AA3D0628260EF6C2E.jpg)
+
+## Technicalities
+
+When a mathematical expression is entered for the first time, Relanota will download the image for that expressions, and store it on the disk. `` ({{cache_dir}}) ``
+
+The application stores the image on disk, to fetch it faster next time the image has to be loaded, e.g. when restarting the application.</value>
+    <comment>Help note for math</comment>
   </data>
   <data name="NavigationView.PaneTitle" xml:space="preserve">
     <value>Relanota</value>
@@ -203,6 +356,74 @@
   <data name="Recent.Content" xml:space="preserve">
     <value>Recently Accessed Notes</value>
     <comment>The text shown on the recently accessed header</comment>
+  </data>
+  <data name="relating" xml:space="preserve">
+    <value># Relating Notes
+---
+
+Relanota allows the user to write notes that relates to each other.
+This means if two notes share the same topic, they can be linked to each other.
+This is done with Tags.
+
+## What is a tag
+
+A tag in Relanota, is used to link notes, and can contain a description of itself.
+This description can be set in the **Tags** editor view, found in the navigation menu.
+The description of a tag can be infinitely long, however only the first 100 characters will be shown in the Tags list.
+When two notes share the same tag, they are linked to each other.
+This means you can export both notes, when exporting based on the given tag.
+
+## Creating a relation
+
+If two notes share the same tag, these notes are now related.
+Tags can be added to a note, directly from the note editor.
+This is done in the tag bar, at the bottom right, of the note editor.
+When typing in the tag bar, tags will be suggested to the user.
+These tags are purely suggested based on the text provided to the tag box.
+If you add a tag, that is not currently in the database, it will be created and associated with the note.
+If the entered tag does exist in thed database, this tag will be associated with the note, and a relation will be created.
+
+## Viewing related notes
+
+Selecting the **Tags** editor, while a note is selected, allows you to see its tags.
+Clicking one of these tags, will show which notes are related to this tag.
+
+Selected the **Tags** editor while no note is selected, will show all tags.
+Clicking one of these tags will also show which notes are related to the tag.
+
+![showcase note relation](ms-appx:///Assets/relations.png =600)
+
+## Editing tags
+
+Tags can be edited in the Tags editor window.
+This is done by either double-clicking a tag in the notest list or tags editor, or clicking the edit button on a tag.
+This will navigate you to the Tags editor window, allowing you to edit the tag.
+
+![editing tag description](ms-appx:///Assets/tag_edit.gif =600)</value>
+    <comment>Help note for relating notes</comment>
+  </data>
+  <data name="shortcuts" xml:space="preserve">
+    <value># Shortcuts
+
+Relanota supports shortcuts in different views.
+This guide servers to highlight these shortcuts for the user, such that they can work more efficiently inside Relanota.
+
+## The Note List
+
+| Shortcut | Description |
+| -------- | ----------- |
+| `CTRL+N` | Creates a new Note |
+
+## The Note Editor
+
+| Shortcut | Description |
+| `CTRL+S` | Saves the current note |
+| `CTRL+Delete` | Deletes the current note |
+| `CTRL+I` | Applies Italics formatting to the selected text, or the current location |
+| `CTRL+B` | Applies Bold formatting to the selected text, or the current location |
+| `CTRL+L` | Copies a reference link to the current note, to the clipboard |
+| `CTRL+G` | Copies a sharable import link of the current note, to the clipboard |</value>
+    <comment>Help note for shortcuts</comment>
   </data>
   <data name="TableButton.Label" xml:space="preserve">
     <value>Insert Table</value>

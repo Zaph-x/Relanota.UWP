@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using UWP.FrontEnd.Views;
 using Windows.ApplicationModel.Core;
@@ -71,7 +72,8 @@ namespace UWP.FrontEnd
             RecentSpacerIndex = NavigationView.MenuItems.IndexOf(NavigationView.MenuItems.First(itm => (itm as NavigationViewItemBase).Content?.ToString() == "Recently Accessed Notes"));
             SystemNavigationManagerPreview.GetForCurrentView().CloseRequested += MainPage_CloseRequested;
 
-            if (App.HasLegacyDB) {
+            if (App.HasLegacyDB)
+            {
                 App.ShowDialog("Legacy database detected",
                     "A legacy database was found when Relanota was starting up. We have moved the content to a new Database.",
                     "Okay");
@@ -175,7 +177,7 @@ namespace UWP.FrontEnd
 
                             for (int i = RecentSpacerIndex + 1; i < NavigationView.MenuItems.Count; i++)
                             {
-                                if ((NavigationView.MenuItems[i] as NavigationViewItemBase).Content.ToString()
+                                if (((NavigationView.MenuItems[i] as NavigationViewItemBase).Tag as Note).Name
                                     .Equals(newNote.Name, StringComparison.InvariantCultureIgnoreCase))
                                     NavigationView.MenuItems.RemoveAt(i--);
                             }
@@ -184,7 +186,11 @@ namespace UWP.FrontEnd
                             NavigationViewItem navigationViewItem = new NavigationViewItem
                             {
                                 Tag = newNote,
-                                Content = newNote.Name,
+                                Content = new TextBlock
+                                {
+                                    Text = newNote.Name,
+                                    TextTrimming = TextTrimming.CharacterEllipsis
+                                },
                                 Icon = new SymbolIcon(Symbol.Page2),
                             };
                             NavigationView.MenuItems.Insert(RecentSpacerIndex + 1, navigationViewItem);
@@ -208,18 +214,22 @@ namespace UWP.FrontEnd
 
         private async void SerialiseRecentlyAdded(FixedSizeObservableCollection<string> recentlyAccessed)
         {
-            StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync("AccessList", CreationCollisionOption.OpenIfExists);
-
-            if (file != null)
+            string path = $"{ApplicationData.Current.LocalFolder.Path}/AccessList";
+            string content = "";
+            foreach (string noteKey in recentlyAccessed)
             {
-                string content = "";
-                foreach (string noteKey in recentlyAccessed)
-                {
-                    content += $"{noteKey}{Environment.NewLine}";
-                }
-                content = content.Trim();
+                content += $"{noteKey}{Environment.NewLine}";
+            }
+            content = content.Trim();
 
-                await FileIO.WriteTextAsync(file, content, Windows.Storage.Streams.UnicodeEncoding.Utf8);
+            using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+            {
+                using (StreamWriter sw = new StreamWriter(fs))
+                {
+                    // discard the contents of the file by setting the length to 0
+                    fs.SetLength(0);
+                    sw.Write(content);
+                }
             }
         }
 
@@ -240,7 +250,8 @@ namespace UWP.FrontEnd
                             NavigationViewItem navigationViewItem = new NavigationViewItem
                             {
                                 Tag = note,
-                                Content = new TextBlock {
+                                Content = new TextBlock
+                                {
                                     Text = note.Name,
                                     TextTrimming = TextTrimming.CharacterEllipsis
                                 },
@@ -339,6 +350,7 @@ namespace UWP.FrontEnd
         {
             // Calculate length of navitem lists. If it's greater than 0, add to the list
             int length = NavigationView.MenuItems.Count - 1 - RecentSpacerIndex;
+            recentlyAccessed.Remove(note.Key.ToString());
             if (length > 0 && !(NavigationView.MenuItems[RecentSpacerIndex + 1] as NavigationViewItem).Content.ToString().Equals(note.Name, StringComparison.InvariantCultureIgnoreCase))
                 recentlyAccessed.Insert(note.Key.ToString(), true);
             // We want to track the navigation state
@@ -426,7 +438,8 @@ namespace UWP.FrontEnd
                             SearchBox.Text = "";
                         });
                 }
-                else {
+                else
+                {
                     CurrentNote = note;
                     NavView_Navigate("reset", null);
                     NoteEditor.SetState(NoteEditorState.SearchNavigation);
