@@ -10,7 +10,7 @@
   <Identity
     Name="12839Zaph.Relanota"
     Publisher="CN=A8743CD6-3217-450B-B826-CB1DBDBF1E46"
-    Version="1.2.0.0" />
+    Version="1.2.1.0" />
 
   <mp:PhoneIdentity PhoneProductId="b4f551d1-fede-4d2a-b299-5dba4509da2e" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
