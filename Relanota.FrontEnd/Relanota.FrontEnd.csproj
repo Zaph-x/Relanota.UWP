@@ -18,7 +18,7 @@
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WindowsXamlEnableOverview>true</WindowsXamlEnableOverview>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-    <PackageCertificateThumbprint>C7A34C33D3E089E1EC7FE089744EC93F665467B8</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>C0D08ADDFB88BDD6994FC33B153A8335D80CCFA3</PackageCertificateThumbprint>
     <PackageCertificateKeyFile>
     </PackageCertificateKeyFile>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
@@ -140,13 +140,18 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CodeHighlights\IHighlight.cs" />
-    <Compile Include="CodeHighlights\PythonHighlighting.cs" />
+    <Compile Include="BindableWrappers\BindableTuple.cs" />
+    <Compile Include="Components\MarkdownEditor.Helper\MarkdownProcessor.cs" />
+    <Compile Include="Components\MarkdownEditor.xaml.cs">
+      <DependentUpon>MarkdownEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AppSettings.cs" />
+    <Compile Include="Views\Interfaces\IContextInteractible.cs" />
+    <Compile Include="Views\Interfaces\IEditorView.cs" />
     <Compile Include="Views\PreviewView.xaml.cs">
       <DependentUpon>PreviewView.xaml</DependentUpon>
     </Compile>
@@ -182,11 +187,108 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\button_image.png" />
+    <Content Include="codemirror\addon\display\fullscreen.css" />
+    <Content Include="codemirror\addon\display\fullscreen.js" />
+    <Content Include="codemirror\addon\edit\continuelist.js" />
+    <Content Include="codemirror\addon\scroll\simplescrollbars.css" />
+    <Content Include="codemirror\addon\scroll\simplescrollbars.js" />
+    <Content Include="codemirror\addon\search\jump-to-line.js" />
+    <Content Include="codemirror\addon\search\match-highlighter.js" />
+    <Content Include="codemirror\addon\search\matchesonscrollbar.css" />
+    <Content Include="codemirror\addon\search\matchesonscrollbar.js" />
+    <Content Include="codemirror\addon\search\search.js" />
+    <Content Include="codemirror\addon\search\searchcursor.js" />
+    <Content Include="codemirror\addon\selection\active-line.js" />
+    <Content Include="codemirror\lib\codemirror.css" />
+    <Content Include="codemirror\lib\codemirror.js" />
+    <Content Include="codemirror\lib\font.css" />
+    <Content Include="codemirror\lib\font.mobile.css" />
+    <Content Include="codemirror\lib\jq.js" />
+    <Content Include="codemirror\mode\markdown\markdown.js" />
+    <Content Include="codemirror\theme\monokai.css" />
+    <Content Include="css\Dark.css" />
+    <Content Include="css\Default.css" />
     <Content Include="Assets\image_paste.png" />
     <Content Include="Assets\relations.png" />
     <Content Include="Assets\tag_edit.gif" />
     <Content Include="Assets\web_image.png" />
+    <Content Include="WebView.html" />
     <None Include="Package.StoreAssociation.xml" />
+    <Content Include="highlighting.js\highlight.js" />
+    <Content Include="highlighting.js\styles\agate.css" />
+    <Content Include="highlighting.js\styles\androidstudio.css" />
+    <Content Include="highlighting.js\styles\arduino-light.css" />
+    <Content Include="highlighting.js\styles\arta.css" />
+    <Content Include="highlighting.js\styles\ascetic.css" />
+    <Content Include="highlighting.js\styles\atelier-cave-dark.css" />
+    <Content Include="highlighting.js\styles\atelier-cave-light.css" />
+    <Content Include="highlighting.js\styles\atelier-dune-dark.css" />
+    <Content Include="highlighting.js\styles\atelier-dune-light.css" />
+    <Content Include="highlighting.js\styles\atelier-estuary-dark.css" />
+    <Content Include="highlighting.js\styles\atelier-estuary-light.css" />
+    <Content Include="highlighting.js\styles\atelier-forest-dark.css" />
+    <Content Include="highlighting.js\styles\atelier-forest-light.css" />
+    <Content Include="highlighting.js\styles\atelier-heath-dark.css" />
+    <Content Include="highlighting.js\styles\atelier-heath-light.css" />
+    <Content Include="highlighting.js\styles\atelier-lakeside-dark.css" />
+    <Content Include="highlighting.js\styles\atelier-lakeside-light.css" />
+    <Content Include="highlighting.js\styles\atelier-plateau-dark.css" />
+    <Content Include="highlighting.js\styles\atelier-plateau-light.css" />
+    <Content Include="highlighting.js\styles\atelier-savanna-dark.css" />
+    <Content Include="highlighting.js\styles\atelier-savanna-light.css" />
+    <Content Include="highlighting.js\styles\atelier-seaside-dark.css" />
+    <Content Include="highlighting.js\styles\atelier-seaside-light.css" />
+    <Content Include="highlighting.js\styles\atelier-sulphurpool-dark.css" />
+    <Content Include="highlighting.js\styles\atelier-sulphurpool-light.css" />
+    <Content Include="highlighting.js\styles\brown-paper.css" />
+    <Content Include="highlighting.js\styles\brown-papersq.png" />
+    <Content Include="highlighting.js\styles\codepen-embed.css" />
+    <Content Include="highlighting.js\styles\color-brewer.css" />
+    <Content Include="highlighting.js\styles\dark.css" />
+    <Content Include="highlighting.js\styles\darkula.css" />
+    <Content Include="highlighting.js\styles\default.css" />
+    <Content Include="highlighting.js\styles\docco.css" />
+    <Content Include="highlighting.js\styles\dracula.css" />
+    <Content Include="highlighting.js\styles\far.css" />
+    <Content Include="highlighting.js\styles\foundation.css" />
+    <Content Include="highlighting.js\styles\github-gist.css" />
+    <Content Include="highlighting.js\styles\github.css" />
+    <Content Include="highlighting.js\styles\googlecode.css" />
+    <Content Include="highlighting.js\styles\grayscale.css" />
+    <Content Include="highlighting.js\styles\gruvbox-dark.css" />
+    <Content Include="highlighting.js\styles\gruvbox-light.css" />
+    <Content Include="highlighting.js\styles\hopscotch.css" />
+    <Content Include="highlighting.js\styles\hybrid.css" />
+    <Content Include="highlighting.js\styles\idea.css" />
+    <Content Include="highlighting.js\styles\ir-black.css" />
+    <Content Include="highlighting.js\styles\kimbie.dark.css" />
+    <Content Include="highlighting.js\styles\kimbie.light.css" />
+    <Content Include="highlighting.js\styles\magula.css" />
+    <Content Include="highlighting.js\styles\mono-blue.css" />
+    <Content Include="highlighting.js\styles\monokai-sublime.css" />
+    <Content Include="highlighting.js\styles\monokai.css" />
+    <Content Include="highlighting.js\styles\obsidian.css" />
+    <Content Include="highlighting.js\styles\paraiso-dark.css" />
+    <Content Include="highlighting.js\styles\paraiso-light.css" />
+    <Content Include="highlighting.js\styles\pojoaque.css" />
+    <Content Include="highlighting.js\styles\pojoaque.jpg" />
+    <Content Include="highlighting.js\styles\qtcreator_dark.css" />
+    <Content Include="highlighting.js\styles\qtcreator_light.css" />
+    <Content Include="highlighting.js\styles\railscasts.css" />
+    <Content Include="highlighting.js\styles\rainbow.css" />
+    <Content Include="highlighting.js\styles\school-book.css" />
+    <Content Include="highlighting.js\styles\school-book.png" />
+    <Content Include="highlighting.js\styles\solarized-dark.css" />
+    <Content Include="highlighting.js\styles\solarized-light.css" />
+    <Content Include="highlighting.js\styles\sunburst.css" />
+    <Content Include="highlighting.js\styles\tomorrow-night-blue.css" />
+    <Content Include="highlighting.js\styles\tomorrow-night-bright.css" />
+    <Content Include="highlighting.js\styles\tomorrow-night-eighties.css" />
+    <Content Include="highlighting.js\styles\tomorrow-night.css" />
+    <Content Include="highlighting.js\styles\tomorrow.css" />
+    <Content Include="highlighting.js\styles\vs.css" />
+    <Content Include="highlighting.js\styles\xcode.css" />
+    <Content Include="highlighting.js\styles\zenburn.css" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -202,7 +304,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Components\MarkdownEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\Generic.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -240,6 +350,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="CommonMark.NET">
+      <Version>0.15.1</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.Data.Sqlite">
       <Version>5.0.1</Version>
     </PackageReference>

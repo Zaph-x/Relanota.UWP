@@ -65,9 +65,11 @@
                               ItemsSource="{x:Bind Fonts}" x:Name="FontsSelector"
                               Width="200"
                               SelectedItem="{Binding Source={StaticResource AppSettings}, Path=PreferredFont, Mode=TwoWay}"
-                    >
-                        
-                    </ComboBox>
+                    />
+                    <StackPanel>
+                        <TextBlock Text="Apply styling to the note editor" Margin="10"/>
+                        <ToggleSwitch Margin="10 0 0 10" IsOn="{Binding Source={StaticResource AppSettings}, Path=UseFancyEditor, Mode=TwoWay}"/>
+                    </StackPanel>
                     <NavigationViewItemSeparator/>
                 </StackPanel>
                 <StackPanel Grid.Row="2">

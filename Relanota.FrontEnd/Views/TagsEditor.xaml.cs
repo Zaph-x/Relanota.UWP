@@ -18,6 +18,8 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Core.SqlHelper;
+using Core.StateHandler;
+using UWP.FrontEnd.Views.Interfaces;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -26,8 +28,10 @@ namespace UWP.FrontEnd.Views
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class TagsEditor : Page
+    public sealed partial class TagsEditor : Page, IContextInteractible<Tag>
     {
+        ObservableCollection<Tag> Tags = new ObservableCollection<Tag>();
+
         public TagsEditor()
         {
             this.InitializeComponent();
@@ -63,7 +67,9 @@ namespace UWP.FrontEnd.Views
 
                 if (MainPage.CurrentNote == null)
                 {
-                    tags = context.Tags.ToList();
+                    Tags.Clear();
+                    foreach (Tag tag in context.Tags)
+                        Tags.Add(tag);
                 }
                 else
                 {
@@ -144,7 +150,7 @@ namespace UWP.FrontEnd.Views
         {
             if (RelatedNotesListView.SelectedIndex >= 0)
             {
-                NoteEditor.SetState(NoteEditorState.Navigation);
+                AppState.Set(State.Navigation);
                 MainPage.CurrentNote = RelatedNotesListView.SelectedItem as Note;
                 this.Frame.Navigate(typeof(NoteEditor), RelatedNotesListView.SelectedItem as Note);
             }
@@ -160,26 +166,8 @@ namespace UWP.FrontEnd.Views
 
         private void TagSaveButton_Click(object sender, RoutedEventArgs e)
         {
-            using (Database context = new Database())
-            {
-                if (MainPage.CurrentTag != null)
-                {
-                    MainPage.CurrentTag.Update(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(),
-                        context);
-                }
-                else
-                {
-                    MainPage.CurrentTag = new Tag();
-                    MainPage.CurrentTag.Save(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(),
-                        context);
-                }
-            }
-
-            TagNameEditBox.Text = "";
-            TagDescriptionEditBox.Text = "";
-            MainPage.CurrentTag = null;
+            Save();
             FetchTags();
-
         }
 
         private void EditButton_Click(object sender, RoutedEventArgs e)
@@ -189,7 +177,7 @@ namespace UWP.FrontEnd.Views
             {
                 note = context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
                 MainPage.CurrentNote = note;
-                NoteEditor.SetState(NoteEditorState.Navigation);
+                AppState.Set(State.Navigation);
                 this.Frame.Navigate(typeof(NoteEditor), note);
             }
         }
@@ -260,6 +248,38 @@ namespace UWP.FrontEnd.Views
             {
                 button.Foreground = new SolidColorBrush(Colors.Transparent);
             }
+        }
+
+        public void Save()
+        {
+            using (Database context = new Database())
+            {
+                if (MainPage.CurrentTag != null)
+                {
+                    MainPage.CurrentTag.Update(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(),
+                        context);
+                }
+                else
+                {
+                    MainPage.CurrentTag = new Tag();
+                    MainPage.CurrentTag.Save(TagDescriptionEditBox.Text.Trim(), TagNameEditBox.Text.Trim(),
+                        context);
+                }
+            }
+
+            TagNameEditBox.Text = "";
+            TagDescriptionEditBox.Text = "";
+            MainPage.CurrentTag = null;
+        }
+
+        public Tag Load(int key)
+        {
+            Tag tag = null;
+            using (Database context = new Database())
+            {
+
+            }
+            return tag;
         }
     }
 }

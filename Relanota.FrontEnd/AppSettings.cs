@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -15,6 +16,14 @@ namespace UWP.FrontEnd
             get { return Get("MathOnDisk", true); }
             set {
                 Set("MathOnDisk", value);
+                NotifyPropertyChanged();
+            }
+        }
+
+        public bool UseFancyEditor {
+            get { return Get("FancyEditor", true); }
+            set {
+                Set("FancyEditor", value);
                 NotifyPropertyChanged();
             }
         }
@@ -44,14 +53,17 @@ namespace UWP.FrontEnd
 
         public static void Set<T>(string key, T value)
         {
+            Debug.WriteLine($"Setting settings value: {key.PadRight(20, ' ')} Value: {value}", "DEBUG");
             ApplicationData.Current.LocalSettings.Values[key] = value;
         }
 
         public static T Get<T>(string key, T defaultValue)
         {
-            if (ApplicationData.Current.LocalSettings.Values.ContainsKey(key))
+            Debug.WriteLine($"Getting settings value: {key.PadRight(20, ' ')} Default: {defaultValue}", "DEBUG");
+            if (ApplicationData.Current.LocalSettings.Values[key] is object value && value != null)
             {
-                return (T)ApplicationData.Current.LocalSettings.Values[key];
+                Debug.WriteLine($"Got: {value}");
+                return (T)value;
             }
 
             if (null != defaultValue)

@@ -26,9 +26,12 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.ApplicationModel.Resources;
 using Windows.Storage.Streams;
 using Core;
+using Core.StateHandler;
 using Core.SqlHelper;
 using Core.Objects.Entities;
 using Microsoft.Data.Sqlite;
+using System.Diagnostics;
+using Windows.UI.Popups;
 
 namespace UWP.FrontEnd
 {
@@ -40,49 +43,78 @@ namespace UWP.FrontEnd
         private Frame rootFrame = null;
         public static bool HasLegacyDB = false;
 
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
         /// </summary>
+
         public App()
         {
+            UnhandledException += App_UnhandledException;
+            
+            AppState state = new AppState();
             this.InitializeComponent();
             Constants.DATABASE_PATH = ApplicationData.Current.LocalFolder.Path;
             Constants.DATABASE_NAME = "notes.db";
-            if (File.Exists($"{Constants.DATABASE_PATH}/{Constants.DATABASE_NAME}"))
+            AppState.Set(State.DBInit, () =>
             {
-                using (SqliteConnection connection =
-                    new SqliteConnection($"Data Source={Constants.DATABASE_PATH}/{Constants.DATABASE_NAME}"))
+                if (File.Exists($"{Constants.DATABASE_PATH}/{Constants.DATABASE_NAME}"))
                 {
-                    connection.Open();
-                    using (SqliteCommand command = connection.CreateCommand())
-                    {
-                        command.CommandText = @"SELECT 
+                    AppState.Set(State.DBVersionCheck, () => {
+                        using (SqliteConnection connection =
+                            new SqliteConnection($"Data Source={Constants.DATABASE_PATH}/{Constants.DATABASE_NAME}"))
+                        {
+                            connection.Open();
+                            using (SqliteCommand command = connection.CreateCommand())
+                            {
+                                command.CommandText = @"SELECT 
     name
 FROM 
     sqlite_master 
 WHERE 
     type ='table' AND 
     name NOT LIKE 'sqlite_%';";
-                        using (SqliteDataReader reader = command.ExecuteReader())
-                        {
-                            string tables = "";
-                            while (reader.Read())
-                            {
-                                tables += $"{reader.GetString(0)};";
-                            }
+                                using (SqliteDataReader reader = command.ExecuteReader())
+                                {
+                                    string tables = "";
+                                    while (reader.Read())
+                                    {
+                                        tables += $"{reader.GetString(0)};";
+                                    }
 
-                            HasLegacyDB = !tables.Contains("__EFMigrationsHistory");
+                                    HasLegacyDB = !tables.Contains("__EFMigrationsHistory");
+                                }
+                            }
                         }
-                    }
+                        if (HasLegacyDB)
+                        {
+                            AppState.Set(State.DBMigrate, MoveDatabase);
+                            AppState.Reset();
+                        }
+                    });
                 }
-                if (HasLegacyDB)
+                using (Database context = new Database())
                 {
-                    MoveDatabase();
+                    context.Database.EnsureCreated();
+                    context.Database.Migrate();
+                    context.Notes.Load();
+                    context.NoteTags.Load();
+                    context.Tags.Load();
                 }
-            }
+            }, State.StartUp);
+            
 
             this.Suspending += OnSuspending;
+        }
+
+        private async void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
+        {
+            AppState.Set(State.Error, () => ShowToastNotification("An unhandled error occured.", e.Exception.Message));
+            ShowToastNotification("Previous State", AppState.GetPreviousState().ToString());
+            e.Handled = true;
+            await new MessageDialog($"An unhandled exception was thrown. Please consider creating an issue at https://github.com/Zaph-x/Relanota.UWP/issues/new with the content below\r\n\r\n{e.Exception.StackTrace}", "An error ocured:(").ShowAsync();
+            
         }
 
         private void MoveDatabase()
@@ -186,6 +218,7 @@ FROM
         /// <param name="e">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
+            AppState.Set(State.Init);
             rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
@@ -205,15 +238,6 @@ FROM
                 // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
             }
-            using (Database context = new Database())
-            {
-                context.Database.EnsureCreated();
-                context.Database.Migrate();
-                context.Notes.Load();
-                context.NoteTags.Load();
-                context.Tags.Load();
-
-            }
 
             if (e.PrelaunchActivated == false)
             {
@@ -230,22 +254,32 @@ FROM
 
             if (AppSettings.Get("load_recent_on_startup", false))
             {
-                string line = File.ReadLines($@"{ApplicationData.Current.LocalFolder.Path}\AccessList").First(); // gets the first line from file.
-                using (Database context = new Database())
-                {
-                    if (context.TryGetNote(int.Parse(line), out Note note))
+                AppState.Set(State.RecentNavigation, () => {
+                    string line = File.ReadLines($@"{ApplicationData.Current.LocalFolder.Path}\AccessList").First(); // gets the first line from file.
+                    using (Database context = new Database())
                     {
-                        _ = MainPage.Get;
-                        MainPage.CurrentNote = note;
-                        MainPage.Get.NavView_Navigate("edit", null);
+                        if (context.TryGetNote(int.Parse(line), out Note note))
+                        {
+                            _ = MainPage.Get;
+                            MainPage.CurrentNote = note;
+                            MainPage.Get.NavView_Navigate("edit", null);
+                        }
                     }
-                }
+                });
+                
 
             }
+            AppState.Set(State.Ready);
         }
-        protected override async void OnActivated(IActivatedEventArgs args)
+        protected override void OnActivated(IActivatedEventArgs args)
         {
             //base.OnActivated(args);
+#if DEBUG
+            if (Debugger.IsAttached)
+            {
+                this.DebugSettings.EnableFrameRateCounter = true;
+            }
+#endif
             if (args.Kind == ActivationKind.Protocol)
             {
                 Frame rootFrame = Window.Current.Content as Frame;
@@ -268,30 +302,34 @@ FROM
                         switch (eventArgs.Uri.Host.ToLower())
                         {
                             case "open":
-                                NoteEditor.Get.State = NoteEditorState.ProtocolNavigating;
-                                await NoteEditor.Get.NavigateToNoteFromUri(eventArgs.Uri.OriginalString.Substring(0, eventArgs.Uri.OriginalString.Length));
+                                AppState.Set(State.ProtocolNavigating, async () => {
+                                    await NoteEditor.Get.NavigateToNoteFromUri(eventArgs.Uri.OriginalString.Substring(0, eventArgs.Uri.OriginalString.Length));
 
-                                MainPage.Get.NavView_Navigate("reset", null);
-                                MainPage.Get.NavView_Navigate("edit", null);
+                                    MainPage.Get.NavView_Navigate("reset", null);
+                                    MainPage.Get.NavView_Navigate("edit", null);
 
+                                }, State.Ready);
+                                
                                 break;
 
                             case "import":
-                                NoteEditor.Get.State = NoteEditorState.ProtocolImportNavigation;
-                                string serializedString = Uri.UnescapeDataString(eventArgs.Uri.LocalPath.Substring(1));
+                                AppState.Set(State.ProtocolImportNavigation, () =>
+                                {
+                                    string serializedString = Uri.UnescapeDataString(eventArgs.Uri.LocalPath.Substring(1));
 
-                                if (Note.TryDeserialize(serializedString, out Note note))
-                                {
-                                    MainPage.CurrentNote = note;
-                                    MainPage.Get.SetNavigationIndex(3);
-                                    MainPage.Get.NavView_Navigate("edit", null);
-                                }
-                                else
-                                {
-                                    ShowDialog("We could not parse that note.", $"No note could be parsed from the URI used to open Relanota. You will instead be sent to the note list.", "Okay");
-                                    MainPage.Get.SetNavigationIndex(0);
-                                    MainPage.Get.NavView_Navigate("list", null);
-                                }
+                                    if (Note.TryDeserialize(serializedString, out Note note))
+                                    {
+                                        MainPage.CurrentNote = note;
+                                        MainPage.Get.SetNavigationIndex(3);
+                                        MainPage.Get.NavView_Navigate("edit", null);
+                                    }
+                                    else
+                                    {
+                                        ShowDialog("We could not parse that note.", $"No note could be parsed from the URI used to open Relanota. You will instead be sent to the note list.", "Okay");
+                                        MainPage.Get.SetNavigationIndex(0);
+                                        MainPage.Get.NavView_Navigate("list", null);
+                                    }
+                                }, State.Ready);
 
                                 break;
 

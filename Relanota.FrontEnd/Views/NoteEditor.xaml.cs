@@ -34,6 +34,9 @@ using System.ComponentModel;
 using Windows.UI.ViewManagement.Core;
 using Core.Objects.Wrappers;
 using Core.SqlHelper;
+using Core.StateHandler;
+using UWP.FrontEnd.Views.Interfaces;
+using UWP.FrontEnd.Components;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -42,88 +45,47 @@ namespace UWP.FrontEnd.Views
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class NoteEditor : Page
+    public sealed partial class NoteEditor : Page, IContextInteractible<Note>
     {
-        private int WordCount { get; set; } = 0;
+        public int WordCount { get; set; } = 0;
         private AdvancedCollectionView Acv { get; set; }
         public static bool IsSaved { get; set; } = true;
         private static NoteEditor _instance { get; set; }
         public static NoteEditor Get => _instance ?? new NoteEditor();
         public string NoteContent => EditorTextBox.Text.Trim();
         public string NoteName => NoteNameTextBox.Text.Trim();
-        private string[] Lines => EditorTextBox?.Text.Split('\r');
+        public string[] Lines => EditorTextBox?.Text.Split('\r');
         private IEnumerable<int> TableWidth = Enumerable.Range(1, 10);
         private IEnumerable<int> TableHeight = Enumerable.Range(1, 20);
-        private static NoteEditorState _state { get; set; }
-        public NoteEditorState State {
-            get => _state;
-            set {
-                switch (value)
-                {
-                    case NoteEditorState.Ready:
-                        _state = value;
-                        break;
-                    case NoteEditorState.Saving:
-                        Save();
-                        break;
-                    case NoteEditorState.SaveCompleted:
-                        SetTagsState(true);
-                        SetSavedState(true);
-                        MainPage.Get.OnNoteSave(MainPage.CurrentNote.Name);
-                        MainPage.Get.SetDividerNoteName(MainPage.CurrentNote.Name);
-                        MainPage.Get.LogRecentAccess(MainPage.CurrentNote);
-                        break;
-                    case NoteEditorState.SaveError:
-                        ShowUnsavablePrompt();
-                        SetState(NoteEditorState.NotSaved);
-                        _state = value;
-                        break;
-                    case NoteEditorState.Loading:
-                        break;
-                    case NoteEditorState.LoadError:
-                        break;
-                    case NoteEditorState.RecentNavigation:
-                        _state = value;
-                        break;
-                    case NoteEditorState.WorkerCanceled:
-                        _state = value;
-                        break;
-                    case NoteEditorState.ProtocolNavigating:
-                        _state = value;
-                        break;
-                    case NoteEditorState.ListNavigation:
-                        _state = value;
-                        break;
-                    case NoteEditorState.NotSaved:
-                        SetSavedState(false);
-                        break;
-                    default:
-                        _state = value;
-                        break;
-
-                }
-            }
-        }
         Timer _timer;
         int _interval = 1000;
-        BackgroundWorker changesWorker = new BackgroundWorker();
+        private BackgroundWorker changesWorker = new BackgroundWorker();
         private FixedSizeObservableCollection<(string text, int index)> History { get; set; } = new FixedSizeObservableCollection<(string text, int index)>(100);
         private FixedSizeObservableCollection<(string text, int index)> UndoneHistory { get; set; } = new FixedSizeObservableCollection<(string text, int index)>(100);
 
         public NoteEditor()
         {
             _instance = this;
-
             this.InitializeComponent();
+            Editor.ParentPage = this;
+            if (AppSettings.Get("FancyEditor", true))
+            {
+                Editor.Visibility = Visibility.Visible;
+                EditorTextBox.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                Editor.Visibility = Visibility.Collapsed;
+                EditorTextBox.Visibility = Visibility.Visible;
+            }
         }
 
         public bool AreTextboxesEmpty() => string.IsNullOrWhiteSpace(NoteNameTextBox.Text) && string.IsNullOrWhiteSpace(EditorTextBox.Text);
 
         private void ChangesWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (State != NoteEditorState.WorkerCanceled)
+            if (AppState.Current != State.NotSaved)
                 UnsavedChangesText.Text = "";
-            SetState(NoteEditorState.Ready);
         }
 
         private void ChangesWorker_DoWork(object sender, DoWorkEventArgs e)
@@ -161,6 +123,17 @@ namespace UWP.FrontEnd.Views
                 }
             }
 
+        }
+
+        private void FinishSave()
+        {
+            AppState.Set(State.SaveCompleted, () => {
+                SetTagsState(true);
+                SetSavedState(true);
+                MainPage.Get.OnNoteSave(MainPage.CurrentNote.Name);
+                MainPage.Get.SetDividerNoteName(MainPage.CurrentNote.Name);
+                MainPage.Get.LogRecentAccess(MainPage.CurrentNote);
+            }, State.Ready);            
         }
 
         public async Task SaveImageToFileAsync(string fileName, string path, RandomAccessStreamReference stream)
@@ -201,28 +174,36 @@ namespace UWP.FrontEnd.Views
 
             }
             TagTokens.SuggestedItemsSource = Acv;
-            History = new FixedSizeObservableCollection<(string text, int index)>(100);
-            UndoneHistory = new FixedSizeObservableCollection<(string text, int index)>(100);
+            //History = new FixedSizeObservableCollection<(string text, int index)>(100);
+            //UndoneHistory = new FixedSizeObservableCollection<(string text, int index)>(100);
             MainPage.Get.SetNavigationIndex(3);
             if (MainPage.CurrentNote != null)
             {
                 EditorTextBox.TextChanged -= NoteEditorTextBox_TextChanged;
                 EditorTextBox.Text = MainPage.CurrentNote.Content ?? "";
                 RenderBlock.Text = $"# {NoteNameTextBox.Text}\n{Regex.Replace(MainPage.CurrentNote.Content ?? "", @"(?<!\n)\r", Environment.NewLine)}";
+                FillRenderbox(this.EditorTextBox);
                 NoteNameTextBox.Text = MainPage.CurrentNote.Name ?? "";
+                if ((int)(AppState.Current ^ State.ProtocolImportNavigation) == 0)
+                {
+                    SetSavedState(false);
+                } else
+                {
+                    TagTokens.ItemsSource = new ObservableCollection<Tag>(MainPage.CurrentNote.NoteTags.Select(nt => nt.Tag));
+                    TagTokens.IsEnabled = true;
+                }
                 EditorTextBox.TextChanged += NoteEditorTextBox_TextChanged;
                 MainPage.Get.SetDividerNoteName(MainPage.CurrentNote.Name ?? "New Note");
-                TagTokens.ItemsSource = new ObservableCollection<Tag>(MainPage.CurrentNote.NoteTags.Select(nt => nt.Tag));
-                TagTokens.IsEnabled = true;
+
+
                 using (Database context = new Database())
                 {
-                    if (MainPage.CurrentNote.TryGetFullNote(context, out Note note) && State != NoteEditorState.RecentNavigation)
+                    if (MainPage.CurrentNote.TryGetFullNote(context, out Note note) && AppState.Current != State.ProtocolImportNavigation)
                     {
                         MainPage.Get.LogRecentAccess(note);
                     }
                 }
 
-                FillRenderbox(this.EditorTextBox);
             }
             else
             {
@@ -230,7 +211,6 @@ namespace UWP.FrontEnd.Views
             }
             History.Insert((EditorTextBox.Text, EditorTextBox.SelectionStart));
             _timer = new Timer(Tick, null, _interval, Timeout.Infinite);
-            SetState(NoteEditorState.Ready);
         }
 
         private async void Tick(object state)
@@ -274,10 +254,21 @@ namespace UWP.FrontEnd.Views
 
         protected override async void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
-            if (!IsSaved)
+            if (AppState.Current == State.NotSaved)
             {
                 MainPage.CurrentNote.Name = NoteNameTextBox.Text.Trim();
                 MainPage.CurrentNote.Content = EditorTextBox.Text.Trim();
+                await ShowUnsavedChangesDialog();
+                if (AppState.Current == State.NavigationCancelled)
+                {
+                    AppState.Set(State.Ready);
+                    return;
+                }
+                if (!NoteEditor.IsSaved)
+                {
+                    // The user chose save, but was unable to. We don't wish to delete the note
+                    return;
+                }
             }
             if (MainPage.CurrentNote == null && string.IsNullOrWhiteSpace(NoteNameTextBox.Text) && string.IsNullOrWhiteSpace(EditorTextBox.Text))
                 SetSavedState(true);
@@ -285,7 +276,6 @@ namespace UWP.FrontEnd.Views
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-
             _timer.Dispose();
         }
 
@@ -307,56 +297,54 @@ namespace UWP.FrontEnd.Views
         private void NoteEditorTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             FillRenderbox(sender as TextBox);
-            if ((State ^ NoteEditorState.Navigation) == NoteEditorState.NotSaved || State == NoteEditorState.Ready)
-            {
-                SetSavedState(false);
-            }
+            SetSavedState(false);
         }
 
-        private async void ShowUnsavablePrompt()
+        private void ShowUnsavablePrompt()
         {
             IsSaved = false;
             App.ShowDialog("We could not save that.", "The note does not seem to have a name. Please provide a name to save the note.", "Okay");
             MainPage.Get.SetNavigationIndex(3);
         }
 
-        private void Save()
+        public void Save()
         {
             if (string.IsNullOrWhiteSpace(NoteNameTextBox.Text))
             {
-                State = NoteEditorState.SaveError;
+                AppState.Set(State.SaveError, ShowUnsavablePrompt, State.Ready);
                 return;
             }
 
-            using (Database context = new Database())
+            AppState.Set(State.Saving, () =>
             {
-                if (MainPage.CurrentNote == null || MainPage.CurrentNote.Key == 0)
+                using (Database context = new Database())
                 {
-
-                    if (context.TryGetNote(NoteNameTextBox.Text, out Note note))
+                    if (MainPage.CurrentNote == null || MainPage.CurrentNote.Key == 0)
                     {
-                        note.Update($"{note.Content}\n\n{EditorTextBox.Text}", NoteNameTextBox.Text, context);
-                        SetCurrentEditorNote(note);
+
+                        if (context.TryGetNote(NoteNameTextBox.Text, out Note note))
+                        {
+                            note.Update($"{note.Content}\n\n{EditorTextBox.Text}", NoteNameTextBox.Text, context);
+                            SetCurrentEditorNote(note);
+                        }
+                        else
+                        {
+                            MainPage.CurrentNote = new Note();
+                            MainPage.CurrentNote.Save(EditorTextBox.Text, NoteNameTextBox.Text, context);
+                            TagTokens.IsEnabled = true;
+                        }
+
                     }
                     else
                     {
-                        MainPage.CurrentNote = new Note();
-                        MainPage.CurrentNote.Save(EditorTextBox.Text, NoteNameTextBox.Text, context);
-                        TagTokens.IsEnabled = true;
+                        MainPage.CurrentNote.Update(EditorTextBox.Text, NoteNameTextBox.Text, context);
+                        context.SaveChanges();
                     }
-
                 }
-                else
-                {
-                    MainPage.CurrentNote.Update(EditorTextBox.Text, NoteNameTextBox.Text, context);
-                    context.SaveChanges();
-                }
-            }
-
-            SetState(NoteEditorState.SaveCompleted);
+            }, FinishSave);
         }
 
-        private void SetCurrentEditorNote(Note note)
+        public void SetCurrentEditorNote(Note note)
         {
             MainPage.CurrentNote = note;
             TagTokens.ItemsSource = new ObservableCollection<Tag>(MainPage.CurrentNote.NoteTags.Select(nt => nt.Tag));
@@ -367,16 +355,15 @@ namespace UWP.FrontEnd.Views
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            SetState(NoteEditorState.Saving);
+            AppState.Set(State.Saving, Save, State.Ready);
         }
+
         private async void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
             await App.ShowDialog("Delete note permanently?", "If you delete this note, you won't be able to recover it. Do you want to delete it?", "Delete", () =>
             {
                 using (Database context = new Database())
                 {
-
-
                     // The user chose to delete the note
                     MainPage.CurrentNote.Delete(context, App.ShowToastNotification);
                     SetSavedState(true);
@@ -405,6 +392,10 @@ namespace UWP.FrontEnd.Views
             // Make sure a file was actually created
             if (file != null)
             {
+
+                string imagePath = $@"![{file.DisplayName}]({{{{local_dir}}}}\{file.Name})";
+                int selectionIndex = EditorTextBox.SelectionStart;
+                string[] lines = Lines;
                 // Application now has read/write access to the picked file
                 try
                 {
@@ -416,15 +407,18 @@ namespace UWP.FrontEnd.Views
                 {
 
                 }
-                // Insert reference into the textbox and set save state to false
-                string imagePath = $@"![{file.DisplayName}]({{{{local_dir}}}}\{file.Name})";
-                var selectionIndex = EditorTextBox.SelectionStart;
-                EditorTextBox.Text = EditorTextBox.Text.Insert(selectionIndex, imagePath);
+                InsertImage(imagePath);
+                EditorTextBox.Text = string.Join('\r', lines);
                 // Make sure cursor is at the end of the image insert
-                EditorTextBox.SelectionStart = selectionIndex + imagePath.Length;
+                EditorTextBox.SelectionStart = selectionIndex;
                 SetSavedState(false);
 
             }
+        }
+
+        public void InsertImage(string imagePath)
+        {
+            Editor.InsertImage(imagePath);
         }
 
         private async void MarkdownText_OnImageResolving(object sender, ImageResolvingEventArgs e)
@@ -445,7 +439,8 @@ namespace UWP.FrontEnd.Views
 
                     // Generate name for local storage
                     string cachefilename = url.CreateMD5();
-                    try {
+                    try
+                    {
                         // Download if the file does not exist
                         if (!File.Exists($@"{ApplicationData.Current.LocalCacheFolder.Path}\{cachefilename}.jpg") && AppSettings.Get("MathOnDisk", true))
                             await SaveImageToFileAsync(cachefilename, ApplicationData.Current.LocalCacheFolder.Path, new Uri(url));
@@ -543,12 +538,14 @@ namespace UWP.FrontEnd.Views
         {
             if (!Uri.IsWellFormedUriString(e.Link, UriKind.Absolute))
             {
+                await Launcher.LaunchUriAsync(new Uri(e.Link));
                 // TODO implement a default handler for this
                 //await new MessageDialog("Masked relative links needs to be manually handled.").ShowAsync();
             }
             else
             {
                 // Handle any known protocol
+                if (Uri.IsWellFormedUriString(e.Link, UriKind.Relative)) return;
                 await Launcher.LaunchUriAsync(new Uri(e.Link));
             }
         }
@@ -560,7 +557,8 @@ namespace UWP.FrontEnd.Views
                 Title = "You have unsaved changes.",
                 Content = "Do you wish to save these changes, before navigating? Picking No will delete these changes permanently.",
                 PrimaryButtonText = "Yes",
-                SecondaryButtonText = "No"
+                SecondaryButtonText = "No",
+                CloseButtonText = "Cancel"
             };
 
             ContentDialogResult result = await unsavedDialog.ShowAsync();
@@ -568,7 +566,7 @@ namespace UWP.FrontEnd.Views
             if (result == ContentDialogResult.Primary)
             {
                 // Change state as user requested
-                SetState(NoteEditorState.Saving);
+                AppState.Set(State.Saving, Save, State.Ready);
             }
             else if (result == ContentDialogResult.Secondary)
             {
@@ -577,12 +575,14 @@ namespace UWP.FrontEnd.Views
             }
             else
             {
+                MainPage.Get.SetNavigationIndex(3);
+                AppState.Set(State.NavigationCancelled, null, State.Ready);
                 // No action taken. Return to view
             }
         }
 
 
-        private void SetSavedState(bool isSaved)
+        public void SetSavedState(bool isSaved)
         {
             IsSaved = isSaved;
             if (isSaved)
@@ -590,13 +590,13 @@ namespace UWP.FrontEnd.Views
                 UnsavedChangesText.Text = "Changes Saved!";
                 if (!changesWorker.IsBusy)
                     changesWorker.RunWorkerAsync();
-                SetState(NoteEditorState.Ready);
+                AppState.Set(State.Ready);
             }
             else
             {
+                AppState.Set(State.NotSaved);
                 UnsavedChangesText.Text = "Unsaved Changes.";
                 changesWorker.CancelAsync();
-                SetState(NoteEditorState.WorkerCanceled);
             }
         }
 
@@ -658,7 +658,7 @@ namespace UWP.FrontEnd.Views
                         if (!IsSaved)
                         {
                             await ShowUnsavedChangesDialog();
-                            if (State == NoteEditorState.SaveError)
+                            if (AppState.Current == State.SaveError)
                             {
                                 return;
                             }
@@ -667,7 +667,7 @@ namespace UWP.FrontEnd.Views
                         MainPage.CurrentNote = new Note() { Name = noteName, Content = "" };
                         MainPage.Get.NavView_Navigate("reset", null);
                         MainPage.Get.NavView_Navigate("edit", null);
-                        SetState(NoteEditorState.Saving);
+                        SetSavingState();
                         MainPage.Get.LogRecentAccess(MainPage.CurrentNote);
                         OnNavigatedTo(null);
                     }
@@ -680,10 +680,12 @@ namespace UWP.FrontEnd.Views
                 }
         }
 
+        public void SetSavingState() => AppState.Set(State.Saving, Save);
+
         private void ShareNoteButton_Click(object sender, RoutedEventArgs e)
         {
             // Quick copy content of the note. Does not have to be saved.
-            App.SetClipboardContent($"note://import/|{NoteName.Compress()}|{NoteContent.Compress()}|");
+            App.SetClipboardContent(MainPage.CurrentNote.GetImportLink());
             App.ShowToastNotification("Note copied!", "A sharable link has been copied to your clipboard.");
         }
 
@@ -725,12 +727,7 @@ namespace UWP.FrontEnd.Views
             RenderColumn.Width = new GridLength(1, GridUnitType.Star);
         }
 
-        public static void SetState(NoteEditorState state)
-        {
-            Get.State = state;
-        }
-
-        private (string Text, int Start, int End) ApplyFormatting(string text, string formatter, int index, int length)
+        public (string Text, int Start, int End) ApplyFormatting(string text, string formatter, int index, int length)
         {
             text = text.Insert(index, formatter);
             text = text.Insert(index + length + formatter.Length, formatter);
@@ -765,7 +762,7 @@ namespace UWP.FrontEnd.Views
             }
         }
 
-        private (int, int) CalculatePoint(string text, int currentIndex)
+        public (int, int) CalculatePoint(string text, int currentIndex)
         {
             List<string> lines = text.Split('\r').Select(str => str = $"{str}\r").ToList();
             int lineCount = 0;
@@ -795,16 +792,16 @@ namespace UWP.FrontEnd.Views
                     if (EditorTextBox.Text.Split('\r').Any())
                     {
                         int selectionStart = EditorTextBox.SelectionStart;
-                        (int x, int y) point = CalculatePoint(EditorTextBox.Text, selectionStart);
-                        Match match = Regex.Match(Lines[point.y], @"^\s*[-*>+]\s");
+                        (int x, int y) = CalculatePoint(EditorTextBox.Text, selectionStart);
+                        Match match = Regex.Match(Lines[y], @"^\s*[-*>+]\s");
 
-                        if (match.Success && point.x >= match.Index + match.Length)
+                        if (match.Success && x >= match.Index + match.Length)
                         {
                             e.Handled = true;
 
-                            if (Lines[point.y].Trim().Length == "*".Length)
+                            if (Lines[y].Trim().Length == "*".Length)
                             {
-                                lines[point.y] = "";
+                                lines[y] = "";
                                 EditorTextBox.Text = string.Join('\r', lines);
                                 EditorTextBox.SelectionStart = selectionStart - match.Length;
                                 return;
@@ -812,14 +809,14 @@ namespace UWP.FrontEnd.Views
                             InsertTextInTextBox(EditorTextBox, $"\r{(match.Value)}", selectionStart + match.Index + match.Length + 1);
                             return;
                         }
-                        match = Regex.Match(EditorTextBox.Text.Split('\r')[point.y], @"^\s*([1-9][0-9]*)\.\s");
-                        if (match.Success && point.x >= match.Index + match.Length)
+                        match = Regex.Match(EditorTextBox.Text.Split('\r')[y], @"^\s*([1-9][0-9]*)\.\s");
+                        if (match.Success && x >= match.Index + match.Length)
                         {
                             e.Handled = true;
                             int newValue = int.Parse(match.Groups[1].Value) + 1;
-                            if (Lines[point.y].Trim().Length == match.Value.Trim().Length)
+                            if (Lines[y].Trim().Length == match.Value.Trim().Length)
                             {
-                                lines[point.y] = "";
+                                lines[y] = "";
                                 EditorTextBox.Text = string.Join('\r', lines);
                                 EditorTextBox.SelectionStart = selectionStart - match.Length;
                                 return;
@@ -871,11 +868,11 @@ namespace UWP.FrontEnd.Views
         {
             ParagraphSelector.SelectionChanged -= Header_Changed;
             int selectionStart = EditorTextBox.SelectionStart;
-            (int x, int y) point = CalculatePoint(EditorTextBox.Text, selectionStart);
+            (int x, int y) = CalculatePoint(EditorTextBox.Text, selectionStart);
 
-            if (Lines[point.y].Trim().StartsWith('#'))
+            if (Lines[y].Trim().StartsWith('#'))
             {
-                Match match = Regex.Match(Lines[point.y].Trim(), @"^#{1,6}");
+                Match match = Regex.Match(Lines[y].Trim(), @"^#{1,6}");
                 ParagraphSelector.SelectedIndex = match.Groups[0].Length - 1;
             }
             else
@@ -891,20 +888,7 @@ namespace UWP.FrontEnd.Views
             if (!IsLoaded) return;
             string[] lines = Lines;
             int selectionStart = EditorTextBox.SelectionStart;
-            (int x, int y) point = CalculatePoint(EditorTextBox.Text, selectionStart);
-            if (ParagraphSelector.SelectedIndex == 6)
-            {
-                Match match = Regex.Match(lines[point.y], @"^#{1,6} ");
-                lines[point.y] = Regex.Replace(lines[point.y], @"^#{1,6} ", "");
-                selectionStart -= match.Length;
-            }
-            else {
-                
-                Match match = Regex.Match(lines[point.y], @"^#{1,6} ");
-                lines[point.y] = Regex.Replace(lines[point.y], @"^#{1,6} ", "");
-                lines[point.y] = lines[point.y].Insert(0, $"{"#".Repeat(ParagraphSelector.SelectedIndex + 1)} ");
-                selectionStart += $"{"#".Repeat(ParagraphSelector.SelectedIndex + 1)} ".Length - match.Length;
-            }
+            ApplyHeaderChange(ref selectionStart, ref lines);
 
             EditorTextBox.Text = string.Join('\r', lines);
             EditorTextBox.SelectionStart = selectionStart;
@@ -913,25 +897,53 @@ namespace UWP.FrontEnd.Views
 
         }
 
-        private void ListButton_OnClick(object sender, RoutedEventArgs e)
+        public void ApplyHeaderChange(ref int selectionStart, ref string[] lines)
         {
-            string[] lines = Lines;
-            int selectionStart = EditorTextBox.SelectionStart;
-            (int x, int y) point = CalculatePoint(EditorTextBox.Text, selectionStart);
-            if (!lines[point.y].Trim().StartsWith("*"))
+            (_, int y) = CalculatePoint(EditorTextBox.Text, selectionStart);
+            if (ParagraphSelector.SelectedIndex == 6)
             {
-                lines[point.y] = lines[point.y].Insert(0, "* ");
+                Match match = Regex.Match(lines[y], @"^#{1,6} ");
+                lines[y] = Regex.Replace(lines[y], @"^#{1,6} ", "");
+                selectionStart -= match.Length;
             }
             else
             {
-                lines[point.y] = Regex.Replace(lines[point.y], @"^\s*[-*>+]\s", "");
-            }
 
-            EditorTextBox.Text = string.Join('\r', lines);
-            EditorTextBox.SelectionStart = selectionStart + 2;
+                Match match = Regex.Match(lines[y], @"^#{1,6} ");
+                lines[y] = Regex.Replace(lines[y], @"^#{1,6} ", "");
+                lines[y] = lines[y].Insert(0, $"{"#".Repeat(ParagraphSelector.SelectedIndex + 1)} ");
+                selectionStart += $"{"#".Repeat(ParagraphSelector.SelectedIndex + 1)} ".Length - match.Length;
+            }
         }
 
-        private void FormatButton_OnClick(object sender, RoutedEventArgs e) {
+        private void ListButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            int index = EditorTextBox.SelectionStart;
+            string text = EditorTextBox.Text;
+            string[] lines = Lines;
+            InsertList(ref index, ref lines, text);
+            EditorTextBox.Text = string.Join('\r', lines);
+            EditorTextBox.SelectionStart = index;
+        }
+
+        public void InsertList(ref int selectionStart, ref string[] lines, string fullText)
+        {
+            (_, int y) = CalculatePoint(fullText, selectionStart);
+            if (!lines[y].Trim().StartsWith("*"))
+            {
+                lines[y] = lines[y].Insert(0, "* ");
+            }
+            else
+            {
+                lines[y] = Regex.Replace(lines[y], @"^\s*[-*>+]\s", "");
+            }
+
+            // A list denoter is always 2 characters long
+            selectionStart += 2;
+        }
+
+        private void FormatButton_OnClick(object sender, RoutedEventArgs e)
+        {
             string formatter = (sender as AppBarButton)?.Tag as string;
             (string text, int start, int end) = ApplyFormatting(EditorTextBox.Text, formatter, EditorTextBox.SelectionStart, EditorTextBox.SelectionLength);
 
@@ -939,28 +951,17 @@ namespace UWP.FrontEnd.Views
             EditorTextBox.SelectionStart = start;
             EditorTextBox.SelectionLength = end;
         }
-    }
 
-    [Flags]
-    public enum NoteEditorState
-    {
-        Error = 0b_0000,
-        Ready = 0b_0001,
-        Saving = 0b_0010,
-        Loading = 0b_0100,
-        SaveCompleted = 0b_1000,
-        SaveError = 0b_0001_0000,
-        LoadError = 0b_0010_0000,
-        NotSaved = 0b_0000_0011_0000,
-        ProtocolNavigating = 0b_0000_0100_0000,
-        ListNavigation = 0b_0000_1100_0000,
-        RecentNavigation = 0b_0000_1000_0000,
-        WorkerCanceled = 0b_0001_0000_0000,
-        Navigation = 0b_0010_1100_0000,
-        ProtocolImportNavigation = 0b_0010_1111_0000,
-        SearchNavigation = 0b_0001_1100_0000
+        public Note Load(int key)
+        {
+            throw new NotImplementedException();
+        }
 
+        MarkdownProcessor processor = new MarkdownProcessor();
 
-        // Error states
+        public void Update(string content)
+        {
+            EditorTextBox.Text = content;
+        }
     }
 }

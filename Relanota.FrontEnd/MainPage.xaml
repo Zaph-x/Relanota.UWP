@@ -40,7 +40,9 @@
                                 >
                 </AutoSuggestBox>
             </NavigationView.AutoSuggestBox>
-            <Frame x:Name="ContentFrame"  HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+            <Frame x:Name="ContentFrame"  HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+            </Frame>
+
         </NavigationView>
     </Grid>
 </Page>

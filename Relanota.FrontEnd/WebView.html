@@ -1,0 +1,217 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>CodeMirror</title>
+    <link rel="stylesheet" href="codemirror/lib/codemirror.css">
+    <script src="codemirror/lib/codemirror.js"></script>
+    <script src="codemirror/lib/jq.js"></script>
+    <script src="codemirror/mode/markdown/markdown.js"></script>
+    <script src="codemirror/mode/gfm/gfm.js"></script>
+    <script src="codemirror/addon/display/fullscreen.js"></script>
+    <script src="codemirror/addon/edit/continuelist.js"></script>
+    <script src="codemirror/addon/scroll/simplescrollbars.js"></script>
+    <script src="codemirror/addon/search/search.js"></script>
+    <script src="codemirror/addon/search/searchcursor.js"></script>
+    <script src="codemirror/addon/search/jump-to-line.js"></script>
+    <link rel="stylesheet" href="codemirror/addon/display/fullscreen.css">
+    <link rel="stylesheet" href="codemirror/addon/scroll/simplescrollbars.css">
+    <link rel="stylesheet" href="codemirror/theme/monokai.css">
+
+</head>
+<body>
+    <div>
+        <textarea id="source"></textarea>
+    </div>
+    <script>
+        HTMLTextAreaElement.prototype.insertAtCaret = function (text) {
+            text = text || '';
+            if (document.selection) {
+                // IE
+                this.focus();
+                var sel = document.selection.createRange();
+                sel.text = text;
+            } else if (this.selectionStart || this.selectionStart === 0) {
+                // Others
+                var startPos = this.selectionStart;
+                var endPos = this.selectionEnd;
+                this.value = this.value.substring(0, startPos) +
+                    text +
+                    this.value.substring(endPos, this.value.length);
+                this.selectionStart = startPos + text.length;
+                this.selectionEnd = startPos + text.length;
+            } else {
+                this.value += text;
+            }
+        };
+
+        var mobile = /Android|webOS|BlackBerry|Opera Mini|Opera Mobi|IEMobile/i.test(navigator.userAgent);
+        var fileref = document.createElement('link');
+        fileref.setAttribute("rel", "stylesheet");
+        fileref.setAttribute("type", "text/css");
+        fileref.setAttribute("href", mobile ? "codemirror/lib/font.mobile.css" : "codemirror/lib/font.css");
+        document.getElementsByTagName("head")[0].appendChild(fileref);
+
+
+        var myCodeMirror = CodeMirror(document.getElementById("source"), {
+            fullScreen: true,
+            mode: "markdown",
+            scrollbarStyle: "overlay",
+            dragDrop: false,
+            tabMode: "spaces"
+        });
+
+
+        myCodeMirror.setOption("extraKeys", {
+            "Enter": "newlineAndIndentContinueMarkdownList",
+        });
+
+        myCodeMirror.on('inputRead', function (cm, event) {
+            if (event.origin == 'paste') {
+                
+                window.External.notify("paste");
+            }
+        });
+
+        myCodeMirror.on("change", function () {
+            window.external.notify("change");
+        })
+
+        myCodeMirror.on("scroll", function () {
+            window.external.notify("scroll");
+        })
+
+        var setTheme = function (theme) {
+            myCodeMirror.setOption("theme", theme);
+        }
+
+        var setContent = function (content) {
+            myCodeMirror.doc.setValue(content)
+        }
+
+        var getContent = function () {
+            return myCodeMirror.doc.getValue();
+        }
+
+        var getScrollRatio = function () {
+            var info = myCodeMirror.getScrollInfo();
+            if (info.height <= info.clientHeight)
+                return "0";
+            else
+                return (info.top / (info.height - info.clientHeight)).toString();
+        }
+
+        var setFontFamily = function (font) {
+            myCodeMirror.getWrapperElement().style.fontFamily = font;
+        }
+
+        var setLineWrapping = function (v) {
+            myCodeMirror.setOption("lineWrapping", v);
+        }
+
+        var setShowLineNumber = function (v) {
+            myCodeMirror.setOption("lineNumbers", v);
+        }
+
+        var setStyleActiveLine = function (v) {
+            myCodeMirror.setOption("styleActiveLine", v);
+        }
+
+        function insertTextAtCursor(text) {
+            var doc = myCodeMirror.getDoc();
+            var cursor = doc.getCursor();
+            doc.replaceRange(text, cursor);
+        }
+
+        //Search
+        var searchCursor = null;
+
+        CodeMirror.defineOption("searchText", "", function (cm, val, old) {
+            cm.execCommand("find");
+        });
+
+        CodeMirror.defineOption("replaceText", "", function (cm, val, old) {
+        });
+
+        CodeMirror.defineOption("matchWordCase", false, function (cm, val, old) {
+        });
+
+        CodeMirror.defineOption("isMatchWholeWord", false, function (cm, val, old) {
+        });
+
+        CodeMirror.defineOption("useWildcards", false, function (cm, val, old) {
+        });
+
+        CodeMirror.defineOption("useRegularExpression", false, function (cm, val, old) {
+        });
+
+        var setSearchText = function (query) {
+            if (query == "")
+                myCodeMirror.setOption("searchText", query);
+            else {
+                if (myCodeMirror.getOption('useRegularExpression')) {
+                    query = "/" + query + "/";
+                } else {
+                    var useWildcards = myCodeMirror.getOption('useWildcards');
+                    var isMatchWholeWord = myCodeMirror.getOption('isMatchWholeWord');
+                    if (useWildcards)
+                        query = query.replace("\*", ".*").replace("\?", ".");
+                    if (isMatchWholeWord)
+                        query = "\\b" + query + "\\b";
+                    if (useWildcards || useWildcards)
+                        query = "/" + query + "/";
+                }
+
+                myCodeMirror.setOption("searchText", query);
+            }
+        }
+
+        var setReplaceText = function (text) {
+            myCodeMirror.setOption("replaceText", text);
+        }
+
+
+        var setSearchMatchCase = function (v) {
+            myCodeMirror.setOption("matchWordCase", v)
+        }
+
+        var setIsMatchWholeWord = function (v) {
+            myCodeMirror.setOption("isMatchWholeWord", v)
+        }
+
+        var setUseWildcard = function (v) {
+            myCodeMirror.setOption("useWildcards", v)
+        }
+
+        var setUseRegularExpression = function (v) {
+            myCodeMirror.setOption("useRegularExpression", v)
+        }
+
+        var findNext = function () {
+            myCodeMirror.execCommand("findNext");
+        }
+
+        var findPrevious = function () {
+            myCodeMirror.execCommand("findPrev");
+        }
+
+        var replace = function () {
+            myCodeMirror.execCommand("replace");
+        }
+
+        var replaceAll = function () {
+            myCodeMirror.execCommand("replaceAll");
+        }
+
+        jQuery(document).keydown(function (event) {
+            if ((event.ctrlKey) && event.which == 83) {
+                // Save Function
+                window.external.notify("save");
+                return false;
+            } else if (event.ctrlKey && event.which == 86) {
+                window.external.notify('paste');
+            }
+        }
+        );
+    </script>
+</body>
+</html>

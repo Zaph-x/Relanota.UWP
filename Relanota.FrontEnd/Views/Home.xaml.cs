@@ -18,6 +18,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Core.SqlHelper;
+using Core.StateHandler;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -50,14 +51,15 @@ namespace UWP.FrontEnd.Views
 
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
-            Note note = (sender as FrameworkElement).Tag as Note;
-            using (Database context = new Database())
-            {
-                note = context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
-            }
-            NoteEditor.Get.State = NoteEditorState.ListNavigation;
-            MainPage.CurrentNote = note;
-            this.Frame.Navigate(typeof(NoteEditor), note);
+            AppState.Set(State.ListNavigation, () => {
+                Note note = (sender as FrameworkElement).Tag as Note;
+                using (Database context = new Database())
+                {
+                    note = context.Notes.Include(n => n.NoteTags).ThenInclude(n => n.Tag).First(n => n.Key == note.Key);
+                }
+                MainPage.CurrentNote = note;
+                this.Frame.Navigate(typeof(NoteEditor), note);
+            });
         }
 
         private void NotesListView_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
@@ -70,7 +72,7 @@ namespace UWP.FrontEnd.Views
                         .ThenInclude(n => n.Tag)
                         .First(n => n.Key == (NotesListView.SelectedItem as Note).Key);
                     MainPage.CurrentNote = (NotesListView.SelectedItem as Note);
-                    NoteEditor.Get.State = NoteEditorState.ListNavigation;
+                    AppState.Set(State.ListNavigation);
                     this.Frame.Navigate(typeof(NoteEditor), (NotesListView.SelectedItem as Note));
                 }
             }

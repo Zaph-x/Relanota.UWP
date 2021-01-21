@@ -19,6 +19,9 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
 using Core.SqlHelper;
+using Core.StateHandler;
+using System.ComponentModel;
+using System.Threading;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -51,6 +54,7 @@ namespace UWP.FrontEnd
 
         public MainPage()
         {
+            AppState.Set(State.Loading);
             Get = this;
 
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
@@ -75,11 +79,11 @@ namespace UWP.FrontEnd
             if (App.HasLegacyDB)
             {
                 App.ShowDialog("Legacy database detected",
-                    "A legacy database was found when Relanota was starting up. We have moved the content to a new Database.",
+                    "A legacy database was found when Relanota was starting up. We have moved the content to a non-legacy Database.",
                     "Okay");
                 App.HasLegacyDB = false;
             }
-
+            AppState.Set(State.Ready);
         }
 
         private async void MainPage_CloseRequested(object sender, SystemNavigationCloseRequestedPreviewEventArgs e)
@@ -286,63 +290,69 @@ namespace UWP.FrontEnd
 
         private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
-            if (args.IsSettingsInvoked == true)
-            {
-                NavView_Navigate("settings", args.RecommendedNavigationTransitionInfo);
-            }
-            else if (args.InvokedItemContainer != null)
-            {
-                if (args.InvokedItemContainer.Tag.GetType() == typeof(Note))
+            AppState.Set(State.Navigation, () => {
+                if (args.IsSettingsInvoked == true)
                 {
-                    HandleRecentlyAccessedNavigation((args.InvokedItemContainer.Tag as Note), args);
-                    return;
+                    NavView_Navigate("settings", args.RecommendedNavigationTransitionInfo);
                 }
-                else
+                else if (args.InvokedItemContainer != null)
                 {
-                    NavView_Navigate(args.InvokedItemContainer.Tag.ToString(), null);
-                }
+                    if (args.InvokedItemContainer.Tag.GetType() == typeof(Note))
+                    {
+                        HandleRecentlyAccessedNavigation((args.InvokedItemContainer.Tag as Note), args);
+                        return;
+                    }
+                    else
+                    {
+                        NavView_Navigate(args.InvokedItemContainer.Tag.ToString(), null);
+                    }
 
-            }
+                }
+            }, State.Ready);
+            
         }
 
-        private async void HandleRecentlyAccessedNavigation(Note tagNote, NavigationViewItemInvokedEventArgs args)
+        private void HandleRecentlyAccessedNavigation(Note tagNote, NavigationViewItemInvokedEventArgs args)
         {
-            // Navigate to the list view to create a transition (Reset view)
-            if (tagNote.Name != (CurrentNote?.Name ?? ""))
+            AppState.Set(State.RecentNavigation, async () =>
             {
+                // Navigate to the list view to create a transition (Reset view)
+                if (tagNote.Name != (CurrentNote?.Name ?? ""))
+                {
+                    using (Database context = new Database())
+                    {
+                        if (CurrentNote != null && !NoteEditor.IsSaved && (CurrentNote?.IsInContext(context) ?? false))
+                        {
+                            await NoteEditor.Get.ShowUnsavedChangesDialog();
+
+                        }
+                        ContentFrame.Navigate(typeof(Reset));
+                    }
+
+                }
+                SetNavigationIndex(3);
                 using (Database context = new Database())
                 {
-                    if (CurrentNote != null && !NoteEditor.IsSaved && (CurrentNote?.IsInContext(context) ?? false))
+                    // We only want to switch if the note is in the context
+                    if (tagNote.IsInContext(context) && tagNote.TryGetFullNote(context, out Note note))
                     {
-                        await NoteEditor.Get.ShowUnsavedChangesDialog();
+                        CurrentNote = note;
+                        // Update and navigate
+                        UpdateRecentlyAccessedList(note);
+                        NavView_Navigate("edit", args.RecommendedNavigationTransitionInfo);
+                        return;
+                    }
+                    else
+                    {
+                        // If the note no longer exists in the context, we want to let the user know, and remove it from the list.
+                        App.ShowDialog("We could not find that note.", $"The note '{tagNote.Name}' could note be found in the database.", "Okay");
+                        recentlyAccessed.Remove(tagNote.Key.ToString());
+                        NavigationView.MenuItems.Remove(args.InvokedItemContainer);
+                        NavView_Navigate("list", null);
 
                     }
-                    ContentFrame.Navigate(typeof(Reset));
                 }
-
-            }
-            SetNavigationIndex(3);
-            using (Database context = new Database())
-            {
-                // We only want to switch if the note is in the context
-                if (tagNote.IsInContext(context) && tagNote.TryGetFullNote(context, out Note note))
-                {
-                    CurrentNote = note;
-                    // Update and navigate
-                    UpdateRecentlyAccessedList(note);
-                    NavView_Navigate("edit", args.RecommendedNavigationTransitionInfo);
-                    return;
-                }
-                else
-                {
-                    // If the note no longer exists in the context, we want to let the user know, and remove it from the list.
-                    App.ShowDialog("We could not find that note.", $"The note '{tagNote.Name}' could note be found in the database.", "Okay");
-                    recentlyAccessed.Remove(tagNote.Key.ToString());
-                    NavigationView.MenuItems.Remove(args.InvokedItemContainer);
-                    NavView_Navigate("list", null);
-
-                }
-            }
+            }, State.Ready);
 
         }
 
@@ -350,25 +360,40 @@ namespace UWP.FrontEnd
         {
             // Calculate length of navitem lists. If it's greater than 0, add to the list
             int length = NavigationView.MenuItems.Count - 1 - RecentSpacerIndex;
+
+            BackgroundWorker disableWorker = new BackgroundWorker();
+
+            disableWorker.DoWork += (o, e) => Thread.Sleep(500);
+            disableWorker.RunWorkerCompleted += (o, e) =>
+            {
+                for (int i = RecentSpacerIndex + 1; i < length; i++)
+                    (NavigationView.MenuItems[i] as NavigationViewItem).IsHitTestVisible = true;
+            };
+
+            // We want to track the navigation state
+
+            if (recentlyAccessed[0] == note.Key.ToString()) return;
             recentlyAccessed.Remove(note.Key.ToString());
             if (length > 0 && !(NavigationView.MenuItems[RecentSpacerIndex + 1] as NavigationViewItem).Content.ToString().Equals(note.Name, StringComparison.InvariantCultureIgnoreCase))
                 recentlyAccessed.Insert(note.Key.ToString(), true);
-            // We want to track the navigation state
-            NoteEditor.SetState(NoteEditorState.RecentNavigation);
+            for (int i = RecentSpacerIndex + 1; i < length; i++)
+                (NavigationView.MenuItems[i] as NavigationViewItem).IsHitTestVisible = false;
+            if (!disableWorker.IsBusy)
+                disableWorker.RunWorkerAsync();
+
         }
 
         public async void NavView_Navigate(string navItemTag, NavigationTransitionInfo transitionInfo)
         {
+            if (((int)AppState.Current & 0b_0100_0000_0000_0001) == 0) return;
             if (navItemTag == "reset")
             {
                 ContentFrame.Navigate(typeof(Reset));
                 return;
             }
-            Type page = null;
 
-            var item = _pages.FirstOrDefault(p => p.Tag.Equals(navItemTag));
-            page = item.Page;
-            if (item.Index != -1) SetNavigationIndex(item.Index);
+            (string tag, Type page, int index) = _pages.FirstOrDefault(p => p.Tag.Equals(navItemTag));
+            if (index != -1) SetNavigationIndex(index);
             var preNavPageType = ContentFrame.CurrentSourcePageType;
 
             if (!(page is null) && preNavPageType != page)
@@ -376,6 +401,11 @@ namespace UWP.FrontEnd
                 if (!NoteEditor.IsSaved)
                 {
                     await NoteEditor.Get.ShowUnsavedChangesDialog();
+                    if (AppState.Current == State.NotSaved)
+                    {
+                        AppState.Set(State.Ready);
+                        return;
+                    }
                     if (!NoteEditor.IsSaved)
                     {
                         // The user chose save, but was unable to. We don't wish to delete the note
@@ -417,36 +447,43 @@ namespace UWP.FrontEnd
 
         private async void SearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
-            using (Database context = new Database())
+            await AppState.SetAsync(State.SearchNavigation, async () =>
             {
-                if (!context.TryGetNote(sender.Text, out Note note))
+                using (Database context = new Database())
                 {
-                    await App.ShowDialog("We could not find that note.", $"The note '{sender.Text}' could note be found in the database. Do you wish to create it?",
-                        "Yes", () =>
+                    if (!context.TryGetNote(sender.Text, out Note note))
+                    {
+                        await AppState.SetAsync(State.LoadError, async () =>
                         {
-                            note = new Note()
-                            {
-                                Name = sender.Text
-                            };
-                            note.Save("", sender.Text, context);
-                            CurrentNote = note;
-                            NoteEditor.SetState(NoteEditorState.SearchNavigation);
-                            NavView_Navigate("edit", null);
-                        },
-                        "No", () =>
-                        {
-                            SearchBox.Text = "";
+                            await App.ShowDialog("We could not find that note.", $"The note '{sender.Text}' could note be found in the database. Do you wish to create it?",
+                               "Yes", () =>
+                               {
+                                   AppState.Set(State.NoteCreating);
+                                   note = new Note()
+                                   {
+                                       Name = sender.Text
+                                   };
+                                   note.Save("", sender.Text, context);
+                                   CurrentNote = note;
+                                   AppState.Set(State.SearchNavigation);
+                                   NavView_Navigate("edit", null);
+                               },
+                               "No", () =>
+                               {
+                                   SearchBox.Text = "";
+                               });
                         });
+                        
+                    }
+                    else
+                    {
+                        CurrentNote = note;
+                        NavView_Navigate("reset", null);
+                        NavView_Navigate("edit", null);
+                    }
                 }
-                else
-                {
-                    CurrentNote = note;
-                    NavView_Navigate("reset", null);
-                    NoteEditor.SetState(NoteEditorState.SearchNavigation);
-                    NavView_Navigate("edit", null);
-                }
-            }
 
+            }, State.Ready);
 
         }
     }
