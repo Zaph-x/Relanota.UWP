@@ -1,4 +1,5 @@
 ﻿using Core.StateHandler;
+using Microsoft.Toolkit.Uwp.UI.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,11 +34,20 @@ namespace UWP.FrontEnd.Components
         public NoteEditor ParentPage { get; set; }
         string MDContent { get; set; }
         private bool isReady { get; set; }
+        ThemeListener Listener = new ThemeListener();
         public MarkdownEditor()
         {
             this.InitializeComponent();
             isReady = false;
 
+            Listener.ThemeChanged += Listener_ThemeChanged;
+
+        }
+
+        private async void Listener_ThemeChanged(ThemeListener sender)
+        {
+            string theme = sender.CurrentTheme == ApplicationTheme.Dark ? "monokai" : "default";
+            await Editor.InvokeScriptAsync("setTheme", new string[] { theme });
         }
 
         private async void Editor_ScriptNotify(object sender, NotifyEventArgs e)
