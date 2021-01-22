@@ -22,6 +22,7 @@ using Core.SqlHelper;
 using Core.StateHandler;
 using System.ComponentModel;
 using System.Threading;
+using Microsoft.Toolkit.Uwp.UI.Helpers;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -50,6 +51,7 @@ namespace UWP.FrontEnd
         private int RecentSpacerIndex { get; set; }
         private FixedSizeObservableCollection<string> recentlyAccessed = new FixedSizeObservableCollection<string>(10);
         ApplicationViewTitleBar formattableTitleBar;
+        ThemeListener Listener = new ThemeListener();
 
 
         public MainPage()
@@ -83,9 +85,14 @@ namespace UWP.FrontEnd
                     "Okay");
                 App.HasLegacyDB = false;
             }
+            Listener.ThemeChanged += Listener_ThemeChanged;
             AppState.Set(State.Ready);
         }
 
+        private void Listener_ThemeChanged(ThemeListener sender)
+        {
+            IsDarkTheme = sender.CurrentTheme == ApplicationTheme.Dark;
+        }
         private async void MainPage_CloseRequested(object sender, SystemNavigationCloseRequestedPreviewEventArgs e)
         {
             e.Handled = true;

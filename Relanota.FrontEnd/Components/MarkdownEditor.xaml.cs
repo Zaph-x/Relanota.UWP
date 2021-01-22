@@ -47,6 +47,7 @@ namespace UWP.FrontEnd.Components
         private async void Listener_ThemeChanged(ThemeListener sender)
         {
             string theme = sender.CurrentTheme == ApplicationTheme.Dark ? "monokai" : "default";
+            //MainPage.IsDarkTheme = sender.CurrentTheme == ApplicationTheme.Dark;
             await Editor.InvokeScriptAsync("setTheme", new string[] { theme });
         }
 
