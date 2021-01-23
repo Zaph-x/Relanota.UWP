@@ -1,0 +1,24 @@
+﻿<Page
+    x:Class="UWP.FrontEnd.Components.PlainTextEditor"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:UWP.FrontEnd.Components"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:frontend="using:UWP.FrontEnd"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <frontend:AppSettings x:Key="AppSettings" />
+    </Page.Resources>
+    <Grid>
+        <TextBox x:Name="Editor"
+                 AcceptsReturn="True"
+                 Paste="Editor_Paste"
+                 Loaded="Editor_Loaded"
+                 FontFamily="{Binding Source={StaticResource AppSettings}, Path=PreferredFont, Mode=OneTime}"
+                 PreviewKeyDown="Editor_OnPreviewKeyDown"
+                 SelectionChanged="Editor_SelectionChanged"
+                 TextChanged="Editor_TextChanged"
+                 KeyDown="Editor_KeyDown"/>
+    </Grid>
+</Page>

@@ -67,13 +67,23 @@
 
         myCodeMirror.on('inputRead', function (cm, event) {
             if (event.origin == 'paste') {
-                
+
                 window.External.notify("paste");
             }
         });
 
+        var isChange = false;
+
         myCodeMirror.on("change", function () {
             window.external.notify("change");
+            isChange = true;
+        })
+
+        myCodeMirror.on("cursorActivity", function () {
+            if (!isChange) {
+                window.external.notify("move");
+            }
+            isChange = false;
         })
 
         myCodeMirror.on("scroll", function () {
@@ -85,8 +95,28 @@
         }
 
         var setContent = function (content) {
-            myCodeMirror.doc.setValue(content)
+            myCodeMirror.doc.setValue(content);
         }
+
+        var getCursorCoords = function () {
+            var doc = myCodeMirror.getDoc();
+            var cursor = doc.getCursor();
+            return `${cursor.line}%${cursor.ch}`;
+        }
+
+        var applyFormatting = function (fmt) {
+
+            var doc = myCodeMirror.getDoc();
+            var start = myCodeMirror.getCursor("from");
+            var end = myCodeMirror.getCursor("to");
+            end.ch += fmt.length;
+            doc.replaceRange(fmt, start);
+            doc.replaceRange(fmt, end);
+            start.ch+=fmt.length
+            doc.setSelection(start, end);
+        }
+
+
 
         var getContent = function () {
             return myCodeMirror.doc.getValue();
@@ -102,6 +132,14 @@
 
         var setFontFamily = function (font) {
             myCodeMirror.getWrapperElement().style.fontFamily = font;
+        }
+
+        var setLocation = function (line, ch) {
+            var pos = {
+                line: parseInt(line),
+                ch: parseInt(ch) + 2
+            }
+            myCodeMirror.setCursor(pos);
         }
 
         var setLineWrapping = function (v) {
@@ -209,6 +247,10 @@
                 return false;
             } else if (event.ctrlKey && event.which == 86) {
                 window.external.notify('paste');
+            } else if (event.ctrlKey && event.which == 66) {
+                applyFormatting("**");
+            } else if (event.ctrlKey && event.which == 73) {
+                applyFormatting("*");
             }
         }
         );

@@ -265,7 +265,7 @@ FROM
                             MainPage.Get.NavView_Navigate("edit", null);
                         }
                     }
-                });
+                }, State.Ready);
                 
 
             }

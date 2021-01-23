@@ -167,18 +167,12 @@
                     </Grid.RowDefinitions>
 
                     <components:MarkdownEditor Grid.Row="1" x:Name="Editor"></components:MarkdownEditor>
-                    <TextBox x:Name="EditorTextBox" Visibility="Collapsed"
+                    <components:PlainTextEditor Grid.Row="1" x:Name="PlainEditor"></components:PlainTextEditor>
+                    <TextBox x:Name="__store" Visibility="Collapsed"
                              Grid.Row="1"
-                             TextChanged="NoteEditorTextBox_TextChanged" 
+                            
                              AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             FontFamily="{Binding Source={StaticResource AppSettings}, Path=PreferredFont, Mode=OneTime}"
-                             IsFocusEngaged="False"
-                             KeyDown="EditorTextBox_KeyDown"
-                             PreviewKeyDown="EditorTextBox_OnPreviewKeyDown"
-                             Paste="EditorTextBox_Paste"
-                             VerticalAlignment="Stretch"
-                             SelectionChanged="EditorTextBox_SelectionChanged"
+                             
                              TabIndex="1"/>
                 </Grid>
                 

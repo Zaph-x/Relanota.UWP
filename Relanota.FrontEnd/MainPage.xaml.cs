@@ -297,7 +297,8 @@ namespace UWP.FrontEnd
 
         private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
-            AppState.Set(State.Navigation, () => {
+            AppState.Set(State.Navigation, () =>
+            {
                 if (args.IsSettingsInvoked == true)
                 {
                     NavView_Navigate("settings", args.RecommendedNavigationTransitionInfo);
@@ -316,7 +317,7 @@ namespace UWP.FrontEnd
 
                 }
             }, State.Ready);
-            
+
         }
 
         private void HandleRecentlyAccessedNavigation(Note tagNote, NavigationViewItemInvokedEventArgs args)
@@ -480,7 +481,7 @@ namespace UWP.FrontEnd
                                    SearchBox.Text = "";
                                });
                         });
-                        
+
                     }
                     else
                     {
@@ -491,7 +492,6 @@ namespace UWP.FrontEnd
                 }
 
             }, State.Ready);
-
         }
     }
 }

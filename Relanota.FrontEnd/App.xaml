@@ -92,7 +92,7 @@
                                                SelectedPressedBackground="{ThemeResource ListViewItemBackgroundSelectedPressed}" 
                                                SelectedPointerOverBackground="{ThemeResource ListViewItemBackgroundSelectedPointerOver}" 
                                                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
-                                               <!--SelectedBackground="{ThemeResource ListViewItemBackgroundSelected}"--> 
+                            <!--SelectedBackground="{ThemeResource ListViewItemBackgroundSelected}"-->
                             <VisualStateManager.VisualStateGroups>
                                 <VisualStateGroup x:Name="CommonStates">
                                     <VisualState x:Name="Normal"/>
@@ -143,5 +143,4 @@
             </Setter>
         </Style>
     </Application.Resources>
-    
 </Application>

@@ -47,40 +47,36 @@ namespace UWP.FrontEnd.Views
     /// </summary>
     public sealed partial class NoteEditor : Page, IContextInteractible<Note>
     {
+        private IEditorView _editor { get; set; }
         public int WordCount { get; set; } = 0;
         private AdvancedCollectionView Acv { get; set; }
         public static bool IsSaved { get; set; } = true;
         private static NoteEditor _instance { get; set; }
         public static NoteEditor Get => _instance ?? new NoteEditor();
-        public string NoteContent => EditorTextBox.Text.Trim();
-        public string NoteName => NoteNameTextBox.Text.Trim();
-        public string[] Lines => EditorTextBox?.Text.Split('\r');
         private IEnumerable<int> TableWidth = Enumerable.Range(1, 10);
         private IEnumerable<int> TableHeight = Enumerable.Range(1, 20);
-        Timer _timer;
+        Timer renderTimer;
         int _interval = 1000;
         private BackgroundWorker changesWorker = new BackgroundWorker();
-        private FixedSizeObservableCollection<(string text, int index)> History { get; set; } = new FixedSizeObservableCollection<(string text, int index)>(100);
-        private FixedSizeObservableCollection<(string text, int index)> UndoneHistory { get; set; } = new FixedSizeObservableCollection<(string text, int index)>(100);
 
         public NoteEditor()
         {
-            _instance = this;
             this.InitializeComponent();
-            Editor.ParentPage = this;
+            _instance = (_editor = AppSettings.Get("FancyEditor", true) ? Editor : PlainEditor as IEditorView).ParentPage = this;
             if (AppSettings.Get("FancyEditor", true))
             {
+
                 Editor.Visibility = Visibility.Visible;
-                EditorTextBox.Visibility = Visibility.Collapsed;
+                PlainEditor.Visibility = Visibility.Collapsed;
             }
             else
             {
                 Editor.Visibility = Visibility.Collapsed;
-                EditorTextBox.Visibility = Visibility.Visible;
+                PlainEditor.Visibility = Visibility.Visible;
+                
             }
-        }
 
-        public bool AreTextboxesEmpty() => string.IsNullOrWhiteSpace(NoteNameTextBox.Text) && string.IsNullOrWhiteSpace(EditorTextBox.Text);
+        }
 
         private void ChangesWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
@@ -125,6 +121,13 @@ namespace UWP.FrontEnd.Views
 
         }
 
+        internal void SetHeaderValue(int poundLength)
+        {
+            ParagraphSelector.SelectionChanged -= Header_Changed;
+            ParagraphSelector.SelectedIndex = poundLength == 0 ? 6 : poundLength - 1;
+            ParagraphSelector.SelectionChanged += Header_Changed;
+        }
+
         private void FinishSave()
         {
             AppState.Set(State.SaveCompleted, () => {
@@ -151,9 +154,6 @@ namespace UWP.FrontEnd.Views
                 baseStream.Seek(0, SeekOrigin.Begin);
                 baseStream.CopyTo(fs);
             }
-
-
-
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -179,12 +179,10 @@ namespace UWP.FrontEnd.Views
             MainPage.Get.SetNavigationIndex(3);
             if (MainPage.CurrentNote != null)
             {
-                EditorTextBox.TextChanged -= NoteEditorTextBox_TextChanged;
-                EditorTextBox.Text = MainPage.CurrentNote.Content ?? "";
-                RenderBlock.Text = $"# {NoteNameTextBox.Text}\n{Regex.Replace(MainPage.CurrentNote.Content ?? "", @"(?<!\n)\r", Environment.NewLine)}";
-                FillRenderbox(this.EditorTextBox);
                 NoteNameTextBox.Text = MainPage.CurrentNote.Name ?? "";
-                if ((int)(AppState.Current ^ State.ProtocolImportNavigation) == 0)
+                RenderBlock.Text = $"# {NoteNameTextBox.Text}\n{Regex.Replace(MainPage.CurrentNote.Content ?? "", @"(?<!\n)\r", Environment.NewLine)}";
+                SetWordCount(MainPage.CurrentNote.Content ?? "");
+                if (AppState.Current  == State.ProtocolImportNavigation)
                 {
                     SetSavedState(false);
                 } else
@@ -192,7 +190,6 @@ namespace UWP.FrontEnd.Views
                     TagTokens.ItemsSource = new ObservableCollection<Tag>(MainPage.CurrentNote.NoteTags.Select(nt => nt.Tag));
                     TagTokens.IsEnabled = true;
                 }
-                EditorTextBox.TextChanged += NoteEditorTextBox_TextChanged;
                 MainPage.Get.SetDividerNoteName(MainPage.CurrentNote.Name ?? "New Note");
 
 
@@ -209,8 +206,8 @@ namespace UWP.FrontEnd.Views
             {
                 SetTagsState(false);
             }
-            History.Insert((EditorTextBox.Text, EditorTextBox.SelectionStart));
-            _timer = new Timer(Tick, null, _interval, Timeout.Infinite);
+            renderTimer = new Timer(Tick, null, _interval, Timeout.Infinite);
+
         }
 
         private async void Tick(object state)
@@ -219,31 +216,18 @@ namespace UWP.FrontEnd.Views
             {
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
                {
-                   string text = EditorTextBox.Text ?? "";
-                   if (EditorTextBox.Text.Contains("$"))
+                   string text = _editor.GetContent() ?? "";
+                   if (text.Contains("$"))
                        text = new MathMode(text, $"{ApplicationData.Current.LocalCacheFolder.Path}").WriteComponent();
 
                    RenderBlock.Text = $"# {NoteNameTextBox.Text}\n" + Regex.Replace(text, @"(?<!\n)\r", Environment.NewLine);
                });
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
-                {
-                    string currentText = EditorTextBox.Text ?? "";
-
-                    if (History.First.text == currentText)
-                    {
-                        return;
-                    }
-
-                    History.Insert((currentText, EditorTextBox.SelectionStart));
-                    UndoneHistory.Clear();
-                });
-
             }
             finally
             {
                 try
                 {
-                    _timer?.Change(_interval, Timeout.Infinite);
+                    renderTimer?.Change(_interval, Timeout.Infinite);
                 }
                 catch (ObjectDisposedException)
                 {
@@ -257,7 +241,7 @@ namespace UWP.FrontEnd.Views
             if (AppState.Current == State.NotSaved)
             {
                 MainPage.CurrentNote.Name = NoteNameTextBox.Text.Trim();
-                MainPage.CurrentNote.Content = EditorTextBox.Text.Trim();
+                MainPage.CurrentNote.Content = _editor.GetContent().Trim();
                 await ShowUnsavedChangesDialog();
                 if (AppState.Current == State.NavigationCancelled)
                 {
@@ -270,34 +254,26 @@ namespace UWP.FrontEnd.Views
                     return;
                 }
             }
-            if (MainPage.CurrentNote == null && string.IsNullOrWhiteSpace(NoteNameTextBox.Text) && string.IsNullOrWhiteSpace(EditorTextBox.Text))
+            if (MainPage.CurrentNote == null && string.IsNullOrWhiteSpace(NoteNameTextBox.Text) && string.IsNullOrWhiteSpace(_editor.GetContent()))
                 SetSavedState(true);
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            _timer.Dispose();
+            renderTimer.Dispose();
         }
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
         }
 
-        private void FillRenderbox(TextBox sender)
+        public void SetWordCount(string text)
         {
-            string text = sender.Text;
-
             if (string.IsNullOrWhiteSpace(text))
                 WordCount = 0;
             else
                 WordCount = Regex.Split(text.Trim(), @"\s+").Length;
             WordCounter.Text = $"{WordCount} word" + ((WordCount != 1) ? "s" : "");
-        }
-
-        private void NoteEditorTextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            FillRenderbox(sender as TextBox);
-            SetSavedState(false);
         }
 
         private void ShowUnsavablePrompt()
@@ -324,20 +300,20 @@ namespace UWP.FrontEnd.Views
 
                         if (context.TryGetNote(NoteNameTextBox.Text, out Note note))
                         {
-                            note.Update($"{note.Content}\n\n{EditorTextBox.Text}", NoteNameTextBox.Text, context);
+                            note.Update($"{note.Content}\n\n{_editor.GetContent()}", NoteNameTextBox.Text, context);
                             SetCurrentEditorNote(note);
                         }
                         else
                         {
                             MainPage.CurrentNote = new Note();
-                            MainPage.CurrentNote.Save(EditorTextBox.Text, NoteNameTextBox.Text, context);
+                            MainPage.CurrentNote.Save(_editor.GetContent(), NoteNameTextBox.Text, context);
                             TagTokens.IsEnabled = true;
                         }
 
                     }
                     else
                     {
-                        MainPage.CurrentNote.Update(EditorTextBox.Text, NoteNameTextBox.Text, context);
+                        MainPage.CurrentNote.Update(_editor.GetContent(), NoteNameTextBox.Text, context);
                         context.SaveChanges();
                     }
                 }
@@ -349,7 +325,7 @@ namespace UWP.FrontEnd.Views
             MainPage.CurrentNote = note;
             TagTokens.ItemsSource = new ObservableCollection<Tag>(MainPage.CurrentNote.NoteTags.Select(nt => nt.Tag));
             RenderBlock.Text = $"# {note.Name}\n{note.Content}";
-            EditorTextBox.Text = $"{note.Content}";
+            _editor.SetContent($"{note.Content}");
             TagTokens.IsEnabled = true;
         }
 
@@ -394,8 +370,6 @@ namespace UWP.FrontEnd.Views
             {
 
                 string imagePath = $@"![{file.DisplayName}]({{{{local_dir}}}}\{file.Name})";
-                int selectionIndex = EditorTextBox.SelectionStart;
-                string[] lines = Lines;
                 // Application now has read/write access to the picked file
                 try
                 {
@@ -407,76 +381,13 @@ namespace UWP.FrontEnd.Views
                 {
 
                 }
-                InsertImage(imagePath);
-                EditorTextBox.Text = string.Join('\r', lines);
-                // Make sure cursor is at the end of the image insert
-                EditorTextBox.SelectionStart = selectionIndex;
+                _editor.InsertImage(imagePath);
                 SetSavedState(false);
 
             }
         }
 
-        public void InsertImage(string imagePath)
-        {
-            Editor.InsertImage(imagePath);
-        }
-
-        private async void MarkdownText_OnImageResolving(object sender, ImageResolvingEventArgs e)
-        {
-            // This is basically the default implementation
-
-            try
-            {
-                // check if the image is from online. Find on disk
-                if (e.Url.ToLower().StartsWith("http"))
-                {
-                    // Fix urls
-                    string url = e.Url.Replace("(", "%28").Replace(")", "%29");
-                    // Get Bitmap from URL
-                    BitmapImage image = new BitmapImage(new Uri(url));
-
-                    e.Image = image;
-
-                    // Generate name for local storage
-                    string cachefilename = url.CreateMD5();
-                    try
-                    {
-                        // Download if the file does not exist
-                        if (!File.Exists($@"{ApplicationData.Current.LocalCacheFolder.Path}\{cachefilename}.jpg") && AppSettings.Get("MathOnDisk", true))
-                            await SaveImageToFileAsync(cachefilename, ApplicationData.Current.LocalCacheFolder.Path, new Uri(url));
-                    }
-                    catch
-                    {
-                        // Do nothing
-                    }
-                }
-                else
-                {
-                    // Make sure we convert long file names to smaller shorter ones
-                    string path = e.Url.Replace("{{cache_dir}}", ApplicationData.Current.LocalCacheFolder.Path);
-                    path = path.Replace("{{local_dir}}", ApplicationData.Current.LocalFolder.Path);
-                    e.Image = new BitmapImage(new Uri(path));
-                }
-            }
-            catch (Exception)
-            {
-                e.Handled = false;
-                return;
-            }
-
-            e.Handled = true;
-        }
-
-        private void RenderBlock_CodeBlockResolving(object sender, CodeBlockResolvingEventArgs e)
-        {
-            // TODO: Add more language support later
-            if (e.CodeLanguage == "CUSTOM")
-            {
-                e.Handled = true;
-                e.InlineCollection.Add(new Run { Foreground = new SolidColorBrush(Colors.Red), Text = e.Text, FontWeight = FontWeights.Bold });
-            }
-
-        }
+        
 
         private void TagTokens_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
         {
@@ -600,30 +511,6 @@ namespace UWP.FrontEnd.Views
             }
         }
 
-        private async void EditorTextBox_Paste(object sender, TextControlPasteEventArgs e)
-        {
-            // Get the target text box and data package
-            TextBox tb = sender as TextBox;
-            DataPackageView dataPackageView = Clipboard.GetContent();
-
-            // Check if data is an image
-            if (dataPackageView.Contains(StandardDataFormats.Bitmap))
-            {
-                // Generate file name and save image
-                string fileName = $"Paste {DateTime.Now:ddMMyyyy hhmmss tt}";
-                await SaveImageToFileAsync(fileName, ApplicationData.Current.LocalFolder.Path, await dataPackageView.GetBitmapAsync());
-
-                // Insert image into note, at current position
-                string imagePath = $@"![{fileName}]({{{{local_dir}}}}\{fileName}.jpg)";
-                App.SetClipboardContent(imagePath);
-                int selectionIndex = tb.SelectionStart;
-                tb.Text = tb.Text.Insert(selectionIndex, imagePath);
-                tb.SelectionStart = selectionIndex + imagePath.Length;
-
-                e.Handled = true;
-            }
-        }
-
         public async Task NavigateToNoteFromUri(string uri)
         {
             // Check if the note has been saved.
@@ -727,41 +614,6 @@ namespace UWP.FrontEnd.Views
             RenderColumn.Width = new GridLength(1, GridUnitType.Star);
         }
 
-        public (string Text, int Start, int End) ApplyFormatting(string text, string formatter, int index, int length)
-        {
-            text = text.Insert(index, formatter);
-            text = text.Insert(index + length + formatter.Length, formatter);
-            index += formatter.Length;
-            return (text, index, length);
-        }
-
-        private void EditorTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
-        {
-            (string Text, int Start, int End) formattedText;
-            bool ctrlIsPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
-            bool shiftIsPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
-
-            switch (c: ctrlIsPressed, s: shiftIsPressed, k: e.OriginalKey)
-            {
-                case (true, false, VirtualKey.I):
-                    formattedText = ApplyFormatting(EditorTextBox.Text, "*", EditorTextBox.SelectionStart, EditorTextBox.SelectionLength);
-
-                    EditorTextBox.Text = formattedText.Text;
-                    EditorTextBox.SelectionStart = formattedText.Start;
-                    EditorTextBox.SelectionLength = formattedText.End;
-                    e.Handled = true;
-                    break;
-                case (true, false, VirtualKey.B):
-                    formattedText = ApplyFormatting(EditorTextBox.Text, "**", EditorTextBox.SelectionStart, EditorTextBox.SelectionLength);
-
-                    EditorTextBox.Text = formattedText.Text;
-                    EditorTextBox.SelectionStart = formattedText.Start;
-                    EditorTextBox.SelectionLength = formattedText.End;
-                    e.Handled = true;
-                    break;
-            }
-        }
-
         public (int, int) CalculatePoint(string text, int currentIndex)
         {
             List<string> lines = text.Split('\r').Select(str => str = $"{str}\r").ToList();
@@ -779,127 +631,30 @@ namespace UWP.FrontEnd.Views
             return (indexCount, lineCount - 1);
         }
 
-        private void EditorTextBox_OnPreviewKeyDown(object sender, KeyRoutedEventArgs e)
-        {
-            bool ctrlIsPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
-            bool shiftIsPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
-
-            string[] lines = Lines;
-
-            switch (c: ctrlIsPressed, s: shiftIsPressed, k: e.OriginalKey)
-            {
-                case (false, false, VirtualKey.Enter):
-                    if (EditorTextBox.Text.Split('\r').Any())
-                    {
-                        int selectionStart = EditorTextBox.SelectionStart;
-                        (int x, int y) = CalculatePoint(EditorTextBox.Text, selectionStart);
-                        Match match = Regex.Match(Lines[y], @"^\s*[-*>+]\s");
-
-                        if (match.Success && x >= match.Index + match.Length)
-                        {
-                            e.Handled = true;
-
-                            if (Lines[y].Trim().Length == "*".Length)
-                            {
-                                lines[y] = "";
-                                EditorTextBox.Text = string.Join('\r', lines);
-                                EditorTextBox.SelectionStart = selectionStart - match.Length;
-                                return;
-                            }
-                            InsertTextInTextBox(EditorTextBox, $"\r{(match.Value)}", selectionStart + match.Index + match.Length + 1);
-                            return;
-                        }
-                        match = Regex.Match(EditorTextBox.Text.Split('\r')[y], @"^\s*([1-9][0-9]*)\.\s");
-                        if (match.Success && x >= match.Index + match.Length)
-                        {
-                            e.Handled = true;
-                            int newValue = int.Parse(match.Groups[1].Value) + 1;
-                            if (Lines[y].Trim().Length == match.Value.Trim().Length)
-                            {
-                                lines[y] = "";
-                                EditorTextBox.Text = string.Join('\r', lines);
-                                EditorTextBox.SelectionStart = selectionStart - match.Length;
-                                return;
-                            }
-                            InsertTextInTextBox(EditorTextBox, $"\r{match.Value.Replace(match.Groups[1].Value, newValue.ToString())}", selectionStart + match.Index + match.Length
-                                + 1 + (newValue.ToString().Length > (newValue - 1).ToString().Length ? 1 : 0));
-                            return;
-                        }
-                    }
-
-                    break;
-                case (true, false, VirtualKey.Z):
-                    if (History.First.text != EditorTextBox.Text) History.Insert((EditorTextBox.Text, EditorTextBox.SelectionStart));
-                    if (History.Count > 1)
-                    {
-                        UndoneHistory.Insert(History.First);
-                        History.RemoveFirst();
-                        EditorTextBox.Text = History.First.text;
-                        EditorTextBox.SelectionStart = History.First.index;
-                    }
-                    e.Handled = true;
-                    break;
-                case (true, false, VirtualKey.Y):
-                    if (UndoneHistory.Any())
-                    {
-                        History.Insert(UndoneHistory.First);
-                        UndoneHistory.RemoveFirst();
-                        EditorTextBox.Text = History.First.text;
-                        EditorTextBox.SelectionStart = History.First.index;
-                    }
-                    e.Handled = true;
-                    break;
-            }
-        }
-
-        private void InsertTextInTextBox(TextBox textBox, string text, int newIndex)
-        {
-            textBox.Text = textBox.Text.Insert(textBox.SelectionStart, text);
-            textBox.SelectionStart = newIndex;
-        }
-
         private void EmojiButton_Click(object sender, RoutedEventArgs e)
         {
             CoreInputView.GetForCurrentView().TryShow(CoreInputViewKind.Emoji);
-            EditorTextBox.Focus(FocusState.Programmatic);
-        }
-
-        private void EditorTextBox_SelectionChanged(object sender, RoutedEventArgs e)
-        {
-            ParagraphSelector.SelectionChanged -= Header_Changed;
-            int selectionStart = EditorTextBox.SelectionStart;
-            (int x, int y) = CalculatePoint(EditorTextBox.Text, selectionStart);
-
-            if (Lines[y].Trim().StartsWith('#'))
-            {
-                Match match = Regex.Match(Lines[y].Trim(), @"^#{1,6}");
-                ParagraphSelector.SelectedIndex = match.Groups[0].Length - 1;
-            }
-            else
-            {
-                ParagraphSelector.SelectedIndex = 6;
-            }
-            ParagraphSelector.SelectionChanged += Header_Changed;
-
+            _editor.GetEditor().Focus(FocusState.Programmatic);
         }
 
         private void Header_Changed(object sender, SelectionChangedEventArgs e)
         {
             if (!IsLoaded) return;
-            string[] lines = Lines;
-            int selectionStart = EditorTextBox.SelectionStart;
-            ApplyHeaderChange(ref selectionStart, ref lines);
+            _editor.ApplyHeaderChange(ParagraphSelector.SelectedIndex + 1);
+            //string[] lines = Lines;
+            //int selectionStart = EditorTextBox.SelectionStart;
+            //ApplyHeaderChange(ref selectionStart, ref lines);
 
-            EditorTextBox.Text = string.Join('\r', lines);
-            EditorTextBox.SelectionStart = selectionStart;
+            //_editor.GetContent() = string.Join('\r', lines);
+            //EditorTextBox.SelectionStart = selectionStart;
 
-            EditorTextBox.Focus(FocusState.Programmatic);
+            //EditorTextBox.Focus(FocusState.Programmatic);
 
         }
 
         public void ApplyHeaderChange(ref int selectionStart, ref string[] lines)
         {
-            (_, int y) = CalculatePoint(EditorTextBox.Text, selectionStart);
+            (_, int y) = CalculatePoint(_editor.GetContent(), selectionStart);
             if (ParagraphSelector.SelectedIndex == 6)
             {
                 Match match = Regex.Match(lines[y], @"^#{1,6} ");
@@ -918,38 +673,28 @@ namespace UWP.FrontEnd.Views
 
         private void ListButton_OnClick(object sender, RoutedEventArgs e)
         {
-            int index = EditorTextBox.SelectionStart;
-            string text = EditorTextBox.Text;
-            string[] lines = Lines;
-            InsertList(ref index, ref lines, text);
-            EditorTextBox.Text = string.Join('\r', lines);
-            EditorTextBox.SelectionStart = index;
+            _editor.InsertList();
         }
 
-        public void InsertList(ref int selectionStart, ref string[] lines, string fullText)
-        {
-            (_, int y) = CalculatePoint(fullText, selectionStart);
-            if (!lines[y].Trim().StartsWith("*"))
-            {
-                lines[y] = lines[y].Insert(0, "* ");
-            }
-            else
-            {
-                lines[y] = Regex.Replace(lines[y], @"^\s*[-*>+]\s", "");
-            }
-
-            // A list denoter is always 2 characters long
-            selectionStart += 2;
-        }
+        
 
         private void FormatButton_OnClick(object sender, RoutedEventArgs e)
         {
             string formatter = (sender as AppBarButton)?.Tag as string;
-            (string text, int start, int end) = ApplyFormatting(EditorTextBox.Text, formatter, EditorTextBox.SelectionStart, EditorTextBox.SelectionLength);
+            switch (formatter)
+            {
+                case "*":
+                    _editor.FormatItalics();
+                    break;
+                case "**":
+                    _editor.FormatBold();
 
-            EditorTextBox.Text = text;
-            EditorTextBox.SelectionStart = start;
-            EditorTextBox.SelectionLength = end;
+                    break;
+                case "~~":
+                    _editor.FormatStrikethrough();
+                    break;
+            }
+            
         }
 
         public Note Load(int key)
@@ -957,11 +702,74 @@ namespace UWP.FrontEnd.Views
             throw new NotImplementedException();
         }
 
-        MarkdownProcessor processor = new MarkdownProcessor();
-
         public void Update(string content)
         {
-            EditorTextBox.Text = content;
+            Render(content);
         }
+
+        #region RENDER LOGIC
+
+        private void Render(string content )
+        {
+            RenderBlock.Text = content;
+        }
+
+        private async void MarkdownText_OnImageResolving(object sender, ImageResolvingEventArgs e)
+        {
+            // This is basically the default implementation
+
+            try
+            {
+                // check if the image is from online. Find on disk
+                if (e.Url.ToLower().StartsWith("http"))
+                {
+                    // Fix urls
+                    string url = e.Url.Replace("(", "%28").Replace(")", "%29");
+                    // Get Bitmap from URL
+                    BitmapImage image = new BitmapImage(new Uri(url));
+
+                    e.Image = image;
+
+                    // Generate name for local storage
+                    string cachefilename = url.CreateMD5();
+                    try
+                    {
+                        // Download if the file does not exist
+                        if (!File.Exists($@"{ApplicationData.Current.LocalCacheFolder.Path}\{cachefilename}.jpg") && AppSettings.Get("MathOnDisk", true))
+                            await SaveImageToFileAsync(cachefilename, ApplicationData.Current.LocalCacheFolder.Path, new Uri(url));
+                    }
+                    catch
+                    {
+                        // Do nothing
+                    }
+                }
+                else
+                {
+                    // Make sure we convert long file names to smaller shorter ones
+                    string path = e.Url.Replace("{{cache_dir}}", ApplicationData.Current.LocalCacheFolder.Path);
+                    path = path.Replace("{{local_dir}}", ApplicationData.Current.LocalFolder.Path);
+                    e.Image = new BitmapImage(new Uri(path));
+                }
+            }
+            catch (Exception)
+            {
+                e.Handled = false;
+                return;
+            }
+
+            e.Handled = true;
+        }
+
+        private void RenderBlock_CodeBlockResolving(object sender, CodeBlockResolvingEventArgs e)
+        {
+            // TODO: Add more language support later
+            if (e.CodeLanguage == "CUSTOM")
+            {
+                e.Handled = true;
+                e.InlineCollection.Add(new Run { Foreground = new SolidColorBrush(Colors.Red), Text = e.Text, FontWeight = FontWeights.Bold });
+            }
+
+        }
+        #endregion
     }
 }
